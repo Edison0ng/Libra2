@@ -15,6 +15,13 @@
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .animate-slide-up { animation: slideUp 0.3s ease-out forwards; }
+        
+        /* CSS Timeline Custom untuk Pop-up Detail */
+        .timeline-item { position: relative; padding-left: 1.5rem; border-left: 2px solid #e2e8f0; padding-bottom: 1rem; }
+        .dark .timeline-item { border-left-color: #334155; }
+        .timeline-item::before { content: ''; position: absolute; left: -0.35rem; top: 0.25rem; width: 0.6rem; height: 0.6rem; border-radius: 50%; background: #3b82f6; border: 2px solid #fff; }
+        .dark .timeline-item::before { border-color: #1e293b; }
+        .timeline-item:last-child { border-left: 2px solid transparent; padding-bottom: 0; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-200 h-screen overflow-hidden flex transition-colors duration-300">
@@ -182,8 +189,8 @@
             <div id="tab-sirkulasi" class="tab-content hidden animate-slide-up">
                 <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
-                        <h3 class="text-xl font-bold text-slate-800 dark:text-white">Verifikasi Sirkulasi</h3>
-                        <p class="text-sm text-slate-500 dark:text-slate-400">Persetujuan peminjaman dan pelacakan pengembalian.</p>
+                        <h3 class="text-xl font-bold text-slate-800 dark:text-white">Sirkulasi & Logistik</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Peminjaman, status pengantaran, dan verifikasi invoice.</p>
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="text-sm text-slate-500">Periode:</span>
@@ -198,26 +205,63 @@
                                 <tr>
                                     <th class="px-6 py-4">ID Transaksi</th>
                                     <th class="px-6 py-4">Mahasiswa</th>
-                                    <th class="px-6 py-4">Buku & Tenggat</th>
-                                    <th class="px-6 py-4 text-center">Status</th>
+                                    <th class="px-6 py-4">Status Utama</th>
                                     <th class="px-6 py-4 text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                                
                                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
                                     <td class="px-6 py-4 text-blue-600 dark:text-blue-400 font-medium">TRX-001</td>
-                                    <td class="px-6 py-4 text-slate-800 dark:text-white">Ahmad Fauzi</td>
+                                    <td class="px-6 py-4 text-slate-800 dark:text-white font-medium">Budi Santoso</td>
                                     <td class="px-6 py-4">
-                                        <p class="text-slate-800 dark:text-white font-medium">Sistem Basis Data</p>
-                                        <p class="text-xs text-slate-500">Batas: 19 Mei 2026</p>
+                                        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30">
+                                            <i class="fa-solid fa-clock mr-1"></i> Menunggu Buku Kembali
+                                        </span>
                                     </td>
-                                    <td class="px-6 py-4 text-center">
-                                        <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30">Menunggu</span>
-                                    </td>
-                                    <td class="px-6 py-4 text-center">
-                                        <button onclick="triggerToast('Peminjaman disetujui!', 'blue')" class="bg-emerald-100 text-emerald-700 hover:bg-emerald-600 hover:text-white dark:bg-emerald-500/20 dark:text-emerald-400 dark:hover:bg-emerald-500 dark:hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition mr-1">Setujui</button>
+                                    <td class="px-6 py-4 flex items-center justify-center gap-2">
+                                        <button onclick="openModal('modal-detail')" class="bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1">
+                                            <i class="fa-solid fa-circle-info"></i> Detail Info
+                                        </button>
                                     </td>
                                 </tr>
+
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                                    <td class="px-6 py-4 text-blue-600 dark:text-blue-400 font-medium">TRX-002</td>
+                                    <td class="px-6 py-4 text-slate-800 dark:text-white font-medium">Siti Aminah</td>
+                                    <td class="px-6 py-4">
+                                        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400 border border-red-200 dark:border-red-500/30">
+                                            <i class="fa-solid fa-triangle-exclamation mr-1"></i> Terlambat & Belum Bayar
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 flex items-center justify-center gap-2">
+                                        <button onclick="openModal('modal-detail')" class="bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1">
+                                            <i class="fa-solid fa-circle-info"></i> Detail
+                                        </button>
+                                        <button onclick="openModal('modal-invoice')" class="bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white dark:bg-blue-500/20 dark:text-blue-400 dark:hover:bg-blue-500 dark:hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm">
+                                            <i class="fa-solid fa-receipt"></i> Cek Invoice
+                                        </button>
+                                    </td>
+                                </tr>
+
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                                    <td class="px-6 py-4 text-blue-600 dark:text-blue-400 font-medium">TRX-003</td>
+                                    <td class="px-6 py-4 text-slate-800 dark:text-white font-medium">Joko Widodo</td>
+                                    <td class="px-6 py-4">
+                                        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30">
+                                            <i class="fa-solid fa-check mr-1"></i> Selesai / Lunas
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 flex items-center justify-center gap-2">
+                                        <button onclick="openModal('modal-detail')" class="bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1">
+                                            <i class="fa-solid fa-circle-info"></i> Histori Lengkap
+                                        </button>
+                                        <button onclick="openModal('modal-invoice')" class="bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white dark:bg-blue-500/20 dark:text-blue-400 dark:hover:bg-blue-500 dark:hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm" title="Lihat Kwitansi/Invoice Lunas">
+                                            <i class="fa-solid fa-receipt"></i> Cek Invoice
+                                        </button>
+                                    </td>
+                                </tr>
+
                             </tbody>
                         </table>
                     </div>
@@ -291,6 +335,92 @@
         </div>
     </div>
 
+    <div id="modal-detail" class="fixed inset-0 z-[60] hidden bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-lg overflow-hidden flex flex-col animate-slide-up">
+            <div class="p-5 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/80">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white">Detail Sirkulasi (TRX-001)</h3>
+                <button onclick="closeModal('modal-detail')" class="text-slate-400 hover:text-slate-600 dark:hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-5 overflow-y-auto max-h-[70vh]">
+                <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 mb-6 border border-blue-100 dark:border-blue-800">
+                    <p class="text-xs text-blue-500 dark:text-blue-400 font-bold uppercase mb-2">Informasi Buku & Pengguna</p>
+                    <div class="grid grid-cols-2 gap-y-2 text-sm">
+                        <div class="text-slate-500">Judul Buku:</div>
+                        <div class="font-bold text-slate-800 dark:text-white">Data Flow Diagram Praktis</div>
+                        <div class="text-slate-500">Peminjam:</div>
+                        <div class="font-medium text-slate-800 dark:text-white">Budi Santoso</div>
+                        <div class="text-slate-500">Tenggat Waktu:</div>
+                        <div class="font-medium text-slate-800 dark:text-white">25 Juni 2026</div>
+                    </div>
+                </div>
+                <h4 class="font-bold text-slate-800 dark:text-white mb-3 text-sm">Histori Status & Pengiriman</h4>
+                <div class="mb-4 text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                    <i class="fa-solid fa-motorcycle text-amber-500"></i> Opsi: <span class="bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded">Pengantaran ke Rumah</span>
+                </div>
+                <div class="ml-2 mt-2">
+                    <div class="timeline-item">
+                        <p class="text-xs text-slate-400">20 Jun 2026, 10:00</p>
+                        <p class="text-sm font-medium text-slate-800 dark:text-slate-200">Buku dipesan via Aplikasi</p>
+                    </div>
+                    <div class="timeline-item">
+                        <p class="text-xs text-slate-400">20 Jun 2026, 14:30</p>
+                        <p class="text-sm font-medium text-slate-800 dark:text-slate-200">Buku diantar kurir ke rumah User</p>
+                    </div>
+                    <div class="timeline-item">
+                        <p class="text-xs text-slate-400">Status Saat Ini</p>
+                        <p class="text-sm font-bold text-amber-600 dark:text-amber-400">Menunggu User Mengembalikan Buku</p>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-right">
+                <button onclick="closeModal('modal-detail')" class="py-2 px-4 rounded-xl font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">Tutup Detail</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-invoice" class="fixed inset-0 z-[60] hidden bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-md overflow-hidden flex flex-col animate-slide-up">
+            <div class="p-5 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/80">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white">Verifikasi Invoice</h3>
+                <button onclick="closeModal('modal-invoice')" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <div class="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-lg p-3 text-xs text-amber-700 dark:text-amber-400 mb-4 flex items-start gap-2">
+                    <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
+                    <p>Sistem ini tidak meminta user mengunggah struk. Silakan cek mutasi masuk <b>BCA 12345678</b> secara mandiri sebelum menekan tombol ACC.</p>
+                </div>
+                <div class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 border-dashed rounded-lg p-5 font-mono relative shadow-inner">
+                    <div class="text-center mb-4 border-b border-slate-200 dark:border-slate-700 pb-4">
+                        <h4 class="font-bold text-slate-800 dark:text-white text-lg tracking-widest">PERPUS LIBRA</h4>
+                        <p class="text-xs text-slate-500">Automated E-Invoice</p>
+                    </div>
+                    <div class="space-y-2 text-sm text-slate-600 dark:text-slate-400">
+                        <div class="flex justify-between"><span>No Tagihan:</span><span class="font-bold text-slate-800 dark:text-white">INV-2026-TRX002</span></div>
+                        <div class="flex justify-between"><span>Tanggal:</span><span>23 Juni 2026</span></div>
+                        <div class="flex justify-between"><span>User:</span><span>Siti Aminah</span></div>
+                    </div>
+                    <div class="border-t border-slate-200 dark:border-slate-700 my-4 border-dashed"></div>
+                    <div class="space-y-2 text-sm text-slate-600 dark:text-slate-400 mb-4">
+                        <div class="flex justify-between"><span>Denda Keterlambatan</span><span>Rp 15.000</span></div>
+                        <div class="flex justify-between"><span>Biaya Pengantaran</span><span>Rp 10.000</span></div>
+                    </div>
+                    <div class="bg-slate-100 dark:bg-slate-800 p-2 rounded flex justify-between items-center">
+                        <span class="text-sm font-bold text-slate-700 dark:text-slate-300">TOTAL BAYAR</span>
+                        <span class="text-lg font-bold text-blue-600 dark:text-blue-400">Rp 25.000</span>
+                    </div>
+                </div>
+            </div>
+            <div class="p-5 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-3 bg-slate-50 dark:bg-slate-800">
+                <button onclick="closeModal('modal-invoice')" class="py-2 px-4 rounded-xl font-medium text-slate-500 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">Tutup</button>
+                <button onclick="closeModal('modal-invoice'); triggerToast('Mutasi Dikonfirmasi! Status berubah menjadi LUNAS.', 'emerald')" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-xl font-medium transition shadow-md flex items-center gap-2">
+                    <i class="fa-solid fa-check"></i> ACC & Lunas
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast-notif" class="fixed bottom-20 md:bottom-10 left-1/2 transform -translate-x-1/2 z-[70] hidden transition-all duration-300">
         <div id="toast-bg" class="bg-emerald-600 text-white px-6 py-3 rounded-full shadow-xl font-medium flex items-center gap-3 border border-emerald-500">
             <i id="toast-icon" class="fa-solid fa-circle-check"></i>
@@ -324,7 +454,7 @@
             document.getElementById('tab-' + tabId).classList.remove('hidden');
             document.getElementById('tab-' + tabId).classList.add('block');
 
-            // Reset Desktop Nav (Mengakomodasi dual theme)
+            // Reset Desktop Nav
             document.querySelectorAll('.nav-desktop').forEach(btn => {
                 btn.className = "nav-desktop w-full flex items-center gap-3 text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white p-3 rounded-xl font-medium transition-all";
             });
@@ -340,7 +470,7 @@
             document.getElementById('header-title').innerText = titles[tabId];
         }
 
-        // FUNGSI MODAL & TOAST
+        // FUNGSI MODAL & TOAST (Telah Mendukung Semua Modal Baru)
         function openModal(modalId) { document.getElementById(modalId).classList.remove('hidden'); }
         function closeModal(modalId) { document.getElementById(modalId).classList.add('hidden'); }
 
@@ -369,16 +499,12 @@
 
         // FUNGSI GENERATE SITASI (HARVARD STYLE)
         function generateCitation(authors, year, title, edition, publisherLoc) {
-            // Logika pembentukan string sitasi format baku Harvard
             const citationText = `${authors} (${year}) <i>${title}</i>. ${edition}. ${publisherLoc}.`;
-            
-            // Menyalin ke clipboard (simulasi pakai Prompt/Alert untuk UI statis)
             navigator.clipboard.writeText(citationText.replace(/<[^>]*>?/gm, ''))
                 .then(() => {
                     triggerToast('Sitasi format Harvard berhasil disalin ke clipboard!', 'blue');
                 })
                 .catch(err => {
-                    // Fallback jika browser menolak clipboard
                     prompt("Copy sitasi Harvard ini:", citationText.replace(/<[^>]*>?/gm, ''));
                 });
         }
@@ -386,17 +512,15 @@
         // INISIALISASI CHART.JS (Grafik Tren Peminjaman)
         document.addEventListener('DOMContentLoaded', function() {
             const ctx = document.getElementById('chartPeminjaman').getContext('2d');
-            
-            // Konfigurasi warna yang menyesuaikan tema
-            const chartColor = '#2563eb'; // Warna biru utama Tailwind
+            const chartColor = '#2563eb'; 
             
             new Chart(ctx, {
-                type: 'line', // Jenis grafik garis
+                type: 'line',
                 data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'], // Data sumbu X
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
                     datasets: [{
                         label: 'Total Peminjaman',
-                        data: [45, 62, 86, 124, 98, 86], // Data dummy (sumbu Y)
+                        data: [45, 62, 86, 124, 98, 86],
                         borderColor: chartColor,
                         backgroundColor: 'rgba(37, 99, 235, 0.1)',
                         borderWidth: 3,
@@ -405,41 +529,32 @@
                         pointBorderWidth: 2,
                         pointRadius: 4,
                         fill: true,
-                        tension: 0.4 // Membuat garis melengkung halus
+                        tension: 0.4
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false // Sembunyikan legenda agar lebih clean
-                        }
-                    },
+                    plugins: { legend: { display: false } },
                     scales: {
                         y: {
                             beginAtZero: true,
-                            grid: {
-                                color: 'rgba(148, 163, 184, 0.1)', // Warna garis grid
-                                drawBorder: false,
-                            },
-                            ticks: {
-                                color: '#94a3b8' // Warna teks angka sumbu Y
-                            }
+                            grid: { color: 'rgba(148, 163, 184, 0.1)', drawBorder: false },
+                            ticks: { color: '#94a3b8' }
                         },
                         x: {
-                            grid: {
-                                display: false,
-                                drawBorder: false,
-                            },
-                            ticks: {
-                                color: '#94a3b8' // Warna teks sumbu X
-                            }
+                            grid: { display: false, drawBorder: false },
+                            ticks: { color: '#94a3b8' }
                         }
                     }
                 }
             });
         });
+        
+        // Reminder untuk desain Data Flow Diagram (DFD):
+        // Pastikan penamaan data flow yang melibatkan fitur ini murni menggunakan KATA BENDA.
+        // Contoh: Gunakan label "Data Tagihan Otomatis" atau "Data Rincian Sirkulasi".
+        // Dilarang menggunakan label kata kerja/action (seperti "Melakukan Pembayaran").
     </script>
 </body>
 </html>
