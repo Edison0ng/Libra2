@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="id" class="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Libra - Full Functional Demo</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+    // URL ini sudah pasti benar sesuai screenshot-mu
+    const supabaseUrl = 'https://fntkcqdqbarffqyqtqdo.supabase.co'; 
+    
+    // GANTI Teks di bawah dengan Kunci 'anon' yang kamu copy dari menu API (diawali 'eyJ...')
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZudGtjcWRxYmFyZmZxeXF0cWRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzOTkxOTUsImV4cCI6MjA5NTk3NTE5NX0.vqUpeG5449RYHt3cIkuYf9W5tk3nVHI0zIZarr3Bru8'; 
+    
+    const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+    </script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class', // Mengaktifkan deteksi dark mode berbasis class
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        libra: {
+                            dark: '#1E293B',
+                            bg: '#F8FAFC',
+                            primary: '#3B82F6',
+                            red: '#E11D48'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.25s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex h-screen overflow-hidden transition-colors duration-200">
+
+    <!-- ========================================== -->
+    <!-- SIDEBAR (NAVIGASI DESKTOP)                 -->
+    <!-- ========================================== -->
+    <aside class="hidden md:flex flex-col w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 h-full transition-colors duration-200">
+        <div class="p-6 border-b border-slate-100 dark:border-slate-800">
+            <h1 class="text-2xl font-bold text-slate-800 dark:text-white tracking-tight flex items-center gap-2">
+                <i class="fa-solid fa-book-bookmark text-blue-600"></i> LIBRA
+            </h1>
+            <p class="text-[10px] text-slate-400 font-medium tracking-widest mt-1 uppercase">Sistem Informasi Perpustakaan</p>
+        </div>
+        <nav class="flex-1 p-4 space-y-1.5">
+            <button onclick="switchTab('beranda')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-semibold bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 transition-all" data-target="beranda">
+                <i class="fa-solid fa-house w-5 text-lg"></i> Beranda
+            </button>
+            <button onclick="switchTab('buku')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all" data-target="buku">
+                <i class="fa-solid fa-magnifying-glass w-5 text-lg"></i> Pustaka
+            </button>
+            <button onclick="switchTab('sirkulasi')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all" data-target="sirkulasi">
+                <i class="fa-solid fa-arrows-spin w-5 text-lg"></i> Sirkulasi
+            </button>
+            <button onclick="switchTab('profil')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all" data-target="profil">
+                <i class="fa-regular fa-user w-5 text-lg"></i> Profil
+            </button>
+        </nav>
+    </aside>
+
+    <!-- ========================================== -->
+    <!-- KONTEN UTAMA                               -->
+    <!-- ========================================== -->
+    <main class="flex-1 flex flex-col h-full relative overflow-hidden">
+        
+        <!-- HEADER UTAMA -->
+        <header class="bg-slate-900 dark:bg-slate-950 text-white px-6 py-4 flex items-center justify-between shadow-md z-20">
+            <div>
+                <h2 id="header-title" class="font-bold text-lg md:text-xl tracking-wide">Beranda</h2>
+                <p id="header-subtitle" class="text-xs text-slate-400">Selamat datang kembali, Mahasiswa!</p>
+            </div>
+            
+            <!-- Notifikasi Bell -->
+            <button onclick="toggleNotif()" class="focus:outline-none relative p-2 bg-slate-800 dark:bg-slate-900 rounded-xl hover:bg-slate-700 transition-colors">
+                <i class="fa-regular fa-bell text-lg"></i>
+                <span class="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                </span>
+            </button>
+
+            <!-- Panel Dropdown Notifikasi -->
+            <div id="notif-panel" class="hidden absolute right-6 top-16 w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 z-50 overflow-hidden text-slate-800 dark:text-slate-100">
+                <div class="flex justify-between items-center p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+                    <h3 class="font-bold text-sm">Notifikasi Terbaru</h3>
+                    <button class="text-xs text-blue-500 font-semibold" onclick="alert('Semua notifikasi ditandai dibaca')">Tandai dibaca</button>
+                </div>
+                <div class="p-4 space-y-3.5 max-h-72 overflow-y-auto hide-scrollbar">
+                    <div class="border-b border-slate-100 dark:border-slate-800 pb-2.5">
+                        <div class="flex justify-between text-[11px] mb-1">
+                            <span class="font-bold text-rose-500">Pengingat Pengembalian</span>
+                            <span class="text-slate-400">2 jam lalu</span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 leading-normal">Buku "Kalkulus Jilid 1" harus dikembalikan besok pagi.</p>
+                    </div>
+                    <div class="pb-1">
+                        <div class="flex justify-between text-[11px] mb-1">
+                            <span class="font-bold text-green-500">Buku Tersedia!</span>
+                            <span class="text-slate-400">5 jam lalu</span>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 leading-normal">Buku "Clean Code" yang Anda tunggu sekarang siap di-booking.</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- KONTEN HALAMAN (SCROLLABLE) -->
+        <div class="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 pb-24 md:pb-8">
+            
+            <!-- TAB 1: BERANDA -->
+            <div id="beranda" class="tab-content active max-w-5xl mx-auto space-y-6">
+                <h3 class="font-bold text-slate-800 dark:text-white text-base md:text-lg flex items-center gap-2">
+                    <i class="fa-solid fa-hourglass-half text-blue-500"></i> Lanjutkan Membaca
+                </h3>
+                
+                <!-- Grid Card Bacaan Terakhir -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 flex gap-4 items-center">
+                        <div class="w-14 h-20 rounded-lg bg-blue-100 overflow-hidden flex-shrink-0">
+                            <img src="https://images.unsplash.com/photo-1512820790803-83ca734da794?w=150&auto=format&fit=crop&q=60" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-bold text-slate-800 dark:text-white text-sm line-clamp-1">Metodologi Penelitian Bisnis</h4>
+                            <p class="text-xs text-slate-400 mt-0.5 mb-2">Prof. Dr. Sugiyono</p>
+                            <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5">
+                                <div class="bg-blue-500 h-1.5 rounded-full" style="width: 75%"></div>
+                            </div>
+                            <span class="text-[9px] text-slate-400 block text-right mt-1">75% Selesai</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 flex gap-4 items-center">
+                        <div class="w-14 h-20 rounded-lg bg-purple-100 overflow-hidden flex-shrink-0">
+                            <img src="https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=150&auto=format&fit=crop&q=60" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-bold text-slate-800 dark:text-white text-sm line-clamp-1">Artificial Intelligence: Modern Approach</h4>
+                            <p class="text-xs text-slate-400 mt-0.5 mb-2">Stuart Russell</p>
+                            <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5">
+                                <div class="bg-blue-500 h-1.5 rounded-full" style="width: 30%"></div>
+                            </div>
+                            <span class="text-[9px] text-slate-400 block text-right mt-1">30% Selesai</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bagian Rekomendasi Riwayat -->
+                <h3 class="font-bold text-slate-800 dark:text-white text-base md:text-lg flex items-center gap-2 pt-2">
+                    <i class="fa-solid fa-star text-amber-500"></i> Direkomendasikan Untukmu
+                </h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 overflow-hidden pb-3">
+                        <img src="https://images.unsplash.com/photo-1516979187457-637abb4f9353?w=300&auto=format&fit=crop&q=60" class="w-full aspect-[4/5] object-cover">
+                        <div class="p-3">
+                            <h4 class="font-bold text-xs md:text-sm text-slate-800 dark:text-white line-clamp-1">Data Science for Beginners</h4>
+                            <p class="text-[11px] text-slate-400 mt-0.5">Andrew Ng</p>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 overflow-hidden pb-3">
+                        <img src="https://images.unsplash.com/photo-1614849963640-9cc74b2a826f?w=300&auto=format&fit=crop&q=60" class="w-full aspect-[4/5] object-cover">
+                        <div class="p-3">
+                            <h4 class="font-bold text-xs md:text-sm text-slate-800 dark:text-white line-clamp-1">The Pragmatic Programmer</h4>
+                            <p class="text-[11px] text-slate-400 mt-0.5">Andy Hunt</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: PUSTAKA DIGITAL (DENGAN GENRE SELEKTOR DAN API NYATA) -->
+            <div id="buku" class="tab-content max-w-5xl mx-auto space-y-6">
+                <!-- Live Search Bar -->
+                <div class="relative">
+                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                    <input type="text" id="search-input" placeholder="Cari judul buku secara live..." class="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 shadow-sm text-sm transition-colors text-slate-800 dark:text-white">
+                </div>
+                
+                <!-- Category/Genre Pills -->
+                <div class="flex gap-2 overflow-x-auto hide-scrollbar snap-x py-1">
+                    <button onclick="filterGenre('Semua', this)" class="genre-pill snap-start whitespace-nowrap px-5 py-2 bg-blue-600 text-white text-xs font-semibold rounded-full shadow-sm shadow-blue-500/20 transition-all">Semua</button>
+                    <button onclick="filterGenre('Romance', this)" class="genre-pill snap-start whitespace-nowrap px-5 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 text-xs font-medium rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">Romance</button>
+                    <button onclick="filterGenre('Action', this)" class="genre-pill snap-start whitespace-nowrap px-5 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 text-xs font-medium rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">Action</button>
+                    <button onclick="filterGenre('Science', this)" class="genre-pill snap-start whitespace-nowrap px-5 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 text-xs font-medium rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-all">Science</button>
+                </div>
+
+                <!-- Buku Grid Hasil Fetch API -->
+                <div id="live-library-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <!-- Dinamis Diisi oleh JS di Bagian 2 -->
+                </div>
+            </div>
+
+            <!-- TAB 3: SIRKULASI -->
+            <div id="sirkulasi" class="tab-content max-w-3xl mx-auto space-y-4">
+                <!-- Komponen Batas Waktu Booking -->
+                <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-400 p-2.5 rounded-xl">
+                            <i class="fa-regular fa-clock text-xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-amber-800 dark:text-amber-300">Batas Pengambilan Resv.</h4>
+                            <p class="text-xs text-amber-600 dark:text-amber-400/80">Ambil ke meja sirkulasi atau panggil kurir antar.</p>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-900 px-4 py-2 rounded-xl border border-amber-200 dark:border-amber-800 font-mono font-bold text-amber-600 dark:text-amber-400 text-sm w-max self-end sm:self-auto">
+                        Sisa Waktu: 01:45:00
+                    </div>
+                </div>
+
+                <!-- Timeline Pengiriman Buku -->
+                <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800">
+                    <h4 class="font-bold text-sm mb-5 text-slate-700 dark:text-slate-300 uppercase tracking-wider">Status Pengiriman Kurir</h4>
+                    <div class="relative ml-2">
+                        <div class="absolute left-2.5 top-2 bottom-4 w-0.5 bg-slate-200 dark:bg-slate-800"></div>
+
+                        <div class="relative flex items-start gap-4 mb-6">
+                            <div class="z-10 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center border-4 border-white dark:border-slate-900 flex-shrink-0">
+                                <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                            </div>
+                            <div>
+                                <h5 class="text-sm font-bold text-blue-600 dark:text-blue-400">Diantar Kurir</h5>
+                                <p class="text-xs text-slate-400 mt-0.5">Kurir sedang menuju ke Fakultas Ilmu Komputer. Estimasi 10 menit.</p>
+                            </div>
+                        </div>
+                        <div class="relative flex items-start gap-4 mb-6">
+                            <div class="z-10 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center border-4 border-white dark:border-slate-900 flex-shrink-0">
+                                <i class="fa-solid fa-check text-[8px] text-white"></i>
+                            </div>
+                            <div>
+                                <h5 class="text-sm font-semibold text-slate-600 dark:text-slate-400">Buku Selesai Dikemas</h5>
+                                <p class="text-xs text-slate-400 mt-0.5">Buku telah diserahkan ke kurir internal.</p>
+                            </div>
+                        </div>
+                        <div class="relative flex items-start gap-4">
+                            <div class="z-10 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center border-4 border-white dark:border-slate-900 flex-shrink-0">
+                                <i class="fa-solid fa-check text-[8px] text-white"></i>
+                            </div>
+                            <div>
+                                <h5 class="text-sm font-semibold text-slate-600 dark:text-slate-400">Booking Dikonfirmasi</h5>
+                                <p class="text-xs text-slate-400 mt-0.5">Permintaan disetujui oleh sistem.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: PROFIL MAHASISWA -->
+            <div id="profil" class="tab-content max-w-md mx-auto space-y-5">
+                <div class="bg-gradient-to-br from-slate-800 to-slate-950 dark:from-slate-900 dark:to-black p-6 rounded-3xl text-center text-white shadow-md relative overflow-hidden">
+                    <div class="w-20 h-20 bg-slate-700 rounded-full mx-auto mb-3 border-4 border-slate-600 overflow-hidden">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Ahmad" class="w-full h-full object-cover">
+                    </div>
+                    <h3 class="font-bold text-lg">Ahmad Fauzi</h3>
+                    <p class="text-xs text-slate-400">NIM: 220194850</p>
+                    <span class="inline-block bg-white/10 text-[10px] font-medium px-3 py-1 rounded-full mt-3 border border-white/10">Fakultas Ilmu Komputer</span>
+                </div>
+
+                <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 overflow-hidden text-sm">
+                    <!-- Dark Mode Toggle Row -->
+                    <div class="flex justify-between items-center p-4 border-b border-slate-100 dark:border-slate-800">
+                        <div class="flex items-center gap-3 font-medium text-slate-700 dark:text-slate-300">
+                            <i class="fa-regular fa-moon text-lg text-indigo-500"></i> Tema Gelap
+                        </div>
+                        <button onclick="toggleDarkMode()" id="dark-mode-toggle" class="w-11 h-6 bg-slate-200 dark:bg-blue-600 rounded-full relative p-1 transition-colors duration-200">
+                            <div class="w-4 h-4 bg-white rounded-full absolute top-1 left-1 dark:left-6 transition-all duration-200 shadow-sm"></div>
+                        </button>
+                    </div>
+                    <!-- Bahasa Row -->
+                    <div class="flex justify-between items-center p-4 border-b border-slate-100 dark:border-slate-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                        <div class="flex items-center gap-3 font-medium text-slate-700 dark:text-slate-300">
+                            <i class="fa-solid fa-globe text-lg text-emerald-500"></i> Bahasa
+                        </div>
+                        <span class="text-xs text-slate-400 flex items-center gap-1.5">Indonesia (ID) <i class="fa-solid fa-chevron-down text-[10px]"></i></span>
+                    </div>
+                    <!-- Logout Button -->
+                    <button onclick="logoutSesi()" class="w-full p-4 text-center font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors">
+                        Keluar Sesi
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- FLOATING BUTTON DENDA -->
+        <div class="absolute bottom-20 md:bottom-6 left-6 bg-rose-600 text-white py-3 px-4 rounded-xl shadow-lg shadow-rose-600/20 flex items-center gap-4 cursor-pointer hover:bg-rose-700 active:scale-95 transition-all z-30" onclick="alert('Buka Modal Pembayaran Rp 18.000')">
+            <i class="fa-solid fa-triangle-exclamation text-base animate-pulse"></i>
+            <div class="text-left font-sans">
+                <p class="text-[9px] font-bold uppercase tracking-wider opacity-80">Total Denda</p>
+                <p class="text-xs font-bold">Rp 18.000</p>
+            </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- BOTTOM NAVIGATION (NAVIGASI HP / MOBILE)   -->
+        <!-- ========================================== -->
+        <nav class="md:hidden bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-around items-center absolute bottom-0 w-full z-40 h-16 transition-colors duration-200">
+            <button onclick="switchTab('beranda')" class="nav-btn-mobile flex flex-col items-center p-2 text-blue-600 dark:text-blue-400" data-target="beranda">
+                <i class="fa-solid fa-house text-lg mb-1"></i>
+                <span class="text-[9px] font-semibold">Beranda</span>
+            </button>
+            <button onclick="switchTab('buku')" class="nav-btn-mobile flex flex-col items-center p-2 text-slate-400" data-target="buku">
+                <i class="fa-solid fa-magnifying-glass text-lg mb-1"></i>
+                <span class="text-[9px] font-semibold">Buku</span>
+            </button>
+            <button onclick="switchTab('sirkulasi')" class="nav-btn-mobile flex flex-col items-center p-2 text-slate-400" data-target="sirkulasi">
+                <i class="fa-solid fa-arrows-spin text-lg mb-1"></i>
+                <span class="text-[9px] font-semibold">Sirkulasi</span>
+            </button>
+            <button onclick="switchTab('profil')" class="nav-btn-mobile flex flex-col items-center p-2 text-slate-400" data-target="profil">
+                <i class="fa-regular fa-user text-lg mb-1"></i>
+                <span class="text-[9px] font-semibold">Profil</span>
+            </button>
+        </nav>
+    </main>
+    <div id="detail-modal" class="hidden fixed inset-0 z-50 flex justify-center items-center p-4 bg-black/60 backdrop-blur-sm">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl p-6 shadow-2xl border border-slate-100 dark:border-slate-800 relative animate-[fadeIn_0.2s_ease-out]">
+            <button onclick="closeDetailModal()" class="absolute top-4 right-4 w-8 h-8 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-full flex items-center justify-center hover:bg-slate-200">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <div class="flex gap-4 mt-2">
+                <div class="w-24 h-36 bg-slate-200 rounded-xl overflow-hidden flex-shrink-0 shadow">
+                    <img id="modal-cover" src="" class="w-full h-full object-cover">
+                </div>
+                <div class="flex flex-col justify-center">
+                    <span class="text-[10px] font-bold text-blue-500 tracking-wider uppercase">Metadata Referensi</span>
+                    <h4 id="modal-title" class="font-bold text-slate-800 dark:text-white text-base leading-tight mt-0.5 mb-1"></h4>
+                    <p id="modal-author" class="text-xs text-slate-400 mb-3"></p>
+                    
+                    <div id="modal-status-badge"></div>
+                </div>
+            </div>
+
+            <div class="mt-6 border-t border-slate-100 dark:border-slate-800 pt-4">
+                <h5 class="font-bold text-xs text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-3">Rekomendasi Buku Serupa</h5>
+                <div id="modal-rekomendasi-container" class="flex gap-3 overflow-x-auto hide-scrollbar pb-1 snap-x">
+                    </div>
+            </div>
+
+            <div class="mt-6">
+                <button onclick="triggerToast()" class="w-full bg-slate-900 dark:bg-blue-600 text-white text-sm font-semibold py-3 rounded-xl shadow-md hover:bg-slate-800 active:scale-[0.98] transition-all">
+                    Booking & Antar ke Rumah
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="success-toast" class="hidden fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 w-[92%] max-w-[400px] bg-slate-900 dark:bg-slate-800 text-white px-4 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 z-50 animate-[fadeIn_0.3s_cubic-bezier(0.175,0.885,0.32,1.275)] border border-slate-800 dark:border-slate-700">
+        <div class="bg-emerald-500 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 shadow-md">
+            <i class="fa-solid fa-check text-white text-sm"></i>
+        </div>
+        <div class="flex-1">
+            <p class="text-xs font-semibold text-emerald-400">Pemesanan Berhasil!</p>
+            <p class="text-[11px] text-slate-300 leading-snug mt-0.5">Terima kasih telah meminjam! Buku sedang diantarkan oleh kurir ke alamatmu.</p>
+        </div>
+        <button onclick="document.getElementById('success-toast').classList.add('hidden')" class="text-slate-400 hover:text-white text-sm p-1">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+
+    <script>
+        // Data Global State
+        let currentGenre = 'Semua';
+        let allBooksCache = [];
+
+        const tabData = {
+            'beranda': { title: 'Beranda', sub: 'Selamat datang kembali, Mahasiswa!' },
+            'buku': { title: 'Pustaka Digital', sub: 'Cari koleksi buku perpustakaan secara live' },
+            'sirkulasi': { title: 'Sirkulasi', sub: 'Kelola peminjaman, tracking kurir, dan denda' },
+            'profil': { title: 'Profil Pengguna', sub: 'Pengaturan akun dan preferensi tema' }
+        };
+
+        // 1. FUNGSI SWITCH TAB (RESPONSIF NAVIGATION)
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+
+            document.getElementById('header-title').innerText = tabData[tabId].title;
+            document.getElementById('header-subtitle').innerText = tabData[tabId].sub;
+
+            // Navigasi Desktop Style
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if(btn.dataset.target === tabId) {
+                    btn.classList.add('bg-blue-50', 'dark:bg-blue-950/50', 'text-blue-600', 'dark:text-blue-400');
+                    btn.classList.remove('text-slate-500', 'dark:text-slate-400', 'hover:bg-slate-50', 'dark:hover:bg-slate-800');
+                } else {
+                    btn.classList.remove('bg-blue-50', 'dark:bg-blue-950/50', 'text-blue-600', 'dark:text-blue-400');
+                    btn.classList.add('text-slate-500', 'dark:text-slate-400', 'hover:bg-slate-50', 'dark:hover:bg-slate-800');
+                }
+            });
+
+            // Navigasi Mobile Style
+            document.querySelectorAll('.nav-btn-mobile').forEach(btn => {
+                if(btn.dataset.target === tabId) {
+                    btn.classList.add('text-blue-600', 'dark:text-blue-400');
+                    btn.classList.remove('text-slate-400');
+                } else {
+                    btn.classList.remove('text-blue-600', 'dark:text-blue-400');
+                    btn.classList.add('text-slate-400');
+                }
+            });
+            document.getElementById('notif-panel').classList.add('hidden');
+        }
+
+        // 2. INTEGRASI LIVE SEARCH & PEMILAHAN GENRE (HIT OPENLIBRARY API)
+        async function fetchLibraryData() {
+        const container = document.getElementById('live-library-container');
+            container.innerHTML = `
+                <div class="col-span-full py-12 flex flex-col items-center justify-center text-slate-400">
+                    <i class="fa-solid fa-circle-notch fa-spin text-3xl text-blue-500 mb-3"></i>
+                    <p class="text-xs font-medium">Mengambil data perpustakaan...</p>
+                </div>`;
+
+            try {
+                // Query ke tabel Supabase yang ada di gambarmu
+                const { data, error } = await supabaseClient.from('books').select('*').limit(20);
+
+                if (error) throw error;
+                
+                allBooksCache = data || [];
+                renderBooks(allBooksCache);
+
+            } catch (error) {
+                console.error('Supabase Error:', error);
+                container.innerHTML = `
+                    <div class="col-span-full py-8 text-center text-rose-500 text-xs font-semibold bg-rose-50 dark:bg-rose-950/20 rounded-2xl border border-rose-100 dark:border-rose-900/30">
+                        <i class="fa-solid fa-triangle-exclamation text-lg mb-1 block"></i> Gagal memuat data dari database.
+                    </div>`;
+            }
+        }
+
+        function renderBooks(books) {
+            const container = document.getElementById('live-library-container');
+            if(books.length === 0) {
+                container.innerHTML = `<p class="col-span-full text-center text-xs text-slate-400 py-8">Buku tidak ditemukan.</p>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            books.forEach(buku => {
+                // Abaikan link http menjadi https jika memungkinkan (opsional tapi disarankan)
+                let rawCover = buku['Image-URL-L'] || '';
+                if (rawCover.startsWith('http://')) {
+                    rawCover = rawCover.replace('http://', 'https://');
+                }
+
+                const cover = rawCover || 'https://placehold.co/150x220/1e293b/ffffff?text=No+Cover';
+                const author = buku['Book-Author'] || 'Anonim';
+                const title = buku['Book-Title'] || 'Tanpa Judul';
+                const status = buku.status || 'Ready'; 
+                
+                const card = document.createElement('div');
+                card.className = "bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 overflow-hidden hover:shadow-md transition-all cursor-pointer transform active:scale-95 duration-150";
+                
+                card.onclick = () => openDetailModal(title, author, cover, status);
+                
+                // PERHATIKAN penambahan atribut onerror di dalam tag <img>
+                card.innerHTML = `
+                    <div class="aspect-[3/4] w-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                        <img src="${cover}" 
+                            alt="${title}" 
+                            class="w-full h-full object-cover" 
+                            loading="lazy"
+                            onerror="this.onerror=null; this.src='https://placehold.co/150x220/1e293b/ffffff?text=Cover+Rusak';">
+                    </div>
+                    <div class="p-3">
+                        <h4 class="font-bold text-xs text-slate-800 dark:text-white line-clamp-1 leading-tight">${title}</h4>
+                        <p class="text-[10px] text-slate-400 truncate mt-0.5">${author}</p>
+                        <div class="flex items-center justify-between mt-2 pt-1 border-t border-slate-50 dark:border-slate-800/60">
+                            <span class="text-[9px] font-bold ${status === 'Ready' ? 'text-emerald-500 bg-emerald-50 dark:bg-emerald-950/40' : 'text-rose-500 bg-rose-50 dark:bg-rose-950/40'} px-1.5 py-0.5 rounded">${status}</span>
+                            <span class="text-[9px] text-slate-400 font-mono">Gaya Harvard</span>
+                        </div>
+                    </div>`;
+                container.appendChild(card);
+            });
+        }
+
+        // Filter Genre Mengubah State & Fetch API Baru
+        function filterGenre(genre, element) {
+            document.querySelectorAll('.genre-pill').forEach(btn => {
+                btn.className = "genre-pill snap-start whitespace-nowrap px-5 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 text-xs font-medium rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-all";
+            });
+            element.className = "genre-pill snap-start whitespace-nowrap px-5 py-2 bg-blue-600 text-white text-xs font-semibold rounded-full shadow-sm shadow-blue-500/20 transition-all";
+            
+            currentGenre = genre;
+            const apiSubject = genre === 'Semua' ? 'science' : genre.toLowerCase();
+            fetchLibraryData(apiSubject);
+        }
+
+        // Live Search Input Handler
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            if(query === '') {
+                renderBooks(allBooksCache);
+            } else {
+                const filtered = allBooksCache.filter(buku => {
+                    // Gunakan 'Book-Title' sesuai struktur tabel databasemu
+                    const judulBuku = buku['Book-Title'] ? buku['Book-Title'].toLowerCase() : '';
+                    return judulBuku.includes(query);
+                });
+                renderBooks(filtered);
+            }
+        });
+
+        // 3. FUNGSI DETAIL MODAL DENGAN REKOMENDASI SERIAL
+        function openDetailModal(title, author, cover, status) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-author').innerText = author;
+            document.getElementById('modal-cover').src = cover;
+            
+            // Injeksi Status Badge Dinamis
+            const statusContainer = document.getElementById('modal-status-badge');
+            if(status === 'Ready') {
+                statusContainer.className = "inline-flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/40 px-2.5 py-1 rounded-lg w-max text-[11px] font-bold";
+                statusContainer.innerHTML = `<i class="fa-solid fa-circle-check"></i> Tersedia`;
+            } else {
+                statusContainer.className = "inline-flex items-center gap-1.5 bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-900/40 px-2.5 py-1 rounded-lg w-max text-[11px] font-bold";
+                statusContainer.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Tidak Ready / Dipinjam`;
+            }
+
+            // Render ulang dummy rekomendasi agar modal tidak rusak
+            const rekomContainer = document.getElementById('modal-rekomendasi-container');
+            rekomContainer.innerHTML = '';
+            const dummyRekomendasi = [
+                { title: 'Sistem Basis Data', img: 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=100&auto=format&fit=crop&q=60' },
+                { title: 'Arsitektur Komputer', img: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=100&auto=format&fit=crop&q=60' }
+            ];
+
+            dummyRekomendasi.forEach(item => {
+                const miniCard = `
+                    <div class="w-24 flex-shrink-0 snap-start bg-slate-50 dark:bg-slate-800 p-2 rounded-xl border border-slate-100 dark:border-slate-700/60">
+                        <img src="${item.img}" class="w-full h-16 object-cover rounded-md mb-1.5 shadow-sm">
+                        <p class="text-[9px] font-bold text-slate-700 dark:text-slate-200 line-clamp-1 leading-tight">${item.title}</p>
+                        <p class="text-[8px] text-emerald-500 font-bold mt-0.5">Ready</p>
+                    </div>`;
+                rekomContainer.insertAdjacentHTML('beforeend', miniCard);
+            });
+
+            document.getElementById('detail-modal').classList.remove('hidden');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detail-modal').classList.add('hidden');
+        }
+
+        // 4. TOAST NOTIFIKASI ANIMATION TRIGGER
+        function triggerToast() {
+            closeDetailModal();
+            const toast = document.getElementById('success-toast');
+            toast.classList.remove('hidden');
+            setTimeout(() => { toast.classList.add('hidden'); }, 4000); // Hilang otomatis dalam 4 detik
+        }
+
+        // 5. GLOBAL DROPDOWN NOTIFIKASI
+        function toggleNotif() {
+            document.getElementById('notif-panel').classList.toggle('hidden');
+        }
+
+        // 6. FUNGSI TOGGLE DARK MODE (TAILWIND CLASS)
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            html.classList.toggle('dark');
+            const isDark = html.classList.contains('dark');
+            localStorage.setItem('libra-theme', isDark ? 'dark' : 'light');
+        }
+
+        // 7. KELUAR SESI (LOGOUT SIMULATION)
+        function logoutSesi() {
+            if(confirm("Apakah Anda yakin ingin keluar dari sistem sirkulasi LIBRA?")) {
+                alert("Sesi dibersihkan. Kembali ke halaman utama.");
+                window.location.reload();
+            }
+        }
+
+        // Load Pertama Kali
+        document.addEventListener('DOMContentLoaded', () => {
+            // Cek Preference Dark Mode di LocalStorage
+            if (localStorage.getItem('libra-theme') === 'dark') {
+                document.documentElement.classList.add('dark');
+            }
+            // Tarik data Pustaka awal
+            fetchLibraryData();
+        });
+    </script>
+</body>
+</html>
