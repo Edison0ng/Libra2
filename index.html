@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Libra - Full Functional Demo</title>
+    <title>Sistem Libra</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -430,7 +430,7 @@
 
             try {
                 // Query ke tabel Supabase yang ada di gambarmu
-                const { data, error } = await supabaseClient.from('books').select('*').limit(20);
+                const { data, error } = await supabaseClient.from('books').select('*').range(0, 99);
 
                 if (error) throw error;
                 
