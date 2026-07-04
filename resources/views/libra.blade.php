@@ -12,11 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <script>
-        const supabaseUrl = 'https://fntkcqdqbarffqyqtqdo.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZudGtjcWRxYmFyZmZxeXF0cWRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzOTkxOTUsImV4cCI6MjA5NTk3NTE5NX0.vqUpeG5449RYHt3cIkuYf9W5tk3nVHI0zIZarr3Bru8';
-        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
-    </script>
+
 
     <script>
         tailwind.config = {
@@ -197,6 +193,7 @@
                         onclick="openBookDetail('{{ $book->title }}', '{{ $book->author }}', '{{ $book->image_url }}')">
                         
                         <img src="{{ $book->image_url }}" alt="{{ $book->title }}" class="w-full aspect-[4/5] object-cover">
+                     
                         <div class="p-3">
                             <h4 class="font-bold text-xs md:text-sm text-slate-800 dark:text-white line-clamp-1">{{ $book->title }}</h4>
                             <p class="text-[11px] text-slate-400 mt-0.5">{{ $book->author }}</p>
