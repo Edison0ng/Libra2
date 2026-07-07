@@ -36,13 +36,19 @@
             <button onclick="switchTab('dashboard')" id="nav-desktop-dashboard" class="nav-desktop w-full flex items-center gap-3 bg-blue-600 text-white p-3 rounded-xl font-medium shadow-lg shadow-blue-500/20 transition-all">
                 <i class="fa-solid fa-chart-pie w-5"></i> Dashboard
             </button>
-            <button onclick="switchTab('kelola')" id="nav-desktop-kelola" class="nav-desktop w-full flex items-center gap-3 text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white p-3 rounded-xl font-medium transition-all">
+            <button onclick="switchTab('books')" id="nav-desktop-books" class="nav-desktop w-full flex items-center gap-3 text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white p-3 rounded-xl font-medium transition-all">
                 <i class="fa-solid fa-book w-5"></i> Kelola Pustaka
             </button>
-            <button onclick="switchTab('sirkulasi')" id="nav-desktop-sirkulasi" class="nav-desktop w-full flex items-center gap-3 text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white p-3 rounded-xl font-medium transition-all">
+            <button onclick="switchTab('users')" id="nav-desktop-users" class="nav-desktop w-full flex items-center gap-3 text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white p-3 rounded-xl font-medium transition-all">
+                <i class="fa-solid fa-users w-5"></i> Pengguna
+            </button>
+            <button onclick="switchTab('peminjams')" id="nav-desktop-peminjams" class="nav-desktop w-full flex items-center gap-3 text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white p-3 rounded-xl font-medium transition-all">
                 <i class="fa-solid fa-rotate w-5"></i> Sirkulasi
             </button>
-            <button onclick="switchTab('pengaduan')" id="nav-desktop-pengaduan" class="nav-desktop w-full flex items-center gap-3 text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white p-3 rounded-xl font-medium transition-all">
+            <button onclick="switchTab('invoices')" id="nav-desktop-invoices" class="nav-desktop w-full flex items-center gap-3 text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white p-3 rounded-xl font-medium transition-all">
+                <i class="fa-solid fa-file-invoice w-5"></i> Invoices
+            </button>
+            <button onclick="switchTab('complaints')" id="nav-desktop-complaints" class="nav-desktop w-full flex items-center gap-3 text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white p-3 rounded-xl font-medium transition-all">
                 <i class="fa-solid fa-envelope w-5"></i> Pengaduan
             </button>
         </nav>
@@ -55,15 +61,10 @@
 
     <main class="flex-1 flex flex-col h-full relative w-full">
         <header class="bg-white border-b border-slate-200 dark:bg-slate-800 dark:border-slate-700 p-4 flex justify-between items-center z-10 sticky top-0 transition-colors duration-300 shadow-sm dark:shadow-none">
-            <h2 id="header-title" class="text-lg md:text-xl font-semibold text-slate-800 dark:text-white">Ringkasan Sistem</h2>
+            <h2 id="header-title" class="text-lg md:text-xl font-semibold text-slate-800 dark:text-white">Dashboard</h2>
             <div class="flex items-center gap-4">
                 <button onclick="toggleTheme()" class="text-slate-400 hover:text-amber-500 dark:hover:text-amber-400 transition-colors w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center" title="Toggle Tema">
                     <i id="theme-icon" class="fa-solid fa-sun"></i>
-                </button>
-
-                <button class="text-slate-400 hover:text-slate-600 dark:hover:text-white relative transition-colors">
-                    <i class="fa-solid fa-bell text-lg"></i>
-                    <span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-800"></span>
                 </button>
                 <div class="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-700">
                     <div class="hidden md:block text-right">
@@ -80,41 +81,36 @@
         <div class="flex-1 overflow-y-auto p-4 md:p-6 pb-24 md:pb-8 hide-scrollbar">
             
             <div id="tab-dashboard" class="tab-content block animate-slide-up">
-                
                 <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-5 mb-6 text-white shadow-lg shadow-blue-500/30 flex items-center gap-4">
                     <div class="text-3xl"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
                     <div>
-                        <h4 class="font-bold text-lg">Insight Prediktif Hari Ini</h4>
-                        <p class="text-sm text-blue-100 mt-1">Sistem memprediksi buku kategori "Data Science" akan kehabisan stok dalam 3 hari ke depan berdasarkan lonjakan pencarian. Pertimbangkan untuk restock.</p>
+                        <h4 class="font-bold text-lg">Insight Server</h4>
+                        <p class="text-sm text-blue-100 mt-1">Sistem LIBRA telah terhubung secara real-time dengan Database API.</p>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
                     <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
                         <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 flex items-center justify-center text-xl flex-shrink-0"><i class="fa-solid fa-book"></i></div>
-                        <div><p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Total Buku</p><h3 class="text-2xl font-bold text-slate-800 dark:text-white">1,248</h3></div>
+                        <div><p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Total Buku</p><h3 id="stat-books" class="text-2xl font-bold text-slate-800 dark:text-white">-</h3></div>
                     </div>
                     <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
                         <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 flex items-center justify-center text-xl flex-shrink-0"><i class="fa-solid fa-users"></i></div>
-                        <div><p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Pengguna</p><h3 class="text-2xl font-bold text-slate-800 dark:text-white">342</h3></div>
+                        <div><p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Pengguna</p><h3 id="stat-users" class="text-2xl font-bold text-slate-800 dark:text-white">-</h3></div>
                     </div>
                     <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
                         <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 flex items-center justify-center text-xl flex-shrink-0"><i class="fa-solid fa-rotate"></i></div>
-                        <div><p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Dipinjam</p><h3 class="text-2xl font-bold text-slate-800 dark:text-white">86</h3></div>
+                        <div><p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Sirkulasi</p><h3 id="stat-peminjams" class="text-2xl font-bold text-slate-800 dark:text-white">-</h3></div>
                     </div>
                     <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
                         <div class="w-12 h-12 rounded-xl bg-red-50 text-red-600 dark:bg-red-500/20 dark:text-red-400 flex items-center justify-center text-xl flex-shrink-0"><i class="fa-solid fa-wallet"></i></div>
-                        <div><p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Total Denda</p><h3 class="text-2xl font-bold text-slate-800 dark:text-white">Rp 125k</h3></div>
+                        <div><p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Invoices</p><h3 id="stat-invoices" class="text-2xl font-bold text-slate-800 dark:text-white">-</h3></div>
                     </div>
                 </div>
 
                 <div class="bg-white dark:bg-slate-800 p-5 md:p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm mt-2 md:mt-0 mb-8 animate-slide-up" style="animation-delay: 0.1s;">
                     <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-bold text-slate-800 dark:text-white">Tren Peminjaman Pustaka</h3>
-                        <select class="bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-xs rounded-lg p-2">
-                            <option>Tahun 2026</option>
-                            <option>Tahun 2025</option>
-                        </select>
+                        <h3 class="text-lg font-bold text-slate-800 dark:text-white">Tren Aktivitas Sistem</h3>
                     </div>
                     <div class="relative w-full h-64 md:h-80">
                         <canvas id="chartPeminjaman"></canvas>
@@ -122,433 +118,692 @@
                 </div>
             </div>
 
-            <div id="tab-kelola" class="tab-content hidden animate-slide-up">
+            <div id="tab-books" class="tab-content hidden animate-slide-up">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                     <div>
                         <h3 class="text-xl font-bold text-slate-800 dark:text-white">Master Data Buku</h3>
-                        <p class="text-sm text-slate-500 dark:text-slate-400">Inventaris dan stok perpustakaan.</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Inventaris perpustakaan terhubung ke API.</p>
                     </div>
                     <div class="flex gap-2 w-full md:w-auto">
-                        <button onclick="triggerToast('Mengekspor data ke Excel...', 'blue')" class="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-xl font-medium transition shadow-sm" title="Export Excel"><i class="fa-solid fa-file-excel"></i></button>
-                        <button onclick="openModal('modal-form-buku')" class="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-5 rounded-xl font-medium transition flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
-                            <i class="fa-solid fa-plus"></i> Tambah Buku Baru
+                        <button onclick="fetchBooks()" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-white py-2 px-4 rounded-xl font-medium transition shadow-sm"><i class="fa-solid fa-rotate-right"></i></button>
+                        <button onclick="openModalForm('modal-book')" class="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-5 rounded-xl font-medium transition flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
+                            <i class="fa-solid fa-plus"></i> Tambah Buku
                         </button>
                     </div>
                 </div>
-
                 <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-                    <div class="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex flex-col md:flex-row gap-3 justify-between">
-                        <div class="relative w-full md:w-80">
-                            <input type="text" placeholder="Cari judul, penulis, ISBN..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pl-10 p-2.5">
+                    <div class="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex gap-3">
+                        <div class="relative w-full">
+                            <input type="text" id="search-books" placeholder="Cari buku..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pl-10 p-2.5">
                             <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400"></i>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <select class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm rounded-lg p-2.5">
-                                <option>Semua Kategori</option>
-                                <option>Informatika</option>
-                            </select>
-                        </div>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                            <thead class="text-xs uppercase bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-300">
+                            <thead class="text-xs uppercase bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
                                 <tr>
-                                    <th class="px-6 py-4">Judul Buku</th>
-                                    <th class="px-6 py-4">Penulis</th>
-                                    <th class="px-6 py-4 text-center">Stok</th>
-                                    <th class="px-6 py-4 text-center">Aksi</th>
+                                    <th class="px-4 py-3">ID</th>
+                                    <th class="px-4 py-3">Judul Buku</th>
+                                    <th class="px-4 py-3">Penulis</th>
+                                    <th class="px-4 py-3">Penerbit/Tahun</th>
+                                    <th class="px-4 py-3">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30 transition">
-                                    <td class="px-6 py-4 font-medium text-slate-800 dark:text-white">Analisis dan Desain Sistem</td>
-                                    <td class="px-6 py-4">Kendall & Kendall</td>
-                                    <td class="px-6 py-4 text-center text-emerald-600 dark:text-emerald-400 font-bold">12</td>
-                                    <td class="px-6 py-4 text-center">
-                                        <button onclick="generateCitation('Kendall, K.E. and Kendall, J.E.', '2014', 'Systems analysis and design', '9th edn', 'Boston: Pearson')" class="text-amber-500 hover:text-amber-400 mx-1 p-1.5 bg-amber-100 dark:bg-amber-500/10 rounded transition" title="Copy Sitasi Harvard"><i class="fa-solid fa-quote-right"></i></button>
-                                        
-                                        <button onclick="openModal('modal-form-buku')" class="text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 mx-1 p-1.5 bg-blue-100 dark:bg-blue-500/10 rounded transition" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
-                                        <button onclick="triggerToast('Data buku berhasil dihapus!', 'red')" class="text-red-600 hover:text-red-500 dark:text-red-400 dark:hover:text-red-300 mx-1 p-1.5 bg-red-100 dark:bg-red-500/10 rounded transition" title="Hapus"><i class="fa-solid fa-trash"></i></button>
-                                    </td>
-                                </tr>
-                            </tbody>
+                            <tbody id="tbody-books"></tbody>
                         </table>
-                    </div>
-                    <div class="p-4 border-t border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
-                        <span class="text-xs text-slate-500">Menampilkan 1 dari 1248 data</span>
-                        <div class="flex gap-1">
-                            <button class="px-3 py-1 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-700 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-600">&lt;</button>
-                            <button class="px-3 py-1 border border-blue-500 rounded bg-blue-600 text-white font-bold">1</button>
-                            <button class="px-3 py-1 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-700 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-600">2</button>
-                            <button class="px-3 py-1 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-700 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-600">&gt;</button>
-                        </div>
                     </div>
                 </div>
             </div>
 
-            <div id="tab-sirkulasi" class="tab-content hidden animate-slide-up">
-                <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div id="tab-users" class="tab-content hidden animate-slide-up">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-800 dark:text-white">Manajemen Pengguna</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Daftar pengguna & mahasiswa.</p>
+                    </div>
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <button onclick="fetchUsers()" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-white py-2 px-4 rounded-xl font-medium transition shadow-sm"><i class="fa-solid fa-rotate-right"></i></button>
+                        <button onclick="openModalForm('modal-user')" class="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-5 rounded-xl font-medium transition flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
+                            <i class="fa-solid fa-plus"></i> Tambah Pengguna
+                        </button>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex gap-3">
+                        <div class="relative w-full">
+                            <input type="text" id="search-users" placeholder="Cari pengguna..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pl-10 p-2.5">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400"></i>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                            <thead class="text-xs uppercase bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
+                                <tr>
+                                    <th class="px-4 py-3">ID</th>
+                                    <th class="px-4 py-3">Nama Lengkap</th>
+                                    <th class="px-4 py-3">Email</th>
+                                    <th class="px-4 py-3">Role</th>
+                                    <th class="px-4 py-3">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-users"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-peminjams" class="tab-content hidden animate-slide-up">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                     <div>
                         <h3 class="text-xl font-bold text-slate-800 dark:text-white">Sirkulasi & Logistik</h3>
-                        <p class="text-sm text-slate-500 dark:text-slate-400">Peminjaman, status pengantaran, dan verifikasi invoice.</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Kelola peminjaman dan pengembalian.</p>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <span class="text-sm text-slate-500">Periode:</span>
-                        <input type="date" class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm rounded-lg p-2 focus:ring-blue-500">
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <button onclick="fetchPeminjams()" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-white py-2 px-4 rounded-xl font-medium transition shadow-sm"><i class="fa-solid fa-rotate-right"></i></button>
+                        <button onclick="openModalForm('modal-peminjam')" class="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-5 rounded-xl font-medium transition flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
+                            <i class="fa-solid fa-plus"></i> Pinjam Baru
+                        </button>
                     </div>
                 </div>
-
                 <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex gap-3">
+                        <div class="relative w-full">
+                            <input type="text" id="search-peminjams" placeholder="Cari sirkulasi..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pl-10 p-2.5">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400"></i>
+                        </div>
+                    </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                            <thead class="text-xs uppercase bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-300">
+                            <thead class="text-xs uppercase bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
                                 <tr>
-                                    <th class="px-6 py-4">ID Transaksi</th>
-                                    <th class="px-6 py-4">Mahasiswa</th>
-                                    <th class="px-6 py-4">Status Utama</th>
-                                    <th class="px-6 py-4 text-center">Aksi</th>
+                                    <th class="px-4 py-3">ID</th>
+                                    <th class="px-4 py-3">User ID</th>
+                                    <th class="px-4 py-3">Book ID</th>
+                                    <th class="px-4 py-3">Tgl Pinjam - Kembali</th>
+                                    <th class="px-4 py-3">Status</th>
+                                    <th class="px-4 py-3">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-                                
-                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
-                                    <td class="px-6 py-4 text-blue-600 dark:text-blue-400 font-medium">TRX-001</td>
-                                    <td class="px-6 py-4 text-slate-800 dark:text-white font-medium">Budi Santoso</td>
-                                    <td class="px-6 py-4">
-                                        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30">
-                                            <i class="fa-solid fa-clock mr-1"></i> Menunggu Buku Kembali
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 flex items-center justify-center gap-2">
-                                        <button onclick="openModal('modal-detail')" class="bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1">
-                                            <i class="fa-solid fa-circle-info"></i> Detail Info
-                                        </button>
-                                    </td>
-                                </tr>
-
-                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
-                                    <td class="px-6 py-4 text-blue-600 dark:text-blue-400 font-medium">TRX-002</td>
-                                    <td class="px-6 py-4 text-slate-800 dark:text-white font-medium">Siti Aminah</td>
-                                    <td class="px-6 py-4">
-                                        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400 border border-red-200 dark:border-red-500/30">
-                                            <i class="fa-solid fa-triangle-exclamation mr-1"></i> Terlambat & Belum Bayar
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 flex items-center justify-center gap-2">
-                                        <button onclick="openModal('modal-detail')" class="bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1">
-                                            <i class="fa-solid fa-circle-info"></i> Detail
-                                        </button>
-                                        <button onclick="openModal('modal-invoice')" class="bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white dark:bg-blue-500/20 dark:text-blue-400 dark:hover:bg-blue-500 dark:hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm">
-                                            <i class="fa-solid fa-receipt"></i> Cek Invoice
-                                        </button>
-                                    </td>
-                                </tr>
-
-                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/30">
-                                    <td class="px-6 py-4 text-blue-600 dark:text-blue-400 font-medium">TRX-003</td>
-                                    <td class="px-6 py-4 text-slate-800 dark:text-white font-medium">Joko Widodo</td>
-                                    <td class="px-6 py-4">
-                                        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30">
-                                            <i class="fa-solid fa-check mr-1"></i> Selesai / Lunas
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 flex items-center justify-center gap-2">
-                                        <button onclick="openModal('modal-detail')" class="bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1">
-                                            <i class="fa-solid fa-circle-info"></i> Histori Lengkap
-                                        </button>
-                                        <button onclick="openModal('modal-invoice')" class="bg-blue-100 text-blue-700 hover:bg-blue-600 hover:text-white dark:bg-blue-500/20 dark:text-blue-400 dark:hover:bg-blue-500 dark:hover:text-white px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-sm" title="Lihat Kwitansi/Invoice Lunas">
-                                            <i class="fa-solid fa-receipt"></i> Cek Invoice
-                                        </button>
-                                    </td>
-                                </tr>
-
-                            </tbody>
+                            <tbody id="tbody-peminjams"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <div id="tab-pengaduan" class="tab-content hidden animate-slide-up">
-                <div class="mb-6">
-                    <h3 class="text-xl font-bold text-slate-800 dark:text-white">Kotak Masuk Mahasiswa</h3>
-                    <p class="text-sm text-slate-500 dark:text-slate-400">Umpan balik, pertanyaan, dan laporan masalah.</p>
+            <div id="tab-invoices" class="tab-content hidden animate-slide-up">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-800 dark:text-white">Data Invoices</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Catatan denda dan tagihan.</p>
+                    </div>
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <button onclick="fetchInvoices()" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-white py-2 px-4 rounded-xl font-medium transition shadow-sm"><i class="fa-solid fa-rotate-right"></i></button>
+                        <button onclick="openModalForm('modal-invoice')" class="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-5 rounded-xl font-medium transition flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
+                            <i class="fa-solid fa-plus"></i> Tambah Invoice
+                        </button>
+                    </div>
                 </div>
-                
-                <div class="bg-white dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl h-64 flex flex-col items-center justify-center text-slate-500">
-                    <i class="fa-solid fa-envelope-open-text text-5xl mb-4 text-slate-300 dark:text-slate-600"></i>
-                    <p class="font-medium text-slate-600 dark:text-slate-400">Belum ada tiket pengaduan hari ini.</p>
-                    <p class="text-sm mt-1">Mahasiswa sedang asyik membaca buku! 🎉</p>
+                <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex gap-3">
+                        <div class="relative w-full">
+                            <input type="text" id="search-invoices" placeholder="Cari invoice..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pl-10 p-2.5">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400"></i>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                            <thead class="text-xs uppercase bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
+                                <tr>
+                                    <th class="px-4 py-3">ID</th>
+                                    <th class="px-4 py-3">Peminjam ID</th>
+                                    <th class="px-4 py-3">Total Tagihan</th>
+                                    <th class="px-4 py-3">Status</th>
+                                    <th class="px-4 py-3">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-invoices"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-complaints" class="tab-content hidden animate-slide-up">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-800 dark:text-white">Kotak Masuk Mahasiswa</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Umpan balik, pertanyaan, dan laporan masalah.</p>
+                    </div>
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <button onclick="fetchComplaints()" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-white py-2 px-4 rounded-xl font-medium transition shadow-sm"><i class="fa-solid fa-rotate-right"></i></button>
+                        <button onclick="openModalForm('modal-complaint')" class="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-5 rounded-xl font-medium transition flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
+                            <i class="fa-solid fa-plus"></i> Tiket Manual
+                        </button>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex gap-3">
+                        <div class="relative w-full">
+                            <input type="text" id="search-complaints" placeholder="Cari pengaduan..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pl-10 p-2.5">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400"></i>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                            <thead class="text-xs uppercase bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
+                                <tr>
+                                    <th class="px-4 py-3">ID</th>
+                                    <th class="px-4 py-3">User ID</th>
+                                    <th class="px-4 py-3">Pesan / Laporan</th>
+                                    <th class="px-4 py-3">Status</th>
+                                    <th class="px-4 py-3">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-complaints"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
         </div>
     </main>
 
-    <nav class="md:hidden fixed bottom-0 w-full bg-white border-t border-slate-200 dark:bg-slate-800 dark:border-slate-700 flex justify-around p-2 z-50 pb-safe shadow-[0_-4px_10px_rgba(0,0,0,0.05)] dark:shadow-[0_-4px_10px_rgba(0,0,0,0.3)]">
-        <button onclick="switchTab('dashboard')" id="nav-mobile-dashboard" class="nav-mobile flex flex-col items-center w-full py-2 text-blue-600 dark:text-blue-500">
-            <i class="fa-solid fa-chart-pie text-lg mb-1"></i><span class="text-[10px] font-medium">Dashboard</span>
-        </button>
-        <button onclick="switchTab('kelola')" id="nav-mobile-kelola" class="nav-mobile flex flex-col items-center w-full py-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-            <i class="fa-solid fa-book text-lg mb-1"></i><span class="text-[10px] font-medium">Pustaka</span>
-        </button>
-        <button onclick="switchTab('sirkulasi')" id="nav-mobile-sirkulasi" class="nav-mobile flex flex-col items-center w-full py-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-            <i class="fa-solid fa-rotate text-lg mb-1"></i><span class="text-[10px] font-medium">Sirkulasi</span>
-        </button>
-        <button onclick="switchTab('pengaduan')" id="nav-mobile-pengaduan" class="nav-mobile flex flex-col items-center w-full py-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
-            <i class="fa-solid fa-envelope text-lg mb-1"></i><span class="text-[10px] font-medium">Pengaduan</span>
-        </button>
+    <nav class="md:hidden fixed bottom-0 w-full bg-white border-t border-slate-200 dark:bg-slate-800 dark:border-slate-700 z-50 flex justify-around p-2 text-xs">
+        <button onclick="switchTab('dashboard')" class="flex flex-col items-center gap-1 p-2 text-blue-600"><i class="fa-solid fa-chart-pie text-lg"></i></button>
+        <button onclick="switchTab('books')" class="flex flex-col items-center gap-1 p-2 text-slate-500 hover:text-slate-800 dark:text-slate-400"><i class="fa-solid fa-book text-lg"></i></button>
+        <button onclick="switchTab('users')" class="flex flex-col items-center gap-1 p-2 text-slate-500 hover:text-slate-800 dark:text-slate-400"><i class="fa-solid fa-users text-lg"></i></button>
+        <button onclick="switchTab('peminjams')" class="flex flex-col items-center gap-1 p-2 text-slate-500 hover:text-slate-800 dark:text-slate-400"><i class="fa-solid fa-rotate text-lg"></i></button>
+        <button onclick="switchTab('invoices')" class="flex flex-col items-center gap-1 p-2 text-slate-500 hover:text-slate-800 dark:text-slate-400"><i class="fa-solid fa-file-invoice text-lg"></i></button>
     </nav>
 
-    <div id="modal-form-buku" class="fixed inset-0 z-[60] hidden bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-lg overflow-hidden flex flex-col animate-slide-up">
-            <div class="p-5 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/80">
-                <h3 class="text-lg font-bold text-slate-800 dark:text-white">Formulir Data Buku</h3>
-                <button onclick="closeModal('modal-form-buku')" class="text-slate-400 hover:text-slate-600 dark:hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <div id="toast" class="fixed bottom-20 md:bottom-10 right-4 md:right-10 z-[100] hidden transition-all">
+        <div id="toast-bg" class="bg-blue-600 text-white px-6 py-3 rounded-full shadow-xl font-medium flex items-center gap-3 border border-blue-500">
+            <i id="toast-icon" class="fa-solid fa-info-circle"></i>
+            <span id="toast-msg">Notifikasi</span>
+        </div>
+    </div>
+
+    <div id="modal-book" class="fixed inset-0 z-[60] hidden bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-md overflow-hidden flex flex-col animate-slide-up">
+            <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/80">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white">Form Buku</h3>
+                <button onclick="closeModal('modal-book')" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            <div class="p-5 overflow-y-auto space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Judul Buku <span class="text-red-500">*</span></label>
-                    <input type="text" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-white rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5" placeholder="Wajib diisi">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Penulis <span class="text-red-500">*</span></label>
-                    <input type="text" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-white rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Kategori</label>
-                        <select class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-white rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5">
-                            <option>Informatika</option>
-                            <option>Data Science</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">Stok Tersedia</label>
-                        <input type="number" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-white rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5" placeholder="0">
-                    </div>
-                </div>
-            </div>
-            <div class="p-5 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-3 bg-slate-50 dark:bg-slate-800">
-                <button onclick="closeModal('modal-form-buku')" class="py-2 px-4 rounded-xl font-medium text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition">Batal</button>
-                <button onclick="closeModal('modal-form-buku'); triggerToast('Data disimpan!', 'emerald')" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-xl font-medium transition shadow-md">Simpan Data</button>
+            <form id="form-book" class="p-4 space-y-4">
+                <input type="hidden" id="book-id">
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Judul Buku</label><input type="text" id="book-title" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Penulis</label><input type="text" id="book-author" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Penerbit</label><input type="text" id="book-publisher" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tahun</label><input type="number" id="book-year" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+            </form>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-3 bg-slate-50 dark:bg-slate-800">
+                <button type="button" onclick="closeModal('modal-book')" class="py-2 px-4 rounded-xl font-medium text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700">Batal</button>
+                <button type="submit" form="form-book" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-xl font-medium">Simpan Data</button>
             </div>
         </div>
     </div>
 
-    <div id="modal-detail" class="fixed inset-0 z-[60] hidden bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-lg overflow-hidden flex flex-col animate-slide-up">
-            <div class="p-5 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/80">
-                <h3 class="text-lg font-bold text-slate-800 dark:text-white">Detail Sirkulasi (TRX-001)</h3>
-                <button onclick="closeModal('modal-detail')" class="text-slate-400 hover:text-slate-600 dark:hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <div id="modal-user" class="fixed inset-0 z-[60] hidden bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-md overflow-hidden flex flex-col animate-slide-up">
+            <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/80">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white">Form Pengguna</h3>
+                <button onclick="closeModal('modal-user')" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            <div class="p-5 overflow-y-auto max-h-[70vh]">
-                <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-4 mb-6 border border-blue-100 dark:border-blue-800">
-                    <p class="text-xs text-blue-500 dark:text-blue-400 font-bold uppercase mb-2">Informasi Buku & Pengguna</p>
-                    <div class="grid grid-cols-2 gap-y-2 text-sm">
-                        <div class="text-slate-500">Judul Buku:</div>
-                        <div class="font-bold text-slate-800 dark:text-white">Data Flow Diagram Praktis</div>
-                        <div class="text-slate-500">Peminjam:</div>
-                        <div class="font-medium text-slate-800 dark:text-white">Budi Santoso</div>
-                        <div class="text-slate-500">Tenggat Waktu:</div>
-                        <div class="font-medium text-slate-800 dark:text-white">25 Juni 2026</div>
-                    </div>
-                </div>
-                <h4 class="font-bold text-slate-800 dark:text-white mb-3 text-sm">Histori Status & Pengiriman</h4>
-                <div class="mb-4 text-xs font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
-                    <i class="fa-solid fa-motorcycle text-amber-500"></i> Opsi: <span class="bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded">Pengantaran ke Rumah</span>
-                </div>
-                <div class="ml-2 mt-2">
-                    <div class="timeline-item">
-                        <p class="text-xs text-slate-400">20 Jun 2026, 10:00</p>
-                        <p class="text-sm font-medium text-slate-800 dark:text-slate-200">Buku dipesan via Aplikasi</p>
-                    </div>
-                    <div class="timeline-item">
-                        <p class="text-xs text-slate-400">20 Jun 2026, 14:30</p>
-                        <p class="text-sm font-medium text-slate-800 dark:text-slate-200">Buku diantar kurir ke rumah User</p>
-                    </div>
-                    <div class="timeline-item">
-                        <p class="text-xs text-slate-400">Status Saat Ini</p>
-                        <p class="text-sm font-bold text-amber-600 dark:text-amber-400">Menunggu User Mengembalikan Buku</p>
-                    </div>
-                </div>
+            <form id="form-user" class="p-4 space-y-4">
+                <input type="hidden" id="user-id">
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nama</label><input type="text" id="user-name" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label><input type="email" id="user-email" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Password</label><input type="text" id="user-password" placeholder="Isi jika ingin diubah" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Role</label><select id="user-role" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"><option value="user">User</option><option value="admin">Admin</option></select></div>
+            </form>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-3 bg-slate-50 dark:bg-slate-800">
+                <button type="button" onclick="closeModal('modal-user')" class="py-2 px-4 rounded-xl font-medium text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700">Batal</button>
+                <button type="submit" form="form-user" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-xl font-medium">Simpan Data</button>
             </div>
-            <div class="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-right">
-                <button onclick="closeModal('modal-detail')" class="py-2 px-4 rounded-xl font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">Tutup Detail</button>
+        </div>
+    </div>
+
+    <div id="modal-peminjam" class="fixed inset-0 z-[60] hidden bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-md overflow-hidden flex flex-col animate-slide-up">
+            <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/80">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white">Form Sirkulasi</h3>
+                <button onclick="closeModal('modal-peminjam')" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="form-peminjam" class="p-4 space-y-4">
+                <input type="hidden" id="peminjam-id">
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">User ID</label><input type="text" id="peminjam-user" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Book ID</label><input type="text" id="peminjam-book" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tgl Pinjam</label><input type="date" id="peminjam-borrow" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                    <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tgl Kembali</label><input type="date" id="peminjam-return" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                </div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status</label><select id="peminjam-status" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"><option value="dipinjam">Dipinjam</option><option value="dikembalikan">Dikembalikan</option></select></div>
+            </form>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-3 bg-slate-50 dark:bg-slate-800">
+                <button type="button" onclick="closeModal('modal-peminjam')" class="py-2 px-4 rounded-xl font-medium text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700">Batal</button>
+                <button type="submit" form="form-peminjam" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-xl font-medium">Simpan Data</button>
             </div>
         </div>
     </div>
 
     <div id="modal-invoice" class="fixed inset-0 z-[60] hidden bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4">
         <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-md overflow-hidden flex flex-col animate-slide-up">
-            <div class="p-5 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/80">
-                <h3 class="text-lg font-bold text-slate-800 dark:text-white">Verifikasi Invoice</h3>
-                <button onclick="closeModal('modal-invoice')" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
-                    <i class="fa-solid fa-xmark text-xl"></i>
-                </button>
+            <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/80">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white">Form Invoice</h3>
+                <button onclick="closeModal('modal-invoice')" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            <div class="p-6">
-                <div class="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-lg p-3 text-xs text-amber-700 dark:text-amber-400 mb-4 flex items-start gap-2">
-                    <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
-                    <p>Sistem ini tidak meminta user mengunggah struk. Silakan cek mutasi masuk <b>BCA 12345678</b> secara mandiri sebelum menekan tombol ACC.</p>
-                </div>
-                <div class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 border-dashed rounded-lg p-5 font-mono relative shadow-inner">
-                    <div class="text-center mb-4 border-b border-slate-200 dark:border-slate-700 pb-4">
-                        <h4 class="font-bold text-slate-800 dark:text-white text-lg tracking-widest">PERPUS LIBRA</h4>
-                        <p class="text-xs text-slate-500">Automated E-Invoice</p>
-                    </div>
-                    <div class="space-y-2 text-sm text-slate-600 dark:text-slate-400">
-                        <div class="flex justify-between"><span>No Tagihan:</span><span class="font-bold text-slate-800 dark:text-white">INV-2026-TRX002</span></div>
-                        <div class="flex justify-between"><span>Tanggal:</span><span>23 Juni 2026</span></div>
-                        <div class="flex justify-between"><span>User:</span><span>Siti Aminah</span></div>
-                    </div>
-                    <div class="border-t border-slate-200 dark:border-slate-700 my-4 border-dashed"></div>
-                    <div class="space-y-2 text-sm text-slate-600 dark:text-slate-400 mb-4">
-                        <div class="flex justify-between"><span>Denda Keterlambatan</span><span>Rp 15.000</span></div>
-                        <div class="flex justify-between"><span>Biaya Pengantaran</span><span>Rp 10.000</span></div>
-                    </div>
-                    <div class="bg-slate-100 dark:bg-slate-800 p-2 rounded flex justify-between items-center">
-                        <span class="text-sm font-bold text-slate-700 dark:text-slate-300">TOTAL BAYAR</span>
-                        <span class="text-lg font-bold text-blue-600 dark:text-blue-400">Rp 25.000</span>
-                    </div>
-                </div>
-            </div>
-            <div class="p-5 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-3 bg-slate-50 dark:bg-slate-800">
-                <button onclick="closeModal('modal-invoice')" class="py-2 px-4 rounded-xl font-medium text-slate-500 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">Tutup</button>
-                <button onclick="closeModal('modal-invoice'); triggerToast('Mutasi Dikonfirmasi! Status berubah menjadi LUNAS.', 'emerald')" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-xl font-medium transition shadow-md flex items-center gap-2">
-                    <i class="fa-solid fa-check"></i> ACC & Lunas
-                </button>
+            <form id="form-invoice" class="p-4 space-y-4">
+                <input type="hidden" id="invoice-id">
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Peminjam ID</label><input type="text" id="invoice-peminjam" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nominal / Denda (Rp)</label><input type="number" id="invoice-amount" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status</label><select id="invoice-status" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"><option value="unpaid">Unpaid</option><option value="paid">Paid</option></select></div>
+            </form>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-3 bg-slate-50 dark:bg-slate-800">
+                <button type="button" onclick="closeModal('modal-invoice')" class="py-2 px-4 rounded-xl font-medium text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700">Batal</button>
+                <button type="submit" form="form-invoice" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-xl font-medium">Simpan Data</button>
             </div>
         </div>
     </div>
 
-    <div id="toast-notif" class="fixed bottom-20 md:bottom-10 left-1/2 transform -translate-x-1/2 z-[70] hidden transition-all duration-300">
-        <div id="toast-bg" class="bg-emerald-600 text-white px-6 py-3 rounded-full shadow-xl font-medium flex items-center gap-3 border border-emerald-500">
-            <i id="toast-icon" class="fa-solid fa-circle-check"></i>
-            <span id="toast-msg">Tindakan berhasil!</span>
+    <div id="modal-complaint" class="fixed inset-0 z-[60] hidden bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-md overflow-hidden flex flex-col animate-slide-up">
+            <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/80">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white">Form Pengaduan</h3>
+                <button onclick="closeModal('modal-complaint')" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="form-complaint" class="p-4 space-y-4">
+                <input type="hidden" id="complaint-id">
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">User ID</label><input type="text" id="complaint-user" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Pesan Laporan</label><textarea id="complaint-message" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200 h-24"></textarea></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status</label><select id="complaint-status" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"><option value="pending">Pending</option><option value="resolved">Resolved</option></select></div>
+            </form>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-3 bg-slate-50 dark:bg-slate-800">
+                <button type="button" onclick="closeModal('modal-complaint')" class="py-2 px-4 rounded-xl font-medium text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700">Batal</button>
+                <button type="submit" form="form-complaint" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-xl font-medium">Simpan Data</button>
+            </div>
         </div>
     </div>
 
     <script>
-        // TOGGLE DARK / LIGHT MODE
+        const API = "https://libra-production-306d.up.railway.app/api";
+
+        // State Arrays
+        let dataState = {
+            books: [], users: [], peminjams: [], invoices: [], complaints: []
+        };
+
+        // --- Core UI Functions ---
         function toggleTheme() {
-            const htmlElement = document.documentElement;
-            const themeIcon = document.getElementById('theme-icon');
-            
-            if (htmlElement.classList.contains('dark')) {
-                htmlElement.classList.remove('dark');
-                themeIcon.classList.remove('fa-sun');
-                themeIcon.classList.add('fa-moon');
-            } else {
-                htmlElement.classList.add('dark');
-                themeIcon.classList.remove('fa-moon');
-                themeIcon.classList.add('fa-sun');
-            }
+            document.documentElement.classList.toggle('dark');
+            const icon = document.getElementById('theme-icon');
+            icon.className = document.documentElement.classList.contains('dark') ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
         }
 
-        // FUNGSI GANTI TAB
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.add('hidden');
-                tab.classList.remove('block');
-            });
-            document.getElementById('tab-' + tabId).classList.remove('hidden');
-            document.getElementById('tab-' + tabId).classList.add('block');
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            const activeTab = document.getElementById(`tab-${tab}`);
+            if(activeTab) activeTab.classList.remove('hidden');
 
-            // Reset Desktop Nav
-            document.querySelectorAll('.nav-desktop').forEach(btn => {
-                btn.className = "nav-desktop w-full flex items-center gap-3 text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white p-3 rounded-xl font-medium transition-all";
+            document.querySelectorAll('.nav-desktop').forEach(el => {
+                el.className = "nav-desktop w-full flex items-center gap-3 text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white p-3 rounded-xl font-medium transition-all";
             });
-            document.getElementById('nav-desktop-' + tabId).className = "nav-desktop w-full flex items-center gap-3 bg-blue-600 text-white p-3 rounded-xl font-medium shadow-lg shadow-blue-500/20 transition-all";
+            const activeNav = document.getElementById(`nav-desktop-${tab}`);
+            if(activeNav) activeNav.className = "nav-desktop w-full flex items-center gap-3 bg-blue-600 text-white p-3 rounded-xl font-medium shadow-lg shadow-blue-500/20 transition-all";
 
-            // Reset Mobile Nav
-            document.querySelectorAll('.nav-mobile').forEach(btn => {
-                btn.className = "nav-mobile flex flex-col items-center w-full py-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors";
-            });
-            document.getElementById('nav-mobile-' + tabId).className = "nav-mobile flex flex-col items-center w-full py-2 text-blue-600 dark:text-blue-500 transition-colors";
-
-            const titles = { 'dashboard': 'Ringkasan Sistem', 'kelola': 'Kelola Master Pustaka', 'sirkulasi': 'Verifikasi & Sirkulasi', 'pengaduan': 'Kotak Masuk Pengaduan' };
-            document.getElementById('header-title').innerText = titles[tabId];
+            const titles = { 'dashboard': 'Dashboard Sistem', 'books': 'Kelola Pustaka', 'users': 'Manajemen Pengguna', 'peminjams': 'Sirkulasi & Logistik', 'invoices': 'Invoices', 'complaints': 'Kotak Pengaduan' };
+            document.getElementById('header-title').innerText = titles[tab] || 'Dashboard';
         }
 
-        // FUNGSI MODAL & TOAST (Telah Mendukung Semua Modal Baru)
-        function openModal(modalId) { document.getElementById(modalId).classList.remove('hidden'); }
-        function closeModal(modalId) { document.getElementById(modalId).classList.add('hidden'); }
-
-        function triggerToast(message, color = 'emerald') {
-            const toast = document.getElementById('toast-notif');
+        function triggerToast(message, color = 'blue') {
+            const toast = document.getElementById('toast');
             const toastBg = document.getElementById('toast-bg');
-            const toastMsg = document.getElementById('toast-msg');
             const toastIcon = document.getElementById('toast-icon');
-
-            toastMsg.innerText = message;
+            
+            document.getElementById('toast-msg').innerText = message;
             if(color === 'red') {
                 toastBg.className = "bg-red-600 text-white px-6 py-3 rounded-full shadow-xl font-medium flex items-center gap-3 border border-red-500";
-                toastIcon.className = "fa-solid fa-circle-exclamation";
-            } else if (color === 'blue') {
-                toastBg.className = "bg-blue-600 text-white px-6 py-3 rounded-full shadow-xl font-medium flex items-center gap-3 border border-blue-500";
-                toastIcon.className = "fa-solid fa-circle-info";
-            } else {
+                toastIcon.className = "fa-solid fa-triangle-exclamation";
+            } else if(color === 'emerald') {
                 toastBg.className = "bg-emerald-600 text-white px-6 py-3 rounded-full shadow-xl font-medium flex items-center gap-3 border border-emerald-500";
-                toastIcon.className = "fa-solid fa-circle-check";
+                toastIcon.className = "fa-solid fa-check";
+            } else {
+                toastBg.className = "bg-blue-600 text-white px-6 py-3 rounded-full shadow-xl font-medium flex items-center gap-3 border border-blue-500";
+                toastIcon.className = "fa-solid fa-info-circle";
             }
-
-            toast.classList.remove('hidden');
-            toast.classList.add('animate-slide-up');
-            setTimeout(() => { toast.classList.add('hidden'); toast.classList.remove('animate-slide-up'); }, 3000);
-        }
-
-        // FUNGSI GENERATE SITASI (HARVARD STYLE)
-        function generateCitation(authors, year, title, edition, publisherLoc) {
-            const citationText = `${authors} (${year}) <i>${title}</i>. ${edition}. ${publisherLoc}.`;
-            navigator.clipboard.writeText(citationText.replace(/<[^>]*>?/gm, ''))
-                .then(() => {
-                    triggerToast('Sitasi format Harvard berhasil disalin ke clipboard!', 'blue');
-                })
-                .catch(err => {
-                    prompt("Copy sitasi Harvard ini:", citationText.replace(/<[^>]*>?/gm, ''));
-                });
-        }
-
-        // INISIALISASI CHART.JS (Grafik Tren Peminjaman)
-        document.addEventListener('DOMContentLoaded', function() {
-            const ctx = document.getElementById('chartPeminjaman').getContext('2d');
-            const chartColor = '#2563eb'; 
             
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+
+        function openModalForm(modalId, id = null) {
+            document.getElementById(modalId).classList.remove('hidden');
+            const type = modalId.replace('modal-', '');
+            const form = document.getElementById(`form-${type}`);
+            form.reset();
+            document.getElementById(`${type}-id`).value = id || '';
+
+            if (id) {
+                // Populate forms automatically if editing
+                const item = dataState[`${type}s`].find(x => x.id == id);
+                if (item) {
+                    if(type === 'book') {
+                        document.getElementById('book-title').value = item?.title || item?.judul || '';
+                        document.getElementById('book-author').value = item?.author || item?.penulis || '';
+                        document.getElementById('book-publisher').value = item?.publisher || item?.penerbit || '';
+                        document.getElementById('book-year').value = item?.year || item?.tahun || '';
+                    } else if(type === 'user') {
+                        document.getElementById('user-name').value = item?.name || item?.nama || '';
+                        document.getElementById('user-email').value = item?.email || '';
+                        document.getElementById('user-role').value = item?.role || item?.peran || 'user';
+                    } else if(type === 'peminjam') {
+                        document.getElementById('peminjam-user').value = item?.user_id || item?.id_user || '';
+                        document.getElementById('peminjam-book').value = item?.book_id || item?.id_buku || '';
+                        document.getElementById('peminjam-borrow').value = item?.borrow_date || item?.tanggal_pinjam || '';
+                        document.getElementById('peminjam-return').value = item?.return_date || item?.tanggal_kembali || '';
+                        document.getElementById('peminjam-status').value = item?.status || 'dipinjam';
+                    } else if(type === 'invoice') {
+                        document.getElementById('invoice-peminjam').value = item?.peminjam_id || item?.id_peminjam || '';
+                        document.getElementById('invoice-amount').value = item?.amount || item?.total || item?.denda || '';
+                        document.getElementById('invoice-status').value = item?.status || 'unpaid';
+                    } else if(type === 'complaint') {
+                        document.getElementById('complaint-user').value = item?.user_id || item?.id_user || '';
+                        document.getElementById('complaint-message').value = item?.message || item?.pesan || '';
+                        document.getElementById('complaint-status').value = item?.status || 'pending';
+                    }
+                }
+            }
+        }
+        function closeModal(modalId) { document.getElementById(modalId).classList.add('hidden'); }
+
+        // --- Core API Functions ---
+        async function fetchAPI(endpoint) {
+            try {
+                const res = await fetch(`${API}/${endpoint}`, {
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                
+                const result = await res.json();
+                
+                // Handling spesifik untuk respons backend Laravel standar maupun paginated
+                let data = [];
+                if (Array.isArray(result)) {
+                    data = result;
+                } else if (result && result.data) {
+                    if (Array.isArray(result.data)) {
+                        data = result.data;
+                    } else if (result.data.data && Array.isArray(result.data.data)) {
+                        data = result.data.data;
+                    }
+                }
+                
+                return data;
+            } catch (err) {
+                console.error("Gagal mengambil data dari endpoint:", endpoint, err);
+                triggerToast(`Gagal memuat ${endpoint}`, 'red');
+                return [];
+            }
+        }
+
+        async function saveAPI(endpoint, payload, id = null) {
+            const url = id ? `${API}/${endpoint}/${id}` : `${API}/${endpoint}`;
+            const method = id ? 'PUT' : 'POST';
+            try {
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 
+                        'Content-Type': 'application/json', 
+                        'Accept': 'application/json' 
+                    },
+                    body: JSON.stringify(payload)
+                });
+                if(!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    console.error("Error validasi/backend:", err);
+                    throw new Error(err.message || 'Request Failed');
+                }
+                return true;
+            } catch(e) {
+                console.error("Error pada saat menyimpan data:", e);
+                return false;
+            }
+        }
+
+        async function deleteAPI(endpoint, id, refreshCallback) {
+            if(!confirm('Yakin ingin menghapus data ini?')) return;
+            try {
+                const res = await fetch(`${API}/${endpoint}/${id}`, { 
+                    method: 'DELETE',
+                    headers: { 'Accept': 'application/json' }
+                });
+                if(res.ok) { triggerToast('Data berhasil dihapus', 'emerald'); refreshCallback(); }
+                else throw new Error('Delete request failed');
+            } catch(e) { 
+                console.error(e);
+                triggerToast('Gagal menghapus data', 'red'); 
+            }
+        }
+
+        // --- Books ---
+        async function fetchBooks() {
+            const data = await fetchAPI('books') || [];
+            dataState.books = data;
+            document.getElementById('stat-books').innerText = dataState.books.length;
+            renderBooks(dataState.books);
+        }
+        function renderBooks(data) {
+            const tbody = document.getElementById('tbody-books');
+            if(!data || data.length === 0) return tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-4 text-center">Data Kosong</td></tr>`;
+            tbody.innerHTML = data.map(item => `
+                <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <td class="px-4 py-3">${item?.id || '-'}</td>
+                    <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">${item?.title || item?.judul || '-'}</td>
+                    <td class="px-4 py-3">${item?.author || item?.penulis || '-'}</td>
+                    <td class="px-4 py-3">${item?.publisher || item?.penerbit || '-'} / ${item?.year || item?.tahun || '-'}</td>
+                    <td class="px-4 py-3">
+                        <button onclick="openModalForm('modal-book', ${item?.id})" class="text-blue-500 mr-3"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteAPI('books', ${item?.id}, fetchBooks)" class="text-red-500"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>`).join('');
+        }
+        document.getElementById('form-book').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('book-id').value;
+            const payload = {
+                title: document.getElementById('book-title').value, judul: document.getElementById('book-title').value,
+                author: document.getElementById('book-author').value, penulis: document.getElementById('book-author').value,
+                publisher: document.getElementById('book-publisher').value, penerbit: document.getElementById('book-publisher').value,
+                year: document.getElementById('book-year').value, tahun: document.getElementById('book-year').value
+            };
+            if(await saveAPI('books', payload, id)) {
+                closeModal('modal-book'); triggerToast('Buku disimpan!', 'emerald'); fetchBooks();
+            } else triggerToast('Gagal menyimpan!', 'red');
+        });
+        document.getElementById('search-books').addEventListener('input', (e) => {
+            const v = e.target.value.toLowerCase();
+            renderBooks(dataState.books.filter(b => (b?.title || b?.judul || '').toLowerCase().includes(v)));
+        });
+
+        // --- Users ---
+        async function fetchUsers() {
+            const data = await fetchAPI('users') || [];
+            dataState.users = data;
+            document.getElementById('stat-users').innerText = dataState.users.length;
+            renderUsers(dataState.users);
+        }
+        function renderUsers(data) {
+            const tbody = document.getElementById('tbody-users');
+            if(!data || data.length === 0) return tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-4 text-center">Data Kosong</td></tr>`;
+            tbody.innerHTML = data.map(item => `
+                <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <td class="px-4 py-3">${item?.id || '-'}</td>
+                    <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">${item?.name || item?.nama || '-'}</td>
+                    <td class="px-4 py-3">${item?.email || '-'}</td>
+                    <td class="px-4 py-3"><span class="px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded-lg text-xs uppercase">${item?.role || item?.peran || 'USER'}</span></td>
+                    <td class="px-4 py-3">
+                        <button onclick="openModalForm('modal-user', ${item?.id})" class="text-blue-500 mr-3"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteAPI('users', ${item?.id}, fetchUsers)" class="text-red-500"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>`).join('');
+        }
+        document.getElementById('form-user').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('user-id').value;
+            const payload = {
+                name: document.getElementById('user-name').value, nama: document.getElementById('user-name').value,
+                email: document.getElementById('user-email').value,
+                role: document.getElementById('user-role').value, peran: document.getElementById('user-role').value
+            };
+            const pwd = document.getElementById('user-password').value;
+            if(pwd) { payload.password = pwd; payload.katasandi = pwd; }
+            if(await saveAPI('users', payload, id)) {
+                closeModal('modal-user'); triggerToast('User disimpan!', 'emerald'); fetchUsers();
+            } else triggerToast('Gagal menyimpan!', 'red');
+        });
+        document.getElementById('search-users').addEventListener('input', (e) => {
+            const v = e.target.value.toLowerCase();
+            renderUsers(dataState.users.filter(u => (u?.name || u?.nama || u?.email || '').toLowerCase().includes(v)));
+        });
+
+        // --- Peminjams ---
+        async function fetchPeminjams() {
+            const data = await fetchAPI('peminjams') || [];
+            dataState.peminjams = data;
+            document.getElementById('stat-peminjams').innerText = dataState.peminjams.length;
+            renderPeminjams(dataState.peminjams);
+        }
+        function renderPeminjams(data) {
+            const tbody = document.getElementById('tbody-peminjams');
+            if(!data || data.length === 0) return tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-4 text-center">Data Kosong</td></tr>`;
+            tbody.innerHTML = data.map(item => `
+                <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <td class="px-4 py-3">${item?.id || '-'}</td>
+                    <td class="px-4 py-3">${item?.user_id || item?.id_user || '-'}</td>
+                    <td class="px-4 py-3">${item?.book_id || item?.id_buku || '-'}</td>
+                    <td class="px-4 py-3 text-xs">${item?.borrow_date || item?.tanggal_pinjam || '-'} / ${item?.return_date || item?.tanggal_kembali || '-'}</td>
+                    <td class="px-4 py-3"><span class="px-2 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 rounded-lg text-xs">${item?.status || '-'}</span></td>
+                    <td class="px-4 py-3">
+                        <button onclick="openModalForm('modal-peminjam', ${item?.id})" class="text-blue-500 mr-3"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteAPI('peminjams', ${item?.id}, fetchPeminjams)" class="text-red-500"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>`).join('');
+        }
+        document.getElementById('form-peminjam').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('peminjam-id').value;
+            const payload = {
+                user_id: document.getElementById('peminjam-user').value, id_user: document.getElementById('peminjam-user').value,
+                book_id: document.getElementById('peminjam-book').value, id_buku: document.getElementById('peminjam-book').value,
+                borrow_date: document.getElementById('peminjam-borrow').value, tanggal_pinjam: document.getElementById('peminjam-borrow').value,
+                return_date: document.getElementById('peminjam-return').value, tanggal_kembali: document.getElementById('peminjam-return').value,
+                status: document.getElementById('peminjam-status').value
+            };
+            if(await saveAPI('peminjams', payload, id)) {
+                closeModal('modal-peminjam'); triggerToast('Data Sirkulasi disimpan!', 'emerald'); fetchPeminjams();
+            } else triggerToast('Gagal menyimpan!', 'red');
+        });
+        document.getElementById('search-peminjams').addEventListener('input', (e) => {
+            const v = e.target.value.toLowerCase();
+            renderPeminjams(dataState.peminjams.filter(p => String(p?.user_id || p?.id_user || '').includes(v) || String(p?.book_id || p?.id_buku || '').includes(v)));
+        });
+
+        // --- Invoices ---
+        async function fetchInvoices() {
+            const data = await fetchAPI('invoices') || [];
+            dataState.invoices = data;
+            document.getElementById('stat-invoices').innerText = dataState.invoices.length;
+            renderInvoices(dataState.invoices);
+        }
+        function renderInvoices(data) {
+            const tbody = document.getElementById('tbody-invoices');
+            if(!data || data.length === 0) return tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-4 text-center">Data Kosong</td></tr>`;
+            tbody.innerHTML = data.map(item => `
+                <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <td class="px-4 py-3">${item?.id || '-'}</td>
+                    <td class="px-4 py-3">${item?.peminjam_id || item?.id_peminjam || '-'}</td>
+                    <td class="px-4 py-3 font-bold text-slate-800 dark:text-white">Rp ${item?.amount || item?.total || item?.denda || '0'}</td>
+                    <td class="px-4 py-3"><span class="px-2 py-1 ${item?.status==='paid'?'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300':'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'} rounded-lg text-xs uppercase">${item?.status || 'UNPAID'}</span></td>
+                    <td class="px-4 py-3">
+                        <button onclick="openModalForm('modal-invoice', ${item?.id})" class="text-blue-500 mr-3"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteAPI('invoices', ${item?.id}, fetchInvoices)" class="text-red-500"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>`).join('');
+        }
+        document.getElementById('form-invoice').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('invoice-id').value;
+            const payload = {
+                peminjam_id: document.getElementById('invoice-peminjam').value, id_peminjam: document.getElementById('invoice-peminjam').value,
+                amount: document.getElementById('invoice-amount').value, total: document.getElementById('invoice-amount').value, denda: document.getElementById('invoice-amount').value,
+                status: document.getElementById('invoice-status').value
+            };
+            if(await saveAPI('invoices', payload, id)) {
+                closeModal('modal-invoice'); triggerToast('Invoice disimpan!', 'emerald'); fetchInvoices();
+            } else triggerToast('Gagal menyimpan!', 'red');
+        });
+        document.getElementById('search-invoices').addEventListener('input', (e) => {
+            const v = e.target.value.toLowerCase();
+            renderInvoices(dataState.invoices.filter(i => String(i?.peminjam_id || i?.id_peminjam || '').includes(v)));
+        });
+
+        // --- Complaints ---
+        async function fetchComplaints() {
+            const data = await fetchAPI('complaints') || [];
+            dataState.complaints = data;
+            renderComplaints(dataState.complaints);
+        }
+        function renderComplaints(data) {
+            const tbody = document.getElementById('tbody-complaints');
+            if(!data || data.length === 0) return tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-4 text-center">Tidak ada laporan hari ini. 🎉</td></tr>`;
+            tbody.innerHTML = data.map(item => `
+                <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <td class="px-4 py-3">${item?.id || '-'}</td>
+                    <td class="px-4 py-3">${item?.user_id || item?.id_user || '-'}</td>
+                    <td class="px-4 py-3 text-xs max-w-[200px] truncate">${item?.message || item?.pesan || '-'}</td>
+                    <td class="px-4 py-3"><span class="px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded-lg text-xs uppercase">${item?.status || 'PENDING'}</span></td>
+                    <td class="px-4 py-3">
+                        <button onclick="openModalForm('modal-complaint', ${item?.id})" class="text-blue-500 mr-3"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteAPI('complaints', ${item?.id}, fetchComplaints)" class="text-red-500"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>`).join('');
+        }
+        document.getElementById('form-complaint').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('complaint-id').value;
+            const payload = {
+                user_id: document.getElementById('complaint-user').value, id_user: document.getElementById('complaint-user').value,
+                message: document.getElementById('complaint-message').value, pesan: document.getElementById('complaint-message').value,
+                status: document.getElementById('complaint-status').value
+            };
+            if(await saveAPI('complaints', payload, id)) {
+                closeModal('modal-complaint'); triggerToast('Pengaduan disimpan!', 'emerald'); fetchComplaints();
+            } else triggerToast('Gagal menyimpan!', 'red');
+        });
+        document.getElementById('search-complaints').addEventListener('input', (e) => {
+            const v = e.target.value.toLowerCase();
+            renderComplaints(dataState.complaints.filter(c => (c?.message || c?.pesan || '').toLowerCase().includes(v)));
+        });
+
+        function initChart() {
+            const ctx = document.getElementById('chartPeminjaman');
+            if(!ctx) return;
             new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
-                    datasets: [{
-                        label: 'Total Peminjaman',
-                        data: [45, 62, 86, 124, 98, 86],
-                        borderColor: chartColor,
-                        backgroundColor: 'rgba(37, 99, 235, 0.1)',
-                        borderWidth: 3,
-                        pointBackgroundColor: '#ffffff',
-                        pointBorderColor: chartColor,
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        fill: true,
-                        tension: 0.4
-                    }]
+                    datasets: [{ label: 'Aktifitas API', data: [12, 19, 15, 22, 18, 30], borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.4 }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(148, 163, 184, 0.1)', drawBorder: false },
-                            ticks: { color: '#94a3b8' }
-                        },
-                        x: {
-                            grid: { display: false, drawBorder: false },
-                            ticks: { color: '#94a3b8' }
-                        }
-                    }
-                }
+                options: { responsive: true, maintainAspectRatio: false }
             });
+        }
+
+        // On Load
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchBooks();
+            fetchUsers();
+            fetchPeminjams();
+            fetchInvoices();
+            fetchComplaints();
+            initChart();
         });
         
         // Reminder untuk desain Data Flow Diagram (DFD):
