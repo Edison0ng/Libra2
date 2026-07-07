@@ -12,8 +12,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-
-
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -276,9 +274,9 @@
                 </div>
             </div>
 
-            <!-- TAB 4: PROFIL -->
-            <div id="profil" class="tab-content max-w-md mx-auto space-y-5">
-                <!-- Konten Profil -->
+            <!-- TAB 4: PROFIL (DENGAN FITUR DONASI & FEEDBACK) -->
+            <div id="profil" class="tab-content max-w-xl mx-auto space-y-6">
+                <!-- Profil Mahasiswa -->
                 <div class="bg-gradient-to-br from-slate-800 to-slate-950 dark:from-slate-900 dark:to-black p-6 rounded-3xl text-center text-white shadow-md relative overflow-hidden">
                     <div class="w-20 h-20 bg-slate-700 rounded-full mx-auto mb-3 border-4 border-slate-600 overflow-hidden">
                         <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Ahmad" class="w-full h-full object-cover">
@@ -288,7 +286,9 @@
                     <span class="inline-block bg-white/10 text-[10px] font-medium px-3 py-1 rounded-full mt-3 border border-white/10">Fakultas Ilmu Komputer</span>
                 </div>
 
+                <!-- Pengaturan & Fitur -->
                 <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 overflow-hidden text-sm">
+                    <!-- Dark Mode Toggle -->
                     <div class="flex justify-between items-center p-4 border-b border-slate-100 dark:border-slate-800">
                         <div class="flex items-center gap-3 font-medium text-slate-700 dark:text-slate-300">
                             <i class="fa-regular fa-moon text-lg text-indigo-500"></i> Tema Gelap
@@ -297,12 +297,97 @@
                             <div class="w-4 h-4 bg-white rounded-full absolute top-1 left-1 dark:left-6 transition-all duration-200 shadow-sm"></div>
                         </button>
                     </div>
+
+                    <!-- Bahasa -->
                     <div class="flex justify-between items-center p-4 border-b border-slate-100 dark:border-slate-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50">
                         <div class="flex items-center gap-3 font-medium text-slate-700 dark:text-slate-300">
                             <i class="fa-solid fa-globe text-lg text-emerald-500"></i> Bahasa
                         </div>
                         <span class="text-xs text-slate-400 flex items-center gap-1.5">Indonesia (ID) <i class="fa-solid fa-chevron-down text-[10px]"></i></span>
                     </div>
+
+                    <!-- ✨ FORMULIR DONASI BUKU (BARU) -->
+                    <div class="p-4 border-b border-slate-100 dark:border-slate-800">
+                        <div class="flex items-center gap-2 mb-3">
+                            <i class="fa-solid fa-hand-holding-heart text-blue-500 text-sm"></i>
+                            <h4 class="font-bold text-sm text-slate-800 dark:text-white">Formulir Donasi Buku</h4>
+                        </div>
+                        <p class="text-xs text-slate-400 leading-normal mb-4">Bantu perluas literasi kampus dengan mendonasikan buku layak bacamu ke koleksi Sistem Libra.</p>
+                        
+                        <form id="donation-form" onsubmit="event.preventDefault(); submitDonation();" class="space-y-3">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Judul Buku</label>
+                                    <input type="text" id="donate-book-title" required class="w-full px-3 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-slate-800 dark:text-white transition-colors">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Penulis / Pengarang</label>
+                                    <input type="text" id="donate-book-author" required class="w-full px-3 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-slate-800 dark:text-white transition-colors">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Kategori</label>
+                                    <select id="donate-book-category" class="w-full px-3 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-slate-800 dark:text-white">
+                                        <option value="Science">Sains & Teknologi</option>
+                                        <option value="Romance">Fiksi / Novel</option>
+                                        <option value="Action">Komik / Petualangan</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Kondisi Buku</label>
+                                    <select id="donate-book-condition" class="w-full px-3 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-slate-800 dark:text-white">
+                                        <option value="Sangat Baik">Sangat Baik (Seperti Baru)</option>
+                                        <option value="Baik">Baik (Ada Sedikit Lecet)</option>
+                                        <option value="Cukup">Cukup Layak</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1">Catatan Tambahan (Opsional)</label>
+                                <textarea id="donate-book-note" rows="2" class="w-full px-3 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-slate-800 dark:text-white resize-none"></textarea>
+                            </div>
+                            <button type="submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-md transition-colors">
+                                Ajukan Donasi Buku
+                            </button>
+                        </form>
+
+                        <!-- Riwayat Donasi -->
+                        <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                            <h5 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Riwayat Donasi Kamu</h5>
+                            <div id="donation-history-container" class="space-y-3"></div>
+                        </div>
+                    </div>
+
+                    <!-- ✨ FORMULIR FEEDBACK (BARU) -->
+                    <div class="p-4 border-b border-slate-100 dark:border-slate-800">
+                        <div class="flex items-center gap-2 mb-1">
+                            <i class="fa-solid fa-comment-dots text-blue-500 text-sm"></i>
+                            <h4 class="font-bold text-sm text-slate-800 dark:text-white">Kirim Masukan / Feedback</h4>
+                        </div>
+                        <p class="text-xs text-slate-400 mb-4">Bantu kami meningkatkan Sistem Libra dengan memberikan saran atau laporan kendala Anda.</p>
+                        
+                        <form id="feedback-form" onsubmit="event.preventDefault(); submitFeedback();" class="space-y-3">
+                            <div>
+                                <label for="feedback-category" class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Kategori Masukan</label>
+                                <select id="feedback-category" class="w-full text-xs px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-slate-800 dark:text-white">
+                                    <option value="Saran">Saran & Fitur Baru</option>
+                                    <option value="Bug">Laporan Bug / Error</option>
+                                    <option value="Pelayanan">Fasilitas Perpustakaan</option>
+                                    <option value="Lainnya">Lainnya</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="feedback-message" class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Pesan Anda</label>
+                                <textarea id="feedback-message" rows="3" required class="w-full text-xs px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-slate-800 dark:text-white resize-none" placeholder="Tuliskan saran atau masukan Anda di sini..."></textarea>
+                            </div>
+                            <button type="submit" class="w-full py-2.5 bg-blue-600 text-white text-xs font-semibold rounded-xl shadow-sm hover:bg-blue-700 transition-colors">
+                                Kirim Feedback
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Logout -->
                     <button onclick="logoutSesi()" class="w-full p-4 text-center font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors">
                         Keluar Sesi
                     </button>
@@ -387,8 +472,8 @@
             <i class="fa-solid fa-check text-white text-sm"></i>
         </div>
         <div class="flex-1">
-            <p class="text-xs font-semibold text-emerald-400">Pemesanan Berhasil!</p>
-            <p class="text-[11px] text-slate-300 leading-snug mt-0.5">Terima kasih telah meminjam! Buku sedang diantarkan oleh kurir ke alamatmu.</p>
+            <p id="toast-title" class="text-xs font-semibold text-emerald-400">Pemesanan Berhasil!</p>
+            <p id="toast-desc" class="text-[11px] text-slate-300 leading-snug mt-0.5">Terima kasih telah meminjam! Buku sedang diantarkan oleh kurir ke alamatmu.</p>
         </div>
         <button onclick="document.getElementById('success-toast').classList.add('hidden')" class="text-slate-400 hover:text-white text-sm p-1">
             <i class="fa-solid fa-xmark"></i>
@@ -400,19 +485,19 @@
     <!-- ========================================== -->
     <script>
         // ============================================================
-        // FUNGSI SWITCH TAB (DIPERBAIKI)
+        // DATA DONASI & FEEDBACK (Local Storage)
+        // ============================================================
+        let userDonations = JSON.parse(localStorage.getItem('libra-donations') || '[]');
+        let userFeedbacks = JSON.parse(localStorage.getItem('libra-feedbacks') || '[]');
+
+        // ============================================================
+        // FUNGSI SWITCH TAB
         // ============================================================
         function switchTab(tabId) {
-            // Sembunyikan semua konten tab
-            document.querySelectorAll('.tab-content').forEach(el => {
-                el.classList.remove('active');
-            });
-
-            // Tampilkan tab yang dipilih
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             const target = document.getElementById(tabId);
             if (target) target.classList.add('active');
 
-            // Update judul header
             const titles = {
                 'beranda': 'Beranda',
                 'buku': 'Pustaka Digital',
@@ -421,7 +506,6 @@
             };
             document.getElementById('header-title').textContent = titles[tabId] || tabId;
 
-            // Update tombol sidebar desktop
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 btn.className = 'nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all';
                 if (btn.dataset.target === tabId) {
@@ -429,13 +513,17 @@
                 }
             });
 
-            // Update tombol mobile
             document.querySelectorAll('.nav-btn-mobile').forEach(btn => {
                 btn.className = 'nav-btn-mobile flex flex-col items-center p-2 text-slate-400';
                 if (btn.dataset.target === tabId) {
                     btn.className = 'nav-btn-mobile flex flex-col items-center p-2 text-blue-600 dark:text-blue-400';
                 }
             });
+
+            // Refresh donasi jika tab profil
+            if (tabId === 'profil') {
+                renderDonationHistory();
+            }
         }
 
         // ============================================================
@@ -463,7 +551,6 @@
                 button.className = 'genre-pill snap-start whitespace-nowrap px-5 py-2 bg-blue-600 text-white text-xs font-semibold rounded-full shadow-sm shadow-blue-500/20 transition-all';
             }
             console.log('Filter genre:', genre);
-            // Di sini Anda bisa menambahkan logika filter buku
         }
 
         function openBookDetail(title, author, image) {
@@ -479,6 +566,8 @@
 
         function triggerToast() {
             const toast = document.getElementById('success-toast');
+            document.getElementById('toast-title').textContent = 'Pemesanan Berhasil!';
+            document.getElementById('toast-desc').textContent = 'Terima kasih telah meminjam! Buku sedang diantarkan oleh kurir ke alamatmu.';
             toast.classList.remove('hidden');
             setTimeout(() => toast.classList.add('hidden'), 5000);
             closeDetailModal();
@@ -490,6 +579,108 @@
             }
         }
 
+        // ============================================================
+        // FUNGSI DONASI BUKU
+        // ============================================================
+        function submitDonation() {
+            const titleInp = document.getElementById('donate-book-title');
+            const authorInp = document.getElementById('donate-book-author');
+            const categoryInp = document.getElementById('donate-book-category');
+            const conditionInp = document.getElementById('donate-book-condition');
+            const noteInp = document.getElementById('donate-book-note');
+
+            if (!titleInp.value.trim() || !authorInp.value.trim()) {
+                alert('Harap isi judul dan penulis buku!');
+                return;
+            }
+
+            const now = new Date();
+            const formattedDate = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+
+            const newDonation = {
+                title: titleInp.value.trim(),
+                author: authorInp.value.trim(),
+                category: categoryInp.value,
+                condition: conditionInp.value,
+                note: noteInp.value.trim(),
+                date: formattedDate,
+                status: "Menunggu Verifikasi"
+            };
+
+            userDonations.unshift(newDonation);
+            localStorage.setItem('libra-donations', JSON.stringify(userDonations));
+            renderDonationHistory();
+
+            // Reset form
+            titleInp.value = '';
+            authorInp.value = '';
+            noteInp.value = '';
+            categoryInp.selectedIndex = 0;
+            conditionInp.selectedIndex = 0;
+
+            // Tampilkan toast
+            document.getElementById('toast-title').textContent = 'Donasi Diajukan!';
+            document.getElementById('toast-desc').textContent = 'Terima kasih! Pengajuan donasi Anda berhasil dikirim ke admin perpustakaan.';
+            const toast = document.getElementById('success-toast');
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 4000);
+        }
+
+        function renderDonationHistory() {
+            const container = document.getElementById('donation-history-container');
+            if (!container) return;
+            
+            if (userDonations.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 py-4 text-center italic">Belum ada riwayat pengajuan donasi.</p>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            userDonations.forEach(donasi => {
+                container.insertAdjacentHTML('beforeend', `
+                    <div class="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200/50 dark:border-slate-800 flex justify-between items-center">
+                        <div>
+                            <h6 class="text-xs font-bold text-slate-800 dark:text-white line-clamp-1">${donasi.title}</h6>
+                            <p class="text-[10px] text-slate-400 mt-0.5">${donasi.author} • ${donasi.date}</p>
+                        </div>
+                        <span class="text-[9px] font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-500 dark:bg-amber-950/40 border border-amber-200/50 dark:border-amber-900/40">${donasi.status}</span>
+                    </div>
+                `);
+            });
+        }
+
+        // ============================================================
+        // FUNGSI FEEDBACK
+        // ============================================================
+        function submitFeedback() {
+            const category = document.getElementById('feedback-category').value;
+            const message = document.getElementById('feedback-message').value.trim();
+            
+            if (!message) {
+                alert('Harap isi pesan feedback Anda!');
+                return;
+            }
+            
+            const feedbacks = JSON.parse(localStorage.getItem('libra-feedbacks') || '[]');
+            feedbacks.push({ 
+                category: category, 
+                message: message, 
+                date: new Date().toISOString() 
+            });
+            localStorage.setItem('libra-feedbacks', JSON.stringify(feedbacks));
+            
+            document.getElementById('feedback-form').reset();
+            
+            document.getElementById('toast-title').textContent = 'Feedback Terkirim!';
+            document.getElementById('toast-desc').textContent = 'Terima kasih atas masukan Anda untuk peningkatan Sistem Libra.';
+            const toast = document.getElementById('success-toast');
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 4000);
+        }
+
+        // ============================================================
+        // EVENT LISTENER
+        // ============================================================
         // Tutup notifikasi saat klik di luar
         document.addEventListener('click', function(event) {
             const panel = document.getElementById('notif-panel');
@@ -500,6 +691,11 @@
                     panel.classList.add('hidden');
                 }
             }
+        });
+
+        // Render donasi saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function() {
+            renderDonationHistory();
         });
 
         console.log('📚 Sistem Libra siap digunakan!');
