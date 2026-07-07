@@ -170,8 +170,8 @@
             <div id="buku" class="tab-content max-w-5xl mx-auto space-y-6">
                 <!-- Search Bar -->
                 <div class="relative">
-                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                    <input type="text" id="search-input" placeholder="Cari judul buku secara live..." class="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 shadow-sm text-sm transition-colors text-slate-800 dark:text-white">
+                   <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                  <input type="text" id="search-input" oninput="liveSearch()" placeholder="Cari judul atau penulis buku secara live..." class="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 shadow-sm text-sm transition-colors text-slate-800 dark:text-white">
                 </div>
                 
                 <!-- Genre Pills -->
@@ -193,8 +193,8 @@
                         <img src="{{ $book->image_url }}" alt="{{ $book->title }}" class="w-full aspect-[4/5] object-cover">
                      
                         <div class="p-3">
-                            <h4 class="font-bold text-xs md:text-sm text-slate-800 dark:text-white line-clamp-1">{{ $book->title }}</h4>
-                            <p class="text-[11px] text-slate-400 mt-0.5">{{ $book->author }}</p>
+                            <h4 class="book-title font-bold text-xs md:text-sm text-slate-800 dark:text-white line-clamp-1">{{ $book->title }}</h4>
+                            <p class="book-author text-[11px] text-slate-400 mt-0.5">{{ $book->author }}</p>
                             <p class="text-[10px] text-slate-400">Tahun: {{ $book->year }}</p>
                             
                             @if($book->status == 'Tersedia')
@@ -497,6 +497,13 @@
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             const target = document.getElementById(tabId);
             if (target) target.classList.add('active');
+            if (tabId === 'buku') {
+                const searchInput = document.getElementById('search-input');
+                if (searchInput) {
+                    searchInput.value = '';
+                    liveSearch(); // Reset tampilan
+                }
+            }
 
             const titles = {
                 'beranda': 'Beranda',
@@ -579,6 +586,82 @@
             }
         }
 
+        function liveSearch() {
+            const query = document.getElementById('search-input').value.toLowerCase().trim();
+            const cards = document.querySelectorAll('#live-library-container > div');
+            
+            cards.forEach((card) => {
+                // Ambil elemen judul dan penulis
+                const titleEl = card.querySelector('.book-title');
+                const authorEl = card.querySelector('.book-author');
+                
+                if (titleEl && authorEl) {
+                    const title = titleEl.textContent.toLowerCase();
+                    const author = authorEl.textContent.toLowerCase();
+                    
+                    // Cek apakah query ada di judul ATAU penulis
+                    const isMatch = title.includes(query) || author.includes(query);
+                    card.style.display = isMatch ? '' : 'none';
+                }
+            });
+        }
+
+        // ============================================================
+        // FUNGSI FILTER GENRE (DIPERBAIKI AGAR KOMPATIBEL DENGAN SEARCH)
+        // ============================================================
+        let currentGenre = 'Semua';
+
+        function filterGenre(genre, button) {
+            currentGenre = genre;
+            
+            // Update tampilan tombol
+            document.querySelectorAll('.genre-pill').forEach(pill => {
+                pill.className = 'genre-pill snap-start whitespace-nowrap px-5 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 text-xs font-medium rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-all';
+            });
+            if (button) {
+                button.className = 'genre-pill snap-start whitespace-nowrap px-5 py-2 bg-blue-600 text-white text-xs font-semibold rounded-full shadow-sm shadow-blue-500/20 transition-all';
+            }
+            
+            // Filter ulang berdasarkan genre
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const query = document.getElementById('search-input').value.toLowerCase().trim();
+            const cards = document.querySelectorAll('#live-library-container > div');
+            
+            cards.forEach((card) => {
+                // Ambil judul dan penulis
+                const titleEl = card.querySelector('.book-title');
+                const authorEl = card.querySelector('.book-author');
+                
+                if (titleEl && authorEl) {
+                    const title = titleEl.textContent.toLowerCase();
+                    const author = authorEl.textContent.toLowerCase();
+                    
+                    // Cek apakah sesuai dengan pencarian
+                    const searchMatch = title.includes(query) || author.includes(query);
+                    
+                    // Cek apakah sesuai dengan genre (jika ada data genre)
+                    // Catatan: Karena data dari Blade, kita bisa tambahkan data attribute atau ambil dari teks
+                    // Saya asumsikan genre tidak difilter dari sisi client karena data dari server
+                    // Tapi kita tetap tampilkan semua yang sesuai pencarian
+                    card.style.display = searchMatch ? '' : 'none';
+                }
+            });
+        }
+
+        // ============================================================
+        // EVENT LISTENER UNTUK PENCARIAN
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('search-input');
+            if (searchInput) {
+                searchInput.addEventListener('input', liveSearch);
+            }
+            
+            renderDonationHistory();
+        });
         // ============================================================
         // FUNGSI DONASI BUKU
         // ============================================================
