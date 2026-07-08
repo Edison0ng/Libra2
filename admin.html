@@ -134,23 +134,37 @@
                 <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
                     <div class="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex gap-3">
                         <div class="relative w-full">
-                            <input type="text" id="search-books" placeholder="Cari buku..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pl-10 p-2.5">
+                            <input type="text" id="search-books" placeholder="Cari buku berdasarkan judul atau penulis..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pl-10 p-2.5">
                             <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400"></i>
                         </div>
+                        <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                            <span id="book-count">0</span> data
+                        </div>
                     </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                            <thead class="text-xs uppercase bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
+                    <!-- Container tabel dengan overflow untuk scroll horizontal & vertikal -->
+                    <div class="overflow-auto" style="max-height: 500px;">
+                        <table class="w-full text-left text-sm text-slate-600 dark:text-slate-400">
+                            <thead class="text-xs uppercase bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 sticky top-0 z-10">
                                 <tr>
-                                    <th class="px-4 py-3">ID</th>
-                                    <th class="px-4 py-3">Judul Buku</th>
-                                    <th class="px-4 py-3">Penulis</th>
-                                    <th class="px-4 py-3">Penerbit/Tahun</th>
-                                    <th class="px-4 py-3">Aksi</th>
+                                    <th class="px-4 py-3 min-w-[60px]">ID</th>
+                                    <th class="px-4 py-3 min-w-[200px]">Judul Buku</th>
+                                    <th class="px-4 py-3 min-w-[180px]">Penulis</th>
+                                    <th class="px-4 py-3 min-w-[200px]">Penerbit</th>
+                                    <th class="px-4 py-3 min-w-[100px]">Tahun</th>
+                                    <th class="px-4 py-3 min-w-[120px] text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="tbody-books"></tbody>
                         </table>
+                    </div>
+                    <!-- Footer pagination info -->
+                    <div class="p-3 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex justify-between items-center text-xs text-slate-500 dark:text-slate-400">
+                        <span>Total data: <span id="book-total">0</span> buku</span>
+                        <div class="flex gap-2">
+                            <button onclick="fetchBooks()" class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition">
+                                <i class="fa-solid fa-rotate-right mr-1"></i> Refresh
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -482,31 +496,30 @@
             document.getElementById(`${type}-id`).value = id || '';
 
             if (id) {
-                // Populate forms automatically if editing
                 const item = dataState[`${type}s`].find(x => x.id == id);
                 if (item) {
                     if(type === 'book') {
-                        document.getElementById('book-title').value = item?.title || item?.judul || '';
-                        document.getElementById('book-author').value = item?.author || item?.penulis || '';
-                        document.getElementById('book-publisher').value = item?.publisher || item?.penerbit || '';
-                        document.getElementById('book-year').value = item?.year || item?.tahun || '';
+                        document.getElementById('book-title').value = item?.['Book-Title'] || '';
+                        document.getElementById('book-author').value = item?.['Book-Author'] || '';
+                        document.getElementById('book-publisher').value = item?.['Publisher'] || '';
+                        document.getElementById('book-year').value = item?.['Year-Of-Publication'] || '';
                     } else if(type === 'user') {
-                        document.getElementById('user-name').value = item?.name || item?.nama || '';
+                        document.getElementById('user-name').value = item?.name || '';
                         document.getElementById('user-email').value = item?.email || '';
-                        document.getElementById('user-role').value = item?.role || item?.peran || 'user';
+                        document.getElementById('user-role').value = item?.role || 'user';
                     } else if(type === 'peminjam') {
-                        document.getElementById('peminjam-user').value = item?.user_id || item?.id_user || '';
-                        document.getElementById('peminjam-book').value = item?.book_id || item?.id_buku || '';
-                        document.getElementById('peminjam-borrow').value = item?.borrow_date || item?.tanggal_pinjam || '';
-                        document.getElementById('peminjam-return').value = item?.return_date || item?.tanggal_kembali || '';
+                        document.getElementById('peminjam-user').value = item?.user_id || '';
+                        document.getElementById('peminjam-book').value = item?.book_id || '';
+                        document.getElementById('peminjam-borrow').value = item?.borrow_date || '';
+                        document.getElementById('peminjam-return').value = item?.return_date || '';
                         document.getElementById('peminjam-status').value = item?.status || 'dipinjam';
                     } else if(type === 'invoice') {
-                        document.getElementById('invoice-peminjam').value = item?.peminjam_id || item?.id_peminjam || '';
-                        document.getElementById('invoice-amount').value = item?.amount || item?.total || item?.denda || '';
+                        document.getElementById('invoice-peminjam').value = item?.peminjam_id || '';
+                        document.getElementById('invoice-amount').value = item?.amount || '';
                         document.getElementById('invoice-status').value = item?.status || 'unpaid';
                     } else if(type === 'complaint') {
-                        document.getElementById('complaint-user').value = item?.user_id || item?.id_user || '';
-                        document.getElementById('complaint-message').value = item?.message || item?.pesan || '';
+                        document.getElementById('complaint-user').value = item?.user_id || '';
+                        document.getElementById('complaint-message').value = item?.message || '';
                         document.getElementById('complaint-status').value = item?.status || 'pending';
                     }
                 }
@@ -592,35 +605,71 @@
         }
         function renderBooks(data) {
             const tbody = document.getElementById('tbody-books');
-            if(!data || data.length === 0) return tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-4 text-center">Data Kosong</td></tr>`;
+            const totalSpan = document.getElementById('book-total');
+            const countSpan = document.getElementById('book-count');
+            
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-slate-400">📚 Belum ada data buku. Tambahkan buku baru!</td></tr>`;
+                if (totalSpan) totalSpan.innerText = '0';
+                if (countSpan) countSpan.innerText = '0';
+                return;
+            }
+            
             tbody.innerHTML = data.map(item => `
-                <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                    <td class="px-4 py-3">${item?.id || '-'}</td>
-                    <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">${item?.title || item?.judul || '-'}</td>
-                    <td class="px-4 py-3">${item?.author || item?.penulis || '-'}</td>
-                    <td class="px-4 py-3">${item?.publisher || item?.penerbit || '-'} / ${item?.year || item?.tahun || '-'}</td>
-                    <td class="px-4 py-3">
-                        <button onclick="openModalForm('modal-book', ${item?.id})" class="text-blue-500 mr-3"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deleteAPI('books', ${item?.id}, fetchBooks)" class="text-red-500"><i class="fa-solid fa-trash"></i></button>
+                <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                    <td class="px-4 py-3 font-mono text-xs">${item?.id || '-'}</td>
+                    <td class="px-4 py-3 font-medium text-slate-800 dark:text-white break-words">${item?.['Book-Title'] || '-'}</td>
+                    <td class="px-4 py-3">${item?.['Book-Author'] || '-'}</td>
+                    <td class="px-4 py-3">${item?.['Publisher'] || '-'}</td>
+                    <td class="px-4 py-3">${item?.['Year-Of-Publication'] || '-'}</td>
+                    <td class="px-4 py-3 text-center whitespace-nowrap">
+                        <button onclick="openModalForm('modal-book', ${item?.id})" class="text-blue-500 hover:text-blue-700 mr-3 transition" title="Edit">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button onclick="deleteAPI('books', ${item?.id}, fetchBooks)" class="text-red-500 hover:text-red-700 transition" title="Hapus">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
                     </td>
-                </tr>`).join('');
+                </tr>
+            `).join('');
+            
+            if (totalSpan) totalSpan.innerText = data.length;
+            if (countSpan) countSpan.innerText = data.length;
         }
+        
         document.getElementById('form-book').addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('book-id').value;
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerText;
+            
+            submitBtn.innerText = 'Menyimpan...';
+            submitBtn.disabled = true;
+
             const payload = {
-                title: document.getElementById('book-title').value, judul: document.getElementById('book-title').value,
-                author: document.getElementById('book-author').value, penulis: document.getElementById('book-author').value,
-                publisher: document.getElementById('book-publisher').value, penerbit: document.getElementById('book-publisher').value,
-                year: document.getElementById('book-year').value, tahun: document.getElementById('book-year').value
+                "Book-Title": document.getElementById('book-title').value,
+                "Book-Author": document.getElementById('book-author').value,
+                "Publisher": document.getElementById('book-publisher').value,
+                "Year-Of-Publication": parseInt(document.getElementById('book-year').value)
             };
-            if(await saveAPI('books', payload, id)) {
-                closeModal('modal-book'); triggerToast('Buku disimpan!', 'emerald'); fetchBooks();
-            } else triggerToast('Gagal menyimpan!', 'red');
+
+            try {
+                if(await saveAPI('books', payload, id)) {
+                    closeModal('modal-book'); 
+                    triggerToast(id ? 'Data buku berhasil diupdate!' : 'Buku baru berhasil ditambahkan!', 'emerald'); 
+                    fetchBooks(); 
+                } else {
+                    triggerToast('Gagal menyimpan data ke server!', 'red');
+                }
+            } finally {
+                submitBtn.innerText = originalText;
+                submitBtn.disabled = false;
+            }
         });
+
         document.getElementById('search-books').addEventListener('input', (e) => {
             const v = e.target.value.toLowerCase();
-            renderBooks(dataState.books.filter(b => (b?.title || b?.judul || '').toLowerCase().includes(v)));
+            renderBooks(dataState.books.filter(b => (b?.['Book-Title'] || '').toLowerCase().includes(v) || (b?.['Book-Author'] || '').toLowerCase().includes(v)));
         });
 
         // --- Users ---
@@ -649,12 +698,13 @@
             e.preventDefault();
             const id = document.getElementById('user-id').value;
             const payload = {
-                name: document.getElementById('user-name').value, nama: document.getElementById('user-name').value,
+                name: document.getElementById('user-name').value,
                 email: document.getElementById('user-email').value,
-                role: document.getElementById('user-role').value, peran: document.getElementById('user-role').value
+                role: document.getElementById('user-role').value
             };
             const pwd = document.getElementById('user-password').value;
-            if(pwd) { payload.password = pwd; payload.katasandi = pwd; }
+            if(pwd) { payload.password = pwd; }
+            
             if(await saveAPI('users', payload, id)) {
                 closeModal('modal-user'); triggerToast('User disimpan!', 'emerald'); fetchUsers();
             } else triggerToast('Gagal menyimpan!', 'red');
@@ -687,20 +737,28 @@
                     </td>
                 </tr>`).join('');
         }
+        
+        // PERBAIKAN: Hanya 1 event listener untuk form-peminjam
         document.getElementById('form-peminjam').addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('peminjam-id').value;
             const payload = {
-                user_id: document.getElementById('peminjam-user').value, id_user: document.getElementById('peminjam-user').value,
-                book_id: document.getElementById('peminjam-book').value, id_buku: document.getElementById('peminjam-book').value,
-                borrow_date: document.getElementById('peminjam-borrow').value, tanggal_pinjam: document.getElementById('peminjam-borrow').value,
-                return_date: document.getElementById('peminjam-return').value, tanggal_kembali: document.getElementById('peminjam-return').value,
+                user_id: parseInt(document.getElementById('peminjam-user').value),
+                book_id: parseInt(document.getElementById('peminjam-book').value),
+                borrow_date: document.getElementById('peminjam-borrow').value,
+                return_date: document.getElementById('peminjam-return').value || null,
                 status: document.getElementById('peminjam-status').value
             };
+            
             if(await saveAPI('peminjams', payload, id)) {
-                closeModal('modal-peminjam'); triggerToast('Data Sirkulasi disimpan!', 'emerald'); fetchPeminjams();
-            } else triggerToast('Gagal menyimpan!', 'red');
+                closeModal('modal-peminjam'); 
+                triggerToast('Data Sirkulasi disimpan!', 'emerald'); 
+                fetchPeminjams();
+            } else {
+                triggerToast('Gagal menyimpan!', 'red');
+            }
         });
+        
         document.getElementById('search-peminjams').addEventListener('input', (e) => {
             const v = e.target.value.toLowerCase();
             renderPeminjams(dataState.peminjams.filter(p => String(p?.user_id || p?.id_user || '').includes(v) || String(p?.book_id || p?.id_buku || '').includes(v)));
@@ -732,13 +790,18 @@
             e.preventDefault();
             const id = document.getElementById('invoice-id').value;
             const payload = {
-                peminjam_id: document.getElementById('invoice-peminjam').value, id_peminjam: document.getElementById('invoice-peminjam').value,
-                amount: document.getElementById('invoice-amount').value, total: document.getElementById('invoice-amount').value, denda: document.getElementById('invoice-amount').value,
+                peminjam_id: parseInt(document.getElementById('invoice-peminjam').value),
+                amount: parseInt(document.getElementById('invoice-amount').value),
                 status: document.getElementById('invoice-status').value
             };
+            
             if(await saveAPI('invoices', payload, id)) {
-                closeModal('modal-invoice'); triggerToast('Invoice disimpan!', 'emerald'); fetchInvoices();
-            } else triggerToast('Gagal menyimpan!', 'red');
+                closeModal('modal-invoice'); 
+                triggerToast('Invoice disimpan!', 'emerald'); 
+                fetchInvoices();
+            } else {
+                triggerToast('Gagal menyimpan!', 'red');
+            }
         });
         document.getElementById('search-invoices').addEventListener('input', (e) => {
             const v = e.target.value.toLowerCase();
@@ -770,31 +833,71 @@
             e.preventDefault();
             const id = document.getElementById('complaint-id').value;
             const payload = {
-                user_id: document.getElementById('complaint-user').value, id_user: document.getElementById('complaint-user').value,
-                message: document.getElementById('complaint-message').value, pesan: document.getElementById('complaint-message').value,
+                user_id: parseInt(document.getElementById('complaint-user').value),
+                message: document.getElementById('complaint-message').value,
                 status: document.getElementById('complaint-status').value
             };
+            
             if(await saveAPI('complaints', payload, id)) {
-                closeModal('modal-complaint'); triggerToast('Pengaduan disimpan!', 'emerald'); fetchComplaints();
-            } else triggerToast('Gagal menyimpan!', 'red');
+                closeModal('modal-complaint'); 
+                triggerToast('Pengaduan disimpan!', 'emerald'); 
+                fetchComplaints();
+            } else {
+                triggerToast('Gagal menyimpan!', 'red');
+            }
         });
         document.getElementById('search-complaints').addEventListener('input', (e) => {
             const v = e.target.value.toLowerCase();
             renderComplaints(dataState.complaints.filter(c => (c?.message || c?.pesan || '').toLowerCase().includes(v)));
         });
 
+        // --- Chart ---
+        let chartInstance = null;
         function initChart() {
             const ctx = document.getElementById('chartPeminjaman');
             if(!ctx) return;
-            new Chart(ctx, {
+            
+            // Hancurkan chart lama jika ada
+            if(chartInstance) {
+                chartInstance.destroy();
+                chartInstance = null;
+            }
+            
+            chartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
-                    datasets: [{ label: 'Aktifitas API', data: [12, 19, 15, 22, 18, 30], borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.4 }]
+                    datasets: [{ 
+                        label: 'Aktifitas API', 
+                        data: [12, 19, 15, 22, 18, 30], 
+                        borderColor: '#3b82f6', 
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)', 
+                        fill: true, 
+                        tension: 0.4 
+                    }]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: document.documentElement.classList.contains('dark') ? '#e2e8f0' : '#1e293b' }
+                        }
+                    }
+                }
             });
         }
+
+        // Inisialisasi chart setelah tab dashboard terlihat
+        // Karena chart membutuhkan canvas yang terlihat, kita gunakan MutationObserver atau inisialisasi ulang saat switch ke dashboard
+        const originalSwitchTab = switchTab;
+        switchTab = function(tab) {
+            originalSwitchTab(tab);
+            if(tab === 'dashboard') {
+                // Delay sebentar agar DOM selesai render
+                setTimeout(initChart, 100);
+            }
+        };
 
         // On Load
         window.addEventListener('DOMContentLoaded', () => {
@@ -803,7 +906,8 @@
             fetchPeminjams();
             fetchInvoices();
             fetchComplaints();
-            initChart();
+            // Inisialisasi chart setelah halaman siap
+            setTimeout(initChart, 200);
         });
         
         // Reminder untuk desain Data Flow Diagram (DFD):
