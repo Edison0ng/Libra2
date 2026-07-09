@@ -136,14 +136,14 @@
             </div>
 
             <div id="sirkulasi" class="tab-content max-w-3xl mx-auto space-y-6">
-                <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+                <div id="circ-deadline-box" class="hidden bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
                     <div class="flex items-center gap-3">
                         <div class="bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-400 p-2.5 rounded-xl">
                             <i class="fa-regular fa-clock text-xl"></i>
                         </div>
                         <div>
                             <h4 class="text-sm font-bold text-amber-800 dark:text-amber-300" data-i18n="circ-deadline-title">Batas Pengambilan Resv.</h4>
-                            <p class="text-xs text-amber-600 dark:text-amber-400/80" data-i18n="circ-deadline-desc">Ambil ke meja sirkulasi atau panggil kurir antar.</p>
+                            <p class="text-xs text-amber-600 dark:text-amber-400/80" data-i18n="circ-deadline-desc">Ambil buku langsung ke meja sirkulasi perpustakaan.</p>
                         </div>
                     </div>
                     <div class="bg-white dark:bg-slate-900 px-4 py-2 rounded-xl border border-amber-200 dark:border-amber-800 font-mono font-bold text-amber-600 dark:text-amber-400 text-sm w-max self-end sm:self-auto">
@@ -151,7 +151,7 @@
                     </div>
                 </div>
 
-                <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800">
+                <div id="courier-status-box" class="hidden bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800">
                     <h4 class="font-bold text-sm mb-5 text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="circ-courier-status">Status Pengiriman Kurir</h4>
                     <div class="relative ml-2">
                         <div class="absolute left-2.5 top-2 bottom-4 w-0.5 bg-slate-200 dark:bg-slate-800"></div>
@@ -162,7 +162,7 @@
                             </div>
                             <div>
                                 <h5 class="text-sm font-bold text-blue-600 dark:text-blue-400" data-i18n="circ-status-1-title">Diantar Kurir</h5>
-                                <p class="text-xs text-slate-400 mt-0.5" data-i18n="circ-status-1-desc">Kurir sedang menuju ke Fakultas Ilmu Komputer. Estimasi 10 menit.</p>
+                                <p id="courier-status-1-desc" class="text-xs text-slate-400 mt-0.5">Kurir sedang menuju ke Fakultas Ilmu Komputer. Estimasi 10 menit.</p>
                             </div>
                         </div>
                         <div class="relative flex items-start gap-4 mb-6">
@@ -219,9 +219,9 @@
                         <div class="p-3.5 bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/40 rounded-xl flex justify-between items-center text-xs">
                             <div>
                                 <h5 class="font-bold text-slate-800 dark:text-white" data-i18n="circ-fine-item-title">Keterlambatan Pengembalian: "Sistem Basis Data"</h5>
-                                <p class="text-slate-400 mt-0.5" data-i18n="circ-fine-item-desc">Terlambat 5 hari × Rp 5.000 / hari</p>
+                                <p class="text-slate-400 mt-0.5" data-i18n="circ-fine-item-desc">Terlambat 5 hari × Rp 2.000 / hari</p>
                             </div>
-                            <span class="font-mono font-bold text-rose-500 text-sm">Rp 25.000</span>
+                            <span class="font-mono font-bold text-rose-500 text-sm">Rp 10.000</span>
                         </div>
                         <p class="text-[11px] text-slate-400 leading-normal italic" data-i18n="circ-fine-note">*Silakan lakukan pembayaran denda langsung di meja loket sirkulasi perpustakaan pusat untuk mengaktifkan kembali hak peminjaman penuh Anda.</p>
                     </div>
@@ -390,16 +390,36 @@
                     </div>
                     <p id="modal-desc" class="text-xs text-slate-400 mt-4 leading-relaxed line-clamp-4"></p>
 
-                    <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
-                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300" data-i18n="modal-method-label">Metode Pengambilan</label>
-                        <div class="flex flex-col sm:flex-row gap-2">
-                            <label class="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 px-3 py-2.5 rounded-xl text-xs text-slate-700 dark:text-slate-300 cursor-pointer flex-1 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800">
-                                <input type="radio" name="pickup-method" value="self" checked class="text-blue-600 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700">
-                                <span data-i18n="modal-method-self">Ambil Sendiri</span>
+                   <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                    <label class="block text-xs font-bold text-slate-700 dark:text-slate-300" data-i18n="modal-method-label">Metode Pengambilan</label>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <label class="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 px-3 py-2.5 rounded-xl text-xs text-slate-700 dark:text-slate-300 cursor-pointer flex-1 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800">
+                            <input type="radio" name="pickup-method" value="self" checked id="pickup-self" class="text-blue-600 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700">
+                            <span data-i18n="modal-method-self">Ambil Sendiri</span>
+                        </label>
+                        <label class="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 px-3 py-2.5 rounded-xl text-xs text-slate-700 dark:text-slate-300 cursor-pointer flex-1 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800">
+                            <input type="radio" name="pickup-method" value="delivery" id="pickup-delivery" class="text-blue-600 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700">
+                            <span data-i18n="modal-method-delivery">Diantar Kurir</span>
+                        </label>
+                    </div>
+
+                    {{-- Opsi lokasi pengiriman, hanya muncul saat "Diantar Kurir" dipilih --}}
+                    <div id="delivery-location-box" class="hidden mt-2 space-y-2 animate-fadeIn">
+                        <label class="block text-xs font-bold text-slate-700 dark:text-slate-300" data-i18n="modal-delivery-location-label">Kirim ke</label>
+                        <div class="flex flex-col gap-2">
+                            <label class="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 px-3 py-2.5 rounded-xl text-xs text-slate-700 dark:text-slate-300 cursor-pointer transition-colors hover:bg-slate-100 dark:hover:bg-slate-800">
+                                <input type="radio" name="delivery-location" value="current" checked id="location-current" class="text-blue-600 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700">
+                                <div>
+                                    <span class="font-semibold" data-i18n="modal-delivery-current">Lokasi Saya Sekarang</span>
+                                    <p class="text-[10px] text-slate-400 mt-0.5" data-i18n="modal-delivery-current-desc">Kurir akan mengantar ke lokasi kamu saat ini.</p>
+                                </div>
                             </label>
-                            <label class="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 px-3 py-2.5 rounded-xl text-xs text-slate-700 dark:text-slate-300 cursor-pointer flex-1 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800">
-                                <input type="radio" name="pickup-method" value="delivery" class="text-blue-600 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700">
-                                <span data-i18n="modal-method-delivery">Diantar Kurir</span>
+                            <label class="flex items-center gap-2 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 px-3 py-2.5 rounded-xl text-xs text-slate-700 dark:text-slate-300 cursor-pointer transition-colors hover:bg-slate-100 dark:hover:bg-slate-800">
+                                <input type="radio" name="delivery-location" value="home" id="location-home" class="text-blue-600 focus:ring-blue-500 dark:bg-slate-900 dark:border-slate-700">
+                                <div>
+                                    <span class="font-semibold" data-i18n="modal-delivery-home">Alamat Rumah</span>
+                                    <p class="text-[10px] text-slate-400 mt-0.5" data-i18n="modal-delivery-home-desc">Kurir akan mengantar ke alamat rumah yang terdaftar.</p>
+                                </div>
                             </label>
                         </div>
                     </div>
@@ -435,7 +455,7 @@
         let currentSelectedGenre = 'Semua';
         let activeBookId = null;
         
-        let userFine = 25000; 
+        let userFine = 10000; 
 
         let wishlistBooks = JSON.parse(localStorage.getItem('libra-wishlist') || '[]');
         let userDonations = JSON.parse(localStorage.getItem('libra-donations') || '[]');
@@ -464,11 +484,13 @@
                 'circ-active-loans': 'Peminjaman Aktif Saya', 'circ-fine-breakdown': 'Rincian Informasi Denda Berjalan',
                 
                 'circ-deadline-title': 'Batas Pengambilan Resv.',
-                'circ-deadline-desc': 'Ambil ke meja sirkulasi atau panggil kurir antar.',
+                'circ-deadline-desc': 'Ambil buku langsung ke meja sirkulasi perpustakaan sebelum batas waktu habis.',
                 'circ-remaining-time': 'Sisa Waktu:',
                 'circ-courier-status': 'Status Pengiriman Kurir',
                 'circ-status-1-title': 'Diantar Kurir',
                 'circ-status-1-desc': 'Kurir sedang menuju ke Fakultas Ilmu Komputer. Estimasi 10 menit.',
+                'circ-status-1-desc-current': 'Kurir sedang menuju ke lokasi kamu saat ini. Estimasi 10 menit.',
+                'circ-status-1-desc-home': 'Kurir sedang menuju ke alamat rumah kamu. Estimasi 10 menit.',
                 'circ-status-2-title': 'Buku Selesai Dikemas',
                 'circ-status-2-desc': 'Buku telah diserahkan ke kurir internal.',
                 'circ-status-3-title': 'Booking Dikonfirmasi',
@@ -481,12 +503,17 @@
                 'circ-loan-date-2': '15 Juni 2026',
                 'circ-due-date-2': '05 Juli 2026',
                 'circ-fine-item-title': 'Keterlambatan Pengembalian: "Sistem Basis Data"',
-                'circ-fine-item-desc': 'Terlambat 5 hari × Rp 5.000 / hari',
+                'circ-fine-item-desc': 'Terlambat 5 hari × Rp 2.000 / hari',
                 'circ-fine-note': '*Silakan lakukan pembayaran denda langsung di meja loket sirkulasi perpustakaan pusat untuk mengaktifkan kembali hak peminjaman penuh Anda.',
 
                 'modal-method-label': 'Metode Pengambilan',
                 'modal-method-self': 'Ambil Sendiri',
                 'modal-method-delivery': 'Diantar Kurir',
+                'modal-delivery-location-label': 'Kirim ke',
+                'modal-delivery-current': 'Lokasi Saya Sekarang',
+                'modal-delivery-current-desc': 'Kurir akan mengantar ke lokasi kamu saat ini.',
+                'modal-delivery-home': 'Alamat Rumah',
+                'modal-delivery-home-desc': 'Kurir akan mengantar ke alamat rumah yang terdaftar.',
                 'modal-btn-book': 'Ambil / Booking Buku',
                 
                 'modal-wishlist-disabled': 'Wishlist Hanya untuk Buku Dipinjam',
@@ -516,11 +543,13 @@
                 'circ-active-loans': 'My Active Loans', 'circ-fine-breakdown': 'Current Fine Breakdown',
                 
                 'circ-deadline-title': 'Reservation Pickup Deadline',
-                'circ-deadline-desc': 'Pick up at the circulation desk or request an internal courier.',
+                'circ-deadline-desc': 'Pick up the book directly at the library circulation desk before the deadline.',
                 'circ-remaining-time': 'Remaining Time:',
                 'circ-courier-status': 'Courier Delivery Status',
                 'circ-status-1-title': 'Out for Delivery',
                 'circ-status-1-desc': 'Courier is heading to the Faculty of Computer Science. Estimated 10 mins.',
+                'circ-status-1-desc-current': 'Courier is heading to your current location. Estimated 10 mins.',
+                'circ-status-1-desc-home': 'Courier is heading to your home address. Estimated 10 mins.',
                 'circ-status-2-title': 'Packaging Completed',
                 'circ-status-2-desc': 'Book has been handed over to the internal campus courier.',
                 'circ-status-3-title': 'Booking Confirmed',
@@ -533,12 +562,17 @@
                 'circ-loan-date-2': '15 June 2026',
                 'circ-due-date-2': '05 July 2026',
                 'circ-fine-item-title': 'Overdue Return: "Database Systems"',
-                'circ-fine-item-desc': '5 days overdue × Rp 5,000 / day',
+                'circ-fine-item-desc': '5 days overdue × Rp 2,000 / day',
                 'circ-fine-note': '*Please complete your fine payment at the central library circulation desk to restore full borrowing privileges.',
 
                 'modal-method-label': 'Pickup Method',
                 'modal-method-self': 'Self Pickup',
                 'modal-method-delivery': 'Courier Delivery',
+                'modal-delivery-location-label': 'Deliver to',
+                'modal-delivery-current': 'My Current Location',
+                'modal-delivery-current-desc': 'Courier will deliver to your current location.',
+                'modal-delivery-home': 'Home Address',
+                'modal-delivery-home-desc': 'Courier will deliver to your registered home address.',
                 'modal-btn-book': 'Book / Reserve Book',
                 
                 'modal-wishlist-disabled': 'Wishlist Only for Borrowed Books',
@@ -590,6 +624,7 @@
             fetchLibraryData(currentSelectedGenre);
             renderDonationHistory();
             renderWishlist();
+            updateCourierStatusVisibility();
         }
 
         function applyTranslations() {
@@ -661,6 +696,27 @@
             fetchLibraryData(genre);
         }
 
+        function updateCourierStatusVisibility() {
+            const box = document.getElementById('courier-status-box');
+            const deadlineBox = document.getElementById('circ-deadline-box');
+            const isActive = localStorage.getItem('libra-courier-active') === 'true';
+
+            if (box) {
+                box.classList.toggle('hidden', !isActive);
+
+                if (isActive) {
+                    const location = localStorage.getItem('libra-courier-location') || 'current';
+                    const descEl = document.getElementById('courier-status-1-desc');
+                    const dict = langDictionary[currentLang];
+                    if (descEl) descEl.innerText = dict[`circ-status-1-desc-${location}`];
+                }
+            }
+
+            if (deadlineBox) {
+                deadlineBox.classList.toggle('hidden', isActive);
+            }
+        }
+
         function executeBooking() {
             const method = document.querySelector('input[name="pickup-method"]:checked').value;
             const book = booksData.find(b => b.id === activeBookId);
@@ -673,12 +729,23 @@
                 document.getElementById('toast-desc').innerText = isId 
                     ? `Buku "${book.title}" siap. Silakan ambil di meja sirkulasi utama perpustakaan.` 
                     : `Book "${book.title}" is ready. Please pick it up at the main circulation desk.`;
-            } else {
+
+                localStorage.setItem('libra-courier-active', 'false');
+                updateCourierStatusVisibility();
+           } else {
+                const location = document.querySelector('input[name="delivery-location"]:checked').value;
+                const locationText = isId
+                    ? (location === 'current' ? 'lokasi kamu saat ini' : 'alamat rumah kamu')
+                    : (location === 'current' ? 'your current location' : 'your home address');
                 document.getElementById('toast-title').innerText = isId ? "Pesanan Diproses!" : "Order Processed!";
-                document.getElementById('toast-desc').innerText = isId 
-                    ? `Buku "${book.title}" akan segera diantarkan oleh kurir internal ke lokasi Anda.` 
-                    : `Book "${book.title}" will be delivered shortly to your location by our internal courier.`;
-            }
+                document.getElementById('toast-desc').innerText = isId
+                    ? `Buku "${book.title}" akan segera diantarkan ke ${locationText}.`
+                    : `Book "${book.title}" will be delivered shortly to ${locationText}.`;
+
+                localStorage.setItem('libra-courier-active', 'true');
+                localStorage.setItem('libra-courier-location', location);
+                updateCourierStatusVisibility();
+        }
 
             const toast = document.getElementById('success-toast');
             toast.classList.remove('hidden');
@@ -719,6 +786,8 @@
             document.getElementById('modal-desc').innerText = book.desc;
 
             document.querySelector('input[name="pickup-method"][value="self"]').checked = true;
+            const locBox = document.getElementById('delivery-location-box');
+            if (locBox) locBox.classList.add('hidden');
 
             const badge = document.getElementById('modal-status-badge');
             badge.innerText = book.status === 'Tersedia' ? (currentLang === 'id' ? 'Tersedia' : 'Available') : (currentLang === 'id' ? 'Dipinjam' : 'On Loan');
@@ -935,10 +1004,19 @@
             fetchLibraryData('Semua');
             renderDonationHistory(); 
             renderWishlist();
+            updateCourierStatusVisibility();
 
             if (userFine > 0) {
                 showFineWidget();
             }
+
+            document.querySelectorAll('input[name="pickup-method"]').forEach(radio => {
+                radio.addEventListener('change', function () {
+                    const locBox = document.getElementById('delivery-location-box');
+                    if (!locBox) return;
+                    locBox.classList.toggle('hidden', this.value !== 'delivery');
+                });
+            });
         });
     </script>
 </body>
