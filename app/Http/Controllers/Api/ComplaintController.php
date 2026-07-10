@@ -8,45 +8,67 @@ use App\Models\Complaint;
 
 class ComplaintController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-public function index()
-{
-    return response()->json(
-        Complaint::all()
-    );
-}
+    // GET /api/complaints
+    public function index()
+    {
+        return response()->json(
+            Complaint::all()
+        );
+    }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    // POST /api/complaints
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'peminjam_id' => 'required',
+            'pesan'       => 'required|string',
+            'status'      => 'required|string'
+        ]);
+
+        $complaint = Complaint::create($validated);
+
+        return response()->json([
+            'message' => 'Complaint berhasil ditambahkan',
+            'data' => $complaint
+        ], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
+    // GET /api/complaints/{id}
     public function show(string $id)
     {
-        //
+        return response()->json(
+            Complaint::findOrFail($id)
+        );
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
+    // PUT /api/complaints/{id}
     public function update(Request $request, string $id)
     {
-        //
+        $complaint = Complaint::findOrFail($id);
+
+        $validated = $request->validate([
+            'peminjam_id' => 'sometimes|required',
+            'pesan'       => 'sometimes|required|string',
+            'status'      => 'sometimes|required|string'
+        ]);
+
+        $complaint->update($validated);
+
+        return response()->json([
+            'message' => 'Complaint berhasil diupdate',
+            'data' => $complaint
+        ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+    // DELETE /api/complaints/{id}
     public function destroy(string $id)
     {
-        //
+        $complaint = Complaint::findOrFail($id);
+
+        $complaint->delete();
+
+        return response()->json([
+            'message' => 'Complaint berhasil dihapus'
+        ]);
     }
 }

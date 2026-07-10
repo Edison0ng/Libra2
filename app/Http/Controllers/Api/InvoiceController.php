@@ -8,45 +8,69 @@ use App\Models\Invoice;
 
 class InvoiceController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-public function index()
-{
-    return response()->json(
-        Invoice::all()
-    );
-}
+    // GET /api/invoices
+    public function index()
+    {
+        return response()->json(Invoice::all());
+    }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+    // POST /api/invoices
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'book_isbn'        => 'required|string',
+            'peminjam_id'      => 'required',
+            'tanggal_pinjam'   => 'required|date',
+            'tanggal_kembali'  => 'nullable|date',
+            'status'           => 'required|string'
+        ]);
+
+        $invoice = Invoice::create($validated);
+
+        return response()->json([
+            'message' => 'Invoice berhasil ditambahkan',
+            'data' => $invoice
+        ], 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
+    // GET /api/invoices/{id}
     public function show(string $id)
     {
-        //
+        return response()->json(
+            Invoice::findOrFail($id)
+        );
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
+    // PUT /api/invoices/{id}
     public function update(Request $request, string $id)
     {
-        //
+        $invoice = Invoice::findOrFail($id);
+
+        $validated = $request->validate([
+            'book_isbn'        => 'sometimes|required|string',
+            'peminjam_id'      => 'sometimes|required',
+            'tanggal_pinjam'   => 'sometimes|required|date',
+            'tanggal_kembali'  => 'nullable|date',
+            'status'           => 'sometimes|required|string'
+        ]);
+
+        $invoice->update($validated);
+
+        return response()->json([
+            'message' => 'Invoice berhasil diupdate',
+            'data' => $invoice
+        ]);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+    // DELETE /api/invoices/{id}
     public function destroy(string $id)
     {
-        //
+        $invoice = Invoice::findOrFail($id);
+
+        $invoice->delete();
+
+        return response()->json([
+            'message' => 'Invoice berhasil dihapus'
+        ]);
     }
 }
