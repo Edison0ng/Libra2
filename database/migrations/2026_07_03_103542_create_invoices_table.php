@@ -11,20 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-Schema::create('complaints', function (Blueprint $table) {
+Schema::create('invoices', function (Blueprint $table) {
     $table->id();
 
-    $table->foreignId('peminjam_id')
-          ->constrained('peminjams')
-          ->onDelete('cascade');
+    $table->string('book_isbn');
+    $table->string('peminjam_id');
 
-    $table->text('pesan');
+    $table->date('tanggal_pinjam');
+    $table->date('tanggal_kembali')->nullable();
 
     $table->enum('status', [
-        'pending',
-        'diproses',
-        'selesai'
-    ])->default('pending');
+        'dipinjam',
+        'dikembalikan'
+    ])->default('dipinjam');
 
     $table->timestamps();
 });
@@ -35,6 +34,6 @@ Schema::create('complaints', function (Blueprint $table) {
      */
     public function down(): void
     {
-        Schema::dropIfExists('complaints');
+        Schema::dropIfExists('invoices');
     }
 };

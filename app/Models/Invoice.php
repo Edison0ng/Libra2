@@ -6,9 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Invoice extends Model
 {
+    protected $table = 'invoices';
+
     protected $fillable = [
-        'invoice_number',
-        'amount',
+        'book_isbn',
+        'peminjam_id',
+        'tanggal_pinjam',
+        'tanggal_kembali',
         'status'
     ];
 }

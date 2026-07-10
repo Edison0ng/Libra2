@@ -6,9 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Complaint extends Model
 {
+    protected $table = 'complaints';
+
     protected $fillable = [
-        'title',
-        'description',
+        'peminjam_id',
+        'pesan',
         'status'
     ];
 }
