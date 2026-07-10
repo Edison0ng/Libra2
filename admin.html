@@ -141,12 +141,11 @@
                             <span id="book-count">0</span> data
                         </div>
                     </div>
-                    <!-- Container tabel dengan overflow untuk scroll horizontal & vertikal -->
                     <div class="overflow-auto" style="max-height: 500px;">
                         <table class="w-full text-left text-sm text-slate-600 dark:text-slate-400">
                             <thead class="text-xs uppercase bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 sticky top-0 z-10">
                                 <tr>
-                                    <th class="px-4 py-3 min-w-[60px]">ID</th>
+                                    <th class="px-4 py-3 min-w-[110px]">ISBN</th>
                                     <th class="px-4 py-3 min-w-[200px]">Judul Buku</th>
                                     <th class="px-4 py-3 min-w-[180px]">Penulis</th>
                                     <th class="px-4 py-3 min-w-[200px]">Penerbit</th>
@@ -157,7 +156,6 @@
                             <tbody id="tbody-books"></tbody>
                         </table>
                     </div>
-                    <!-- Footer pagination info -->
                     <div class="p-3 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex justify-between items-center text-xs text-slate-500 dark:text-slate-400">
                         <span>Total data: <span id="book-total">0</span> buku</span>
                         <div class="flex gap-2">
@@ -185,7 +183,7 @@
                 <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
                     <div class="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex gap-3">
                         <div class="relative w-full">
-                            <input type="text" id="search-users" placeholder="Cari pengguna..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pl-10 p-2.5">
+                            <input type="text" id="search-users" placeholder="Cari nama, NIM, fakultas, atau no. telepon..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pl-10 p-2.5">
                             <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400"></i>
                         </div>
                     </div>
@@ -193,11 +191,13 @@
                         <table class="w-full text-left text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
                             <thead class="text-xs uppercase bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
                                 <tr>
-                                    <th class="px-4 py-3">ID</th>
+                                    <th class="px-4 py-3">Avatar</th>
                                     <th class="px-4 py-3">Nama Lengkap</th>
-                                    <th class="px-4 py-3">Email</th>
-                                    <th class="px-4 py-3">Role</th>
-                                    <th class="px-4 py-3">Aksi</th>
+                                    <th class="px-4 py-3">NIM</th>
+                                    <th class="px-4 py-3">Fakultas</th>
+                                    <th class="px-4 py-3">No. Telepon</th>
+                                    <th class="px-4 py-3">Alamat Kirim</th>
+                                    <th class="px-4 py-3 text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="tbody-users"></tbody>
@@ -266,16 +266,16 @@
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
-<thead class="text-xs uppercase bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
-    <tr>
-        <th class="px-4 py-3">ID</th>
-        <th class="px-4 py-3">Peminjam ID</th>
-        <th class="px-4 py-3">Buku ISBN</th>
-        <th class="px-4 py-3">Tgl Pinjam - Kembali</th>
-        <th class="px-4 py-3">Status</th>
-        <th class="px-4 py-3">Aksi</th>
-    </tr>
-</thead>
+                            <thead class="text-xs uppercase bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
+                                <tr>
+                                    <th class="px-4 py-3">ID</th>
+                                    <th class="px-4 py-3">Peminjam ID</th>
+                                    <th class="px-4 py-3">Buku ISBN</th>
+                                    <th class="px-4 py-3">Tgl Pinjam - Kembali</th>
+                                    <th class="px-4 py-3">Status</th>
+                                    <th class="px-4 py-3">Aksi</th>
+                                </tr>
+                            </thead>
                             <tbody id="tbody-invoices"></tbody>
                         </table>
                     </div>
@@ -307,7 +307,7 @@
                             <thead class="text-xs uppercase bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
                                 <tr>
                                     <th class="px-4 py-3">ID</th>
-                                    <th class="px-4 py-3">User ID</th>
+                                    <th class="px-4 py-3">Peminjam ID</th>
                                     <th class="px-4 py-3">Pesan / Laporan</th>
                                     <th class="px-4 py-3">Status</th>
                                     <th class="px-4 py-3">Aksi</th>
@@ -343,8 +343,9 @@
                 <h3 class="text-lg font-bold text-slate-800 dark:text-white">Form Buku</h3>
                 <button onclick="closeModal('modal-book')" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            <form id="form-book" class="p-4 space-y-4">
+            <form id="form-book" class="p-4 space-y-4 overflow-y-auto" style="max-height:70vh;">
                 <input type="hidden" id="book-id">
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">ISBN <span class="text-red-500">*</span></label><input type="text" id="book-isbn" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200" placeholder="Kode unik buku"></div>
                 <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Judul Buku</label><input type="text" id="book-title" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
                 <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Penulis</label><input type="text" id="book-author" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
                 <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Penerbit</label><input type="text" id="book-publisher" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
@@ -363,12 +364,15 @@
                 <h3 class="text-lg font-bold text-slate-800 dark:text-white">Form Pengguna</h3>
                 <button onclick="closeModal('modal-user')" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            <form id="form-user" class="p-4 space-y-4">
+            <form id="form-user" class="p-4 space-y-4 overflow-y-auto" style="max-height:70vh;">
                 <input type="hidden" id="user-id">
-                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nama</label><input type="text" id="user-name" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
-                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label><input type="email" id="user-email" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
-                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Password</label><input type="text" id="user-password" placeholder="Isi jika ingin diubah" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
-                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Role</label><select id="user-role" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"><option value="user">User</option><option value="admin">Admin</option></select></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap</label><input type="text" id="user-nama" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">NIM</label><input type="text" id="user-nim" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Fakultas</label><input type="text" id="user-fakultas" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">No. Telepon</label><input type="text" id="user-telepon" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Alamat Kirim</label><textarea id="user-alamat" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200 h-20"></textarea></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Avatar URL</label><input type="text" id="user-avatar" placeholder="https://..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Password</label><input type="text" id="user-password" placeholder="Isi jika ingin membuat/mengubah password" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
             </form>
             <div class="p-4 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-3 bg-slate-50 dark:bg-slate-800">
                 <button type="button" onclick="closeModal('modal-user')" class="py-2 px-4 rounded-xl font-medium text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700">Batal</button>
@@ -383,7 +387,7 @@
                 <h3 class="text-lg font-bold text-slate-800 dark:text-white">Form Sirkulasi</h3>
                 <button onclick="closeModal('modal-peminjam')" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            <form id="form-peminjam" class="p-4 space-y-4">
+            <form id="form-peminjam" class="p-4 space-y-4 overflow-y-auto" style="max-height:70vh;">
                 <input type="hidden" id="peminjam-id">
                 <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">User ID</label><input type="text" id="peminjam-user" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
                 <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Book ID</label><input type="text" id="peminjam-book" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
@@ -391,7 +395,7 @@
                     <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tgl Pinjam</label><input type="date" id="peminjam-borrow" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
                     <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tgl Kembali</label><input type="date" id="peminjam-return" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
                 </div>
-                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status</label><select id="peminjam-status" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"><option value="dipinjam">Dipinjam</option><option value="dikembalikan">Dikembalikan</option></select></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status</label><select id="peminjam-status" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"><option value="dipinjam">Dipinjam</option><option value="dikembalikan">Dikembalikan</option><option value="Terlambat">Terlambat</option><option value="Menunggu Kurir">Menunggu Kurir</option></select></div>
             </form>
             <div class="p-4 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-3 bg-slate-50 dark:bg-slate-800">
                 <button type="button" onclick="closeModal('modal-peminjam')" class="py-2 px-4 rounded-xl font-medium text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700">Batal</button>
@@ -406,10 +410,10 @@
                 <h3 class="text-lg font-bold text-slate-800 dark:text-white">Form Invoice</h3>
                 <button onclick="closeModal('modal-invoice')" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-           <form id="form-invoice" class="p-4 space-y-4">
+            <form id="form-invoice" class="p-4 space-y-4 overflow-y-auto" style="max-height:70vh;">
                 <input type="hidden" id="invoice-id">
                 <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Peminjam ID</label><input type="text" id="invoice-peminjam" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
-                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Book ISBN</label><input type="text" id="invoice-isbn" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Buku ISBN</label><input type="text" id="invoice-isbn" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
                 <div class="grid grid-cols-2 gap-2">
                     <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tgl Pinjam</label><input type="date" id="invoice-pinjam" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
                     <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tgl Kembali</label><input type="date" id="invoice-kembali" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
@@ -429,9 +433,9 @@
                 <h3 class="text-lg font-bold text-slate-800 dark:text-white">Form Pengaduan</h3>
                 <button onclick="closeModal('modal-complaint')" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            <form id="form-complaint" class="p-4 space-y-4">
+            <form id="form-complaint" class="p-4 space-y-4 overflow-y-auto" style="max-height:70vh;">
                 <input type="hidden" id="complaint-id">
-                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">User ID</label><input type="text" id="complaint-user" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Peminjam ID</label><input type="text" id="complaint-user" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
                 <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Pesan Laporan</label><textarea id="complaint-message" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200 h-24"></textarea></div>
                 <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status</label><select id="complaint-status" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"><option value="pending">Pending</option><option value="resolved">Resolved</option></select></div>
             </form>
@@ -448,6 +452,16 @@
         // State Arrays
         let dataState = {
             books: [], users: [], peminjams: [], invoices: [], complaints: []
+        };
+
+        // Kemungkinan nama field primary key untuk tiap jenis data (dicoba berurutan).
+        // Ini dipakai bareng pickId() supaya tombol Edit/Hapus tetap dapat ID yang benar
+        // walau backend menamai kolom ID-nya beda dari yang diasumsikan di awal.
+        const ID_KEYS = {
+            user: ['id', 'user_id', 'id_user', 'uuid', 'ID'],
+            peminjam: ['id', 'peminjam_id', 'id_peminjam', 'id_sirkulasi', 'uuid'],
+            invoice: ['id', 'invoice_id', 'id_invoice', 'no_invoice', 'uuid'],
+            complaint: ['id', 'complaint_id', 'id_pengaduan', 'id_complaint', 'uuid']
         };
 
         // --- Core UI Functions ---
@@ -490,47 +504,130 @@
             }
             
             toast.classList.remove('hidden');
-            setTimeout(() => toast.classList.add('hidden'), 3000);
+            const duration = color === 'red' ? 7000 : 3500;
+            clearTimeout(toast._hideTimer);
+            toast._hideTimer = setTimeout(() => toast.classList.add('hidden'), duration);
         }
 
-        function openModalForm(modalId, id = null) {
+        // Helper: aman-kan string untuk ditaruh di attribute HTML (hindari bug tanda kutip/karakter khusus)
+        function escAttr(str) {
+            return String(str ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+        function escHtml(str) {
+            return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+        // Helper: potong string tanggal "YYYY-MM-DD HH:mm:ss" / ISO menjadi format yang dikenali <input type="date">
+        function toDateInputValue(v) {
+            if (!v) return '';
+            return String(v).slice(0, 10);
+        }
+        // Helper: ambil ID unik record dari beberapa kemungkinan nama field.
+        // Backend kadang menamai primary key beda-beda (id, uuid, user_id, dst),
+        // jadi kita coba semua kemungkinan supaya tombol Edit/Hapus tetap dapat ID yang benar.
+        function pickId(item, keys) {
+            for (const k of keys) {
+                const v = item?.[k];
+                if (v !== undefined && v !== null && v !== '') return v;
+            }
+            return '';
+        }
+
+        // Helper: set nilai <select> dengan aman. Kalau value dari database TIDAK ADA
+        // di antara <option> yang tersedia (mis. status "Terlambat" sementara dropdown
+        // cuma punya opsi "dipinjam"/"dikembalikan"), browser akan diam-diam mengosongkan
+        // pilihan itu -> saat disimpan jadi "" -> oleh Laravel diubah jadi null -> DB menolak
+        // (kolom status NOT NULL). Jadi kalau value tidak ketemu di antara option,
+        // kita tambahkan option-nya secara dinamis supaya nilai asli dari database
+        // tidak pernah hilang/kosong saat form disubmit.
+        function setSelectValueSafe(selectEl, value, fallback = '') {
+            const v = (value === null || value === undefined || value === '') ? fallback : String(value);
+            const exists = Array.from(selectEl.options).some(opt => opt.value === v);
+            if (!exists && v !== '') {
+                const opt = document.createElement('option');
+                opt.value = v;
+                opt.textContent = v;
+                selectEl.appendChild(opt);
+            }
+            selectEl.value = v;
+        }
+
+        function openModalForm(modalId, rawId = null) {
             document.getElementById(modalId).classList.remove('hidden');
             const type = modalId.replace('modal-', '');
             const form = document.getElementById(`form-${type}`);
             form.reset();
-            document.getElementById(`${type}-id`).value = id || '';
 
-            if (id) {
-                const item = dataState[`${type}s`].find(x => x.id == id);
+            // rawId datang sebagai string dari onclick (selalu di-quote), '' berarti mode Tambah Baru
+            const id = (rawId === null || rawId === undefined || rawId === '' || rawId === 'null' || rawId === 'undefined') ? '' : rawId;
+            document.getElementById(`${type}-id`).value = id;
+
+            if (id !== '') {
+                let item = null;
+                if (type === 'book') {
+                    item = dataState.books.find(x => String(x?.ISBN ?? x?.isbn ?? x?.id ?? '') === String(id));
+                } else {
+                    item = dataState[`${type}s`].find(x => String(pickId(x, ID_KEYS[type] || ['id'])) === String(id));
+                }
+
                 if (item) {
-                    if(type === 'book') {
+                    if (type === 'book') {
+                        document.getElementById('book-isbn').value = item?.ISBN ?? item?.isbn ?? id ?? '';
                         document.getElementById('book-title').value = item?.['Book-Title'] || '';
                         document.getElementById('book-author').value = item?.['Book-Author'] || '';
                         document.getElementById('book-publisher').value = item?.['Publisher'] || '';
                         document.getElementById('book-year').value = item?.['Year-Of-Publication'] || '';
-                    } else if(type === 'user') {
-                        document.getElementById('user-name').value = item?.name || '';
-                        document.getElementById('user-email').value = item?.email || '';
-                        document.getElementById('user-role').value = item?.role || 'user';
-                    } else if(type === 'peminjam') {
-                        document.getElementById('peminjam-user').value = item?.user_id || '';
-                        document.getElementById('peminjam-book').value = item?.book_id || '';
-                        document.getElementById('peminjam-borrow').value = item?.borrow_date || '';
-                        document.getElementById('peminjam-return').value = item?.return_date || '';
-                        document.getElementById('peminjam-status').value = item?.status || 'dipinjam';
-                    } else if(type === 'invoice') {
-                        document.getElementById('invoice-peminjam').value = item?.peminjam_id || '';
-                        document.getElementById('invoice-amount').value = item?.amount || '';
-                        document.getElementById('invoice-status').value = item?.status || 'unpaid';
-                    } else if(type === 'complaint') {
-                        document.getElementById('complaint-user').value = item?.user_id || '';
-                        document.getElementById('complaint-message').value = item?.message || '';
-                        document.getElementById('complaint-status').value = item?.status || 'pending';
+                    } else if (type === 'user') {
+                        document.getElementById('user-nama').value = item?.nama_lengkap || '';
+                        document.getElementById('user-nim').value = item?.nim || '';
+                        document.getElementById('user-fakultas').value = item?.fakultas || '';
+                        document.getElementById('user-telepon').value = item?.no_telepon || '';
+                        document.getElementById('user-alamat').value = item?.alamat_kirim || '';
+                        document.getElementById('user-avatar').value = item?.avatar_url || '';
+                        // password sengaja tidak diisi ulang (keamanan) - biarkan kosong = tidak diubah
+                    } else if (type === 'peminjam') {
+                        document.getElementById('peminjam-user').value = item?.user_id ?? item?.id_user ?? '';
+                        document.getElementById('peminjam-book').value = item?.book_id ?? item?.id_buku ?? '';
+                        document.getElementById('peminjam-borrow').value = toDateInputValue(item?.borrow_date || item?.tanggal_pinjam);
+                        document.getElementById('peminjam-return').value = toDateInputValue(item?.return_date || item?.tanggal_kembali);
+                        document.getElementById('peminjam-status') && setSelectValueSafe(document.getElementById('peminjam-status'), item?.status, 'dipinjam');
+                    } else if (type === 'invoice') {
+                        document.getElementById('invoice-peminjam').value = item?.peminjam_id ?? item?.id_peminjam ?? '';
+                        document.getElementById('invoice-isbn').value = item?.book_isbn ?? '';
+                        document.getElementById('invoice-pinjam').value = toDateInputValue(item?.tanggal_pinjam);
+                        document.getElementById('invoice-kembali').value = toDateInputValue(item?.tanggal_kembali);
+                        document.getElementById('invoice-status') && setSelectValueSafe(document.getElementById('invoice-status'), item?.status, 'unpaid');
+                    } else if (type === 'complaint') {
+                        document.getElementById('complaint-user').value = item?.peminjam_id ?? '';
+                        document.getElementById('complaint-message').value = item?.pesan || item?.message || '';
+                        document.getElementById('complaint-status') && setSelectValueSafe(document.getElementById('complaint-status'), item?.status, 'pending');
                     }
+                } else {
+                    // PENTING: jangan biarkan form edit terbuka dalam keadaan kosong lalu bisa disubmit,
+                    // karena itu akan menimpa data asli di database dengan nilai kosong/null.
+                    console.warn(`Data ${type} dengan id/kunci "${id}" tidak ditemukan di cache lokal. Coba refresh data.`);
+                    triggerToast('Data tidak ditemukan di cache lokal. Klik tombol Refresh lalu coba lagi.', 'red');
+                    closeModal(modalId);
+                    return;
                 }
             }
         }
         function closeModal(modalId) { document.getElementById(modalId).classList.add('hidden'); }
+
+        // Tombol submit ada di luar <form> (memakai atribut form="..."), jadi kita cari lewat selector ini
+        function setFormLoading(type, loading, loadingLabel = 'Menyimpan...') {
+            const btn = document.querySelector(`button[form="form-${type}"]`);
+            if (!btn) return;
+            if (loading) {
+                btn.dataset.originalText = btn.dataset.originalText || btn.innerText;
+                btn.innerText = loadingLabel;
+                btn.disabled = true;
+                btn.classList.add('opacity-60', 'cursor-not-allowed');
+            } else {
+                btn.innerText = btn.dataset.originalText || 'Simpan Data';
+                btn.disabled = false;
+                btn.classList.remove('opacity-60', 'cursor-not-allowed');
+            }
+        }
 
         // --- Core API Functions ---
         async function fetchAPI(endpoint) {
@@ -542,7 +639,6 @@
                 
                 const result = await res.json();
                 
-                // Handling spesifik untuk respons backend Laravel standar maupun paginated
                 let data = [];
                 if (Array.isArray(result)) {
                     data = result;
@@ -562,42 +658,91 @@
             }
         }
 
+        // saveAPI sekarang mengembalikan { success, message, data } supaya pesan error asli dari
+        // backend (validasi 422, 404 salah endpoint, dll) bisa ditampilkan ke admin, bukan cuma "gagal".
         async function saveAPI(endpoint, payload, id = null) {
-            const url = id ? `${API}/${endpoint}/${id}` : `${API}/${endpoint}`;
-            const method = id ? 'PUT' : 'POST';
+            const hasId = id !== null && id !== undefined && id !== '';
+            const url = hasId ? `${API}/${endpoint}/${encodeURIComponent(id)}` : `${API}/${endpoint}`;
+            const method = hasId ? 'PUT' : 'POST';
+
+            // Log request supaya mudah ditelusuri lewat tab Console (F12) kalau ada masalah.
+            console.log(`[saveAPI] ${method} ${url}`, payload);
+
+            let res;
             try {
-                const res = await fetch(url, {
+                res = await fetch(url, {
                     method: method,
-                    headers: { 
-                        'Content-Type': 'application/json', 
-                        'Accept': 'application/json' 
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify(payload)
                 });
-                if(!res.ok) {
-                    const err = await res.json().catch(() => ({}));
-                    console.error("Error validasi/backend:", err);
-                    throw new Error(err.message || 'Request Failed');
-                }
-                return true;
-            } catch(e) {
-                console.error("Error pada saat menyimpan data:", e);
-                return false;
+            } catch (networkErr) {
+                console.error("Error jaringan saat menyimpan data (kemungkinan CORS/offline):", networkErr);
+                return { success: false, message: 'Tidak dapat terhubung ke server. Cek koneksi internet atau konfigurasi CORS backend.' };
             }
+
+            // Ambil body response sebagai teks dulu (aman untuk JSON maupun bukan JSON,
+            // misalnya endpoint belum ada di backend dan malah balas halaman HTML 404).
+            const rawText = await res.text().catch(() => '');
+            let result = {};
+            try { result = rawText ? JSON.parse(rawText) : {}; } catch (_) { result = {}; }
+
+            if (!res.ok) {
+                let msg = result?.message || result?.error || `Gagal menyimpan data (HTTP ${res.status} ${res.statusText || ''})`.trim();
+                if (result?.errors && typeof result.errors === 'object') {
+                    const firstField = Object.keys(result.errors)[0];
+                    if (firstField && Array.isArray(result.errors[firstField])) {
+                        msg = `${firstField}: ${result.errors[firstField][0]}`;
+                    }
+                }
+                // Kalau backend tidak balas JSON sama sekali (kemungkinan besar endpoint/route
+                // "${endpoint}" belum tersedia di server untuk method ${method}), tandai secara eksplisit.
+                if (!result || Object.keys(result).length === 0) {
+                    if (res.status === 404) msg = `Endpoint "${endpoint}" (${method}) tidak ditemukan di server (404). Kemungkinan route belum dibuat di backend.`;
+                    else if (res.status === 405) msg = `Method ${method} tidak diizinkan untuk endpoint "${endpoint}" (405). Kemungkinan backend belum punya fungsi simpan/ubah untuk data ini.`;
+                    else msg = `Gagal menyimpan data (HTTP ${res.status}). Server tidak mengembalikan detail error.`;
+                }
+                console.error(`[saveAPI] Gagal ${method} ${url} ->`, res.status, rawText || '(kosong)');
+                return { success: false, message: msg, status: res.status };
+            }
+
+            return { success: true, data: result };
         }
 
         async function deleteAPI(endpoint, id, refreshCallback) {
-            if(!confirm('Yakin ingin menghapus data ini?')) return;
+            if (id === null || id === undefined || id === '' || id === 'null' || id === 'undefined') {
+                triggerToast('ID data tidak valid, tidak bisa menghapus.', 'red');
+                return;
+            }
+            if (!confirm('Yakin ingin menghapus data ini?')) return;
+            const url = `${API}/${endpoint}/${encodeURIComponent(id)}`;
+            console.log(`[deleteAPI] DELETE ${url}`);
             try {
-                const res = await fetch(`${API}/${endpoint}/${id}`, { 
+                const res = await fetch(url, {
                     method: 'DELETE',
                     headers: { 'Accept': 'application/json' }
                 });
-                if(res.ok) { triggerToast('Data berhasil dihapus', 'emerald'); refreshCallback(); }
-                else throw new Error('Delete request failed');
-            } catch(e) { 
-                console.error(e);
-                triggerToast('Gagal menghapus data', 'red'); 
+                if (res.ok) {
+                    triggerToast('Data berhasil dihapus', 'emerald');
+                    refreshCallback();
+                } else {
+                    const rawText = await res.text().catch(() => '');
+                    let err = {};
+                    try { err = rawText ? JSON.parse(rawText) : {}; } catch (_) { err = {}; }
+                    let msg = err?.message || err?.error;
+                    if (!msg) {
+                        if (res.status === 404) msg = `Endpoint "${endpoint}" (DELETE) tidak ditemukan di server (404). Kemungkinan route hapus belum dibuat di backend.`;
+                        else if (res.status === 405) msg = `Method DELETE tidak diizinkan untuk endpoint "${endpoint}" (405). Kemungkinan backend belum punya fungsi hapus untuk data ini.`;
+                        else msg = `Gagal menghapus data (HTTP ${res.status})`;
+                    }
+                    console.error(`[deleteAPI] Gagal DELETE ${url} ->`, res.status, rawText || '(kosong)');
+                    triggerToast(msg, 'red');
+                }
+            } catch (e) {
+                console.error("Error jaringan saat menghapus data:", e);
+                triggerToast('Tidak dapat terhubung ke server (cek koneksi/CORS)', 'red');
             }
         }
 
@@ -607,6 +752,9 @@
             dataState.books = data;
             document.getElementById('stat-books').innerText = dataState.books.length;
             renderBooks(dataState.books);
+        }
+        function bookKey(item) {
+            return item?.ISBN ?? item?.isbn ?? item?.id ?? '';
         }
         function renderBooks(data) {
             const tbody = document.getElementById('tbody-books');
@@ -620,23 +768,26 @@
                 return;
             }
             
-            tbody.innerHTML = data.map(item => `
+            tbody.innerHTML = data.map(item => {
+                const key = bookKey(item);
+                return `
                 <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-                    <td class="px-4 py-3 font-mono text-xs">${item?.id || '-'}</td>
-                    <td class="px-4 py-3 font-medium text-slate-800 dark:text-white break-words">${item?.['Book-Title'] || '-'}</td>
-                    <td class="px-4 py-3">${item?.['Book-Author'] || '-'}</td>
-                    <td class="px-4 py-3">${item?.['Publisher'] || '-'}</td>
+                    <td class="px-4 py-3 font-mono text-xs">${escHtml(key) || '-'}</td>
+                    <td class="px-4 py-3 font-medium text-slate-800 dark:text-white break-words">${escHtml(item?.['Book-Title']) || '-'}</td>
+                    <td class="px-4 py-3">${escHtml(item?.['Book-Author']) || '-'}</td>
+                    <td class="px-4 py-3">${escHtml(item?.['Publisher']) || '-'}</td>
                     <td class="px-4 py-3">${item?.['Year-Of-Publication'] || '-'}</td>
                     <td class="px-4 py-3 text-center whitespace-nowrap">
-                        <button onclick="openModalForm('modal-book', ${item?.id})" class="text-blue-500 hover:text-blue-700 mr-3 transition" title="Edit">
+                        <button onclick="openModalForm('modal-book', '${escAttr(key)}')" class="text-blue-500 hover:text-blue-700 mr-3 transition" title="Edit">
                             <i class="fa-solid fa-pen"></i>
                         </button>
-                        <button onclick="deleteAPI('books', ${item?.id}, fetchBooks)" class="text-red-500 hover:text-red-700 transition" title="Hapus">
+                        <button onclick="deleteAPI('books', '${escAttr(key)}', fetchBooks)" class="text-red-500 hover:text-red-700 transition" title="Hapus">
                             <i class="fa-solid fa-trash"></i>
                         </button>
                     </td>
                 </tr>
-            `).join('');
+            `;
+            }).join('');
             
             if (totalSpan) totalSpan.innerText = data.length;
             if (countSpan) countSpan.innerText = data.length;
@@ -645,30 +796,28 @@
         document.getElementById('form-book').addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('book-id').value;
-            const submitBtn = e.target.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerText;
-            
-            submitBtn.innerText = 'Menyimpan...';
-            submitBtn.disabled = true;
 
+            const yearVal = document.getElementById('book-year').value;
             const payload = {
-                "Book-Title": document.getElementById('book-title').value,
-                "Book-Author": document.getElementById('book-author').value,
-                "Publisher": document.getElementById('book-publisher').value,
-                "Year-Of-Publication": parseInt(document.getElementById('book-year').value)
+                "ISBN": document.getElementById('book-isbn').value.trim(),
+                "Book-Title": document.getElementById('book-title').value.trim(),
+                "Book-Author": document.getElementById('book-author').value.trim(),
+                "Publisher": document.getElementById('book-publisher').value.trim(),
+                "Year-Of-Publication": yearVal ? parseInt(yearVal, 10) : null
             };
 
+            setFormLoading('book', true);
             try {
-                if(await saveAPI('books', payload, id)) {
-                    closeModal('modal-book'); 
-                    triggerToast(id ? 'Data buku berhasil diupdate!' : 'Buku baru berhasil ditambahkan!', 'emerald'); 
-                    fetchBooks(); 
+                const result = await saveAPI('books', payload, id);
+                if (result.success) {
+                    closeModal('modal-book');
+                    triggerToast(id ? 'Data buku berhasil diupdate!' : 'Buku baru berhasil ditambahkan!', 'emerald');
+                    fetchBooks();
                 } else {
-                    triggerToast('Gagal menyimpan data ke server!', 'red');
+                    triggerToast(result.message || 'Gagal menyimpan data ke server!', 'red');
                 }
             } finally {
-                submitBtn.innerText = originalText;
-                submitBtn.disabled = false;
+                setFormLoading('book', false);
             }
         });
 
@@ -678,6 +827,8 @@
         });
 
         // --- Users ---
+        // Struktur tabel users (sesuai database): id (uuid), nama_lengkap, nim, fakultas,
+        // no_telepon, alamat_kirim, avatar_url, created_at, password
         async function fetchUsers() {
             const data = await fetchAPI('users') || [];
             dataState.users = data;
@@ -686,37 +837,62 @@
         }
         function renderUsers(data) {
             const tbody = document.getElementById('tbody-users');
-            if(!data || data.length === 0) return tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-4 text-center">Data Kosong</td></tr>`;
-            tbody.innerHTML = data.map(item => `
+            if (!data || data.length === 0) return tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-4 text-center">Data Kosong</td></tr>`;
+            tbody.innerHTML = data.map(item => {
+                const key = pickId(item, ID_KEYS.user);
+                const seed = encodeURIComponent(item?.nama_lengkap || key || 'user');
+                const avatar = item?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
+                return `
                 <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                    <td class="px-4 py-3">${item?.id || '-'}</td>
-                    <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">${item?.name || item?.nama || '-'}</td>
-                    <td class="px-4 py-3">${item?.email || '-'}</td>
-                    <td class="px-4 py-3"><span class="px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded-lg text-xs uppercase">${item?.role || item?.peran || 'USER'}</span></td>
-                    <td class="px-4 py-3">
-                        <button onclick="openModalForm('modal-user', ${item?.id})" class="text-blue-500 mr-3"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deleteAPI('users', ${item?.id}, fetchUsers)" class="text-red-500"><i class="fa-solid fa-trash"></i></button>
+                    <td class="px-4 py-3"><img src="${escAttr(avatar)}" class="w-8 h-8 rounded-full bg-slate-100 object-cover" onerror="this.style.visibility='hidden'"></td>
+                    <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">${escHtml(item?.nama_lengkap) || '-'}</td>
+                    <td class="px-4 py-3">${escHtml(item?.nim) || '-'}</td>
+                    <td class="px-4 py-3">${escHtml(item?.fakultas) || '-'}</td>
+                    <td class="px-4 py-3">${escHtml(item?.no_telepon) || '-'}</td>
+                    <td class="px-4 py-3 max-w-[220px] truncate" title="${escAttr(item?.alamat_kirim)}">${escHtml(item?.alamat_kirim) || '-'}</td>
+                    <td class="px-4 py-3 text-center whitespace-nowrap">
+                        <button onclick="openModalForm('modal-user', '${escAttr(key)}')" class="text-blue-500 hover:text-blue-700 mr-3 transition" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteAPI('users', '${escAttr(key)}', fetchUsers)" class="text-red-500 hover:text-red-700 transition" title="Hapus"><i class="fa-solid fa-trash"></i></button>
                     </td>
-                </tr>`).join('');
+                </tr>`;
+            }).join('');
         }
         document.getElementById('form-user').addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('user-id').value;
             const payload = {
-                name: document.getElementById('user-name').value,
-                email: document.getElementById('user-email').value,
-                role: document.getElementById('user-role').value
+                nama_lengkap: document.getElementById('user-nama').value.trim(),
+                nim: document.getElementById('user-nim').value.trim(),
+                fakultas: document.getElementById('user-fakultas').value.trim(),
+                no_telepon: document.getElementById('user-telepon').value.trim(),
+                alamat_kirim: document.getElementById('user-alamat').value.trim(),
+                avatar_url: document.getElementById('user-avatar').value.trim() || null
             };
             const pwd = document.getElementById('user-password').value;
-            if(pwd) { payload.password = pwd; }
-            
-            if(await saveAPI('users', payload, id)) {
-                closeModal('modal-user'); triggerToast('User disimpan!', 'emerald'); fetchUsers();
-            } else triggerToast('Gagal menyimpan!', 'red');
+            if (pwd) payload.password = pwd;
+
+            setFormLoading('user', true);
+            try {
+                const result = await saveAPI('users', payload, id);
+                if (result.success) {
+                    closeModal('modal-user');
+                    triggerToast(id ? 'Data pengguna berhasil diupdate!' : 'Pengguna baru berhasil ditambahkan!', 'emerald');
+                    fetchUsers();
+                } else {
+                    triggerToast(result.message || 'Gagal menyimpan data pengguna!', 'red');
+                }
+            } finally {
+                setFormLoading('user', false);
+            }
         });
         document.getElementById('search-users').addEventListener('input', (e) => {
             const v = e.target.value.toLowerCase();
-            renderUsers(dataState.users.filter(u => (u?.name || u?.nama || u?.email || '').toLowerCase().includes(v)));
+            renderUsers(dataState.users.filter(u =>
+                (u?.nama_lengkap || '').toLowerCase().includes(v) ||
+                (u?.nim || '').toLowerCase().includes(v) ||
+                (u?.fakultas || '').toLowerCase().includes(v) ||
+                (u?.no_telepon || '').toLowerCase().includes(v)
+            ));
         });
 
         // --- Peminjams ---
@@ -729,44 +905,54 @@
         function renderPeminjams(data) {
             const tbody = document.getElementById('tbody-peminjams');
             if(!data || data.length === 0) return tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-4 text-center">Data Kosong</td></tr>`;
-            tbody.innerHTML = data.map(item => `
+            tbody.innerHTML = data.map(item => {
+                const key = pickId(item, ID_KEYS.peminjam);
+                return `
                 <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                    <td class="px-4 py-3">${item?.id || '-'}</td>
-                    <td class="px-4 py-3">${item?.user_id || item?.id_user || '-'}</td>
-                    <td class="px-4 py-3">${item?.book_id || item?.id_buku || '-'}</td>
-                    <td class="px-4 py-3 text-xs">${item?.borrow_date || item?.tanggal_pinjam || '-'} / ${item?.return_date || item?.tanggal_kembali || '-'}</td>
-                    <td class="px-4 py-3"><span class="px-2 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 rounded-lg text-xs">${item?.status || '-'}</span></td>
+                    <td class="px-4 py-3 font-mono text-xs">${escHtml(key) || '-'}</td>
+                    <td class="px-4 py-3">${escHtml(item?.user_id ?? item?.id_user) || '-'}</td>
+                    <td class="px-4 py-3">${escHtml(item?.book_id ?? item?.id_buku) || '-'}</td>
+                    <td class="px-4 py-3 text-xs">${escHtml(item?.borrow_date || item?.tanggal_pinjam) || '-'} / ${escHtml(item?.return_date || item?.tanggal_kembali) || '-'}</td>
+                    <td class="px-4 py-3"><span class="px-2 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 rounded-lg text-xs">${escHtml(item?.status) || '-'}</span></td>
                     <td class="px-4 py-3">
-                        <button onclick="openModalForm('modal-peminjam', ${item?.id})" class="text-blue-500 mr-3"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deleteAPI('peminjams', ${item?.id}, fetchPeminjams)" class="text-red-500"><i class="fa-solid fa-trash"></i></button>
+                        <button onclick="openModalForm('modal-peminjam', '${escAttr(key)}')" class="text-blue-500 mr-3"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteAPI('peminjams', '${escAttr(key)}', fetchPeminjams)" class="text-red-500"><i class="fa-solid fa-trash"></i></button>
                     </td>
-                </tr>`).join('');
+                </tr>`;
+            }).join('');
         }
         
-        // PERBAIKAN: Hanya 1 event listener untuk form-peminjam
-        document.getElementById('form-peminjam').addEventListener('submit', async (e) => {
+     document.getElementById('form-peminjam').addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('peminjam-id').value;
+            
             const payload = {
-                user_id: parseInt(document.getElementById('peminjam-user').value),
-                book_id: parseInt(document.getElementById('peminjam-book').value),
-                borrow_date: document.getElementById('peminjam-borrow').value,
-                return_date: document.getElementById('peminjam-return').value || null,
+                user_id: document.getElementById('peminjam-user').value.trim(),
+                book_id: document.getElementById('peminjam-book').value.trim(),
+                // Sesuaikan nama dengan kolom database:
+                tanggal_pinjam: document.getElementById('peminjam-borrow').value, 
+                tanggal_kembali: document.getElementById('peminjam-return').value || null,
                 status: document.getElementById('peminjam-status').value
             };
-            
-            if(await saveAPI('peminjams', payload, id)) {
-                closeModal('modal-peminjam'); 
-                triggerToast('Data Sirkulasi disimpan!', 'emerald'); 
-                fetchPeminjams();
-            } else {
-                triggerToast('Gagal menyimpan!', 'red');
+
+            setFormLoading('peminjam', true);
+            try {
+                const result = await saveAPI('peminjams', payload, id);
+                if (result.success) {
+                    closeModal('modal-peminjam');
+                    triggerToast('Data Sirkulasi disimpan!', 'emerald');
+                    fetchPeminjams();
+                } else {
+                    triggerToast(result.message || 'Gagal menyimpan data sirkulasi!', 'red');
+                }
+            } finally {
+                setFormLoading('peminjam', false);
             }
         });
         
         document.getElementById('search-peminjams').addEventListener('input', (e) => {
             const v = e.target.value.toLowerCase();
-            renderPeminjams(dataState.peminjams.filter(p => String(p?.user_id || p?.id_user || '').includes(v) || String(p?.book_id || p?.id_buku || '').includes(v)));
+            renderPeminjams(dataState.peminjams.filter(p => String(p?.user_id || p?.id_user || '').toLowerCase().includes(v) || String(p?.book_id || p?.id_buku || '').toLowerCase().includes(v)));
         });
 
         // --- Invoices ---
@@ -776,41 +962,56 @@
             document.getElementById('stat-invoices').innerText = dataState.invoices.length;
             renderInvoices(dataState.invoices);
         }
-function renderInvoices(data) {
+
+        function renderInvoices(data) {
             const tbody = document.getElementById('tbody-invoices');
             if(!data || data.length === 0) return tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-4 text-center">Data Kosong</td></tr>`;
-            tbody.innerHTML = data.map(item => `
+            tbody.innerHTML = data.map(item => {
+                const key = pickId(item, ID_KEYS.invoice);
+                return `
                 <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                    <td class="px-4 py-3">${item?.id || '-'}</td>
-                    <td class="px-4 py-3">${item?.peminjam_id || '-'}</td>
-                    <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">${item?.book_isbn || '-'}</td>
-                    <td class="px-4 py-3 text-xs">${item?.tanggal_pinjam || '-'} / ${item?.tanggal_kembali || '-'}</td>
-                    <td class="px-4 py-3"><span class="px-2 py-1 ${item?.status==='paid'?'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300':'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'} rounded-lg text-xs uppercase">${item?.status || 'UNPAID'}</span></td>
+                    <td class="px-4 py-3 font-mono text-xs">${escHtml(key) || '-'}</td>
+                    <td class="px-4 py-3">${escHtml(item?.peminjam_id) || '-'}</td>
+                    <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">${escHtml(item?.book_isbn) || '-'}</td>
+                    <td class="px-4 py-3 text-xs">${escHtml(item?.tanggal_pinjam) || '-'} / ${escHtml(item?.tanggal_kembali) || '-'}</td>
+                    <td class="px-4 py-3"><span class="px-2 py-1 ${item?.status==='paid'?'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300':'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'} rounded-lg text-xs uppercase">${escHtml(item?.status) || 'UNPAID'}</span></td>
                     <td class="px-4 py-3">
-                        <button onclick="openModalForm('modal-invoice', ${item?.id})" class="text-blue-500 mr-3"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deleteAPI('invoices', ${item?.id}, fetchInvoices)" class="text-red-500"><i class="fa-solid fa-trash"></i></button>
+                        <button onclick="openModalForm('modal-invoice', '${escAttr(key)}')" class="text-blue-500 mr-3"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteAPI('invoices', '${escAttr(key)}', fetchInvoices)" class="text-red-500"><i class="fa-solid fa-trash"></i></button>
                     </td>
-                </tr>`).join('');
+                </tr>`;
+            }).join('');
         }
         
         document.getElementById('form-invoice').addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('invoice-id').value;
             const payload = {
-                peminjam_id: document.getElementById('invoice-peminjam').value,
-                book_isbn: document.getElementById('invoice-isbn').value,
+                peminjam_id: document.getElementById('invoice-peminjam').value.trim(),
+                book_isbn: document.getElementById('invoice-isbn').value.trim(),
                 tanggal_pinjam: document.getElementById('invoice-pinjam').value,
                 tanggal_kembali: document.getElementById('invoice-kembali').value || null,
                 status: document.getElementById('invoice-status').value
             };
-            
-            if(await saveAPI('invoices', payload, id)) {
-                closeModal('modal-invoice'); 
-                triggerToast('Data Invoices disimpan!', 'emerald'); 
-                fetchInvoices();
-            } else {
-                triggerToast('Gagal menyimpan!', 'red');
+
+            setFormLoading('invoice', true);
+            try {
+                const result = await saveAPI('invoices', payload, id);
+                if (result.success) {
+                    closeModal('modal-invoice');
+                    triggerToast('Data Invoices disimpan!', 'emerald');
+                    fetchInvoices();
+                } else {
+                    triggerToast(result.message || 'Gagal menyimpan data invoice!', 'red');
+                }
+            } finally {
+                setFormLoading('invoice', false);
             }
+        });
+
+        document.getElementById('search-invoices').addEventListener('input', (e) => {
+            const v = e.target.value.toLowerCase();
+            renderInvoices(dataState.invoices.filter(i => String(i?.peminjam_id || i?.id_peminjam || '').toLowerCase().includes(v)));
         });
 
         // --- Complaints ---
@@ -823,34 +1024,43 @@ function renderInvoices(data) {
         function renderComplaints(data) {
             const tbody = document.getElementById('tbody-complaints');
             if(!data || data.length === 0) return tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-4 text-center">Tidak ada laporan hari ini. 🎉</td></tr>`;
-            tbody.innerHTML = data.map(item => `
+            tbody.innerHTML = data.map(item => {
+                const key = pickId(item, ID_KEYS.complaint);
+                return `
                 <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                    <td class="px-4 py-3">${item?.id || '-'}</td>
-                    <td class="px-4 py-3">${item?.peminjam_id || '-'}</td>
-                    <td class="px-4 py-3 text-xs max-w-[200px] truncate">${item?.pesan || '-'}</td>
-                    <td class="px-4 py-3"><span class="px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded-lg text-xs uppercase">${item?.status || 'PENDING'}</span></td>
+                    <td class="px-4 py-3 font-mono text-xs">${escHtml(key) || '-'}</td>
+                    <td class="px-4 py-3">${escHtml(item?.peminjam_id) || '-'}</td>
+                    <td class="px-4 py-3 text-xs max-w-[200px] truncate" title="${escAttr(item?.pesan || item?.message)}">${escHtml(item?.pesan || item?.message) || '-'}</td>
+                    <td class="px-4 py-3"><span class="px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded-lg text-xs uppercase">${escHtml(item?.status) || 'PENDING'}</span></td>
                     <td class="px-4 py-3">
-                        <button onclick="openModalForm('modal-complaint', ${item?.id})" class="text-blue-500 mr-3"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deleteAPI('complaints', ${item?.id}, fetchComplaints)" class="text-red-500"><i class="fa-solid fa-trash"></i></button>
+                        <button onclick="openModalForm('modal-complaint', '${escAttr(key)}')" class="text-blue-500 mr-3"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteAPI('complaints', '${escAttr(key)}', fetchComplaints)" class="text-red-500"><i class="fa-solid fa-trash"></i></button>
                     </td>
-                </tr>`).join('');
+                </tr>`;
+            }).join('');
         }
         
         document.getElementById('form-complaint').addEventListener('submit', async (e) => {
             e.preventDefault();
             const id = document.getElementById('complaint-id').value;
             const payload = {
-                peminjam_id: document.getElementById('complaint-user').value,
-                pesan: document.getElementById('complaint-message').value,
+                peminjam_id: document.getElementById('complaint-user').value.trim(),
+                pesan: document.getElementById('complaint-message').value.trim(),
                 status: document.getElementById('complaint-status').value
             };
-            
-            if(await saveAPI('complaints', payload, id)) {
-                closeModal('modal-complaint'); 
-                triggerToast('Data Pengaduan disimpan!', 'emerald'); 
-                fetchComplaints();
-            } else {
-                triggerToast('Gagal menyimpan!', 'red');
+
+            setFormLoading('complaint', true);
+            try {
+                const result = await saveAPI('complaints', payload, id);
+                if (result.success) {
+                    closeModal('modal-complaint');
+                    triggerToast('Data Pengaduan disimpan!', 'emerald');
+                    fetchComplaints();
+                } else {
+                    triggerToast(result.message || 'Gagal menyimpan data pengaduan!', 'red');
+                }
+            } finally {
+                setFormLoading('complaint', false);
             }
         });
 
@@ -858,14 +1068,13 @@ function renderInvoices(data) {
             const v = e.target.value.toLowerCase();
             renderComplaints(dataState.complaints.filter(c => (c?.message || c?.pesan || '').toLowerCase().includes(v)));
         });
-        
+
         // --- Chart ---
         let chartInstance = null;
         function initChart() {
             const ctx = document.getElementById('chartPeminjaman');
             if(!ctx) return;
             
-            // Hancurkan chart lama jika ada
             if(chartInstance) {
                 chartInstance.destroy();
                 chartInstance = null;
@@ -896,25 +1105,20 @@ function renderInvoices(data) {
             });
         }
 
-        // Inisialisasi chart setelah tab dashboard terlihat
-        // Karena chart membutuhkan canvas yang terlihat, kita gunakan MutationObserver atau inisialisasi ulang saat switch ke dashboard
         const originalSwitchTab = switchTab;
         switchTab = function(tab) {
             originalSwitchTab(tab);
             if(tab === 'dashboard') {
-                // Delay sebentar agar DOM selesai render
                 setTimeout(initChart, 100);
             }
         };
 
-        // On Load
         window.addEventListener('DOMContentLoaded', () => {
             fetchBooks();
             fetchUsers();
             fetchPeminjams();
             fetchInvoices();
             fetchComplaints();
-            // Inisialisasi chart setelah halaman siap
             setTimeout(initChart, 200);
         });
         
