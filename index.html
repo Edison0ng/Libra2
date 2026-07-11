@@ -630,27 +630,32 @@
     submitBtn.disabled = true;
     submitBtn.textContent = 'Memproses...';
 
-    try{
-const res = await fetch(`${API_BASE_URL}/login`, {
-    method: 'POST',
-    mode: 'cors',
-    headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-    },
-    body: JSON.stringify({
-        nim: usernameVal,
-        password: passwordVal
-    })
-});
-      const data = await res.json();
+try{
+    const res = await fetch(`${API_BASE_URL}/login`, {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            nim: usernameVal,
+            password: passwordVal
+        })
+    });
 
-      if(!res.ok || !data.success){
+    console.log("Status:", res.status);   // <-- TAMBAHKAN DI SINI
+
+    const data = await res.json();
+
+    console.log("Response:", data);       // <-- TAMBAHKAN DI SINI
+
+    if(!res.ok || !data.success){
         showError(data.message || 'Username atau kata sandi salah.');
         submitBtn.disabled = false;
         submitBtn.textContent = originalBtnText;
         return;
-      }
+    }
 
       // Simpan token & data user untuk dipakai halaman lain
       localStorage.setItem('libra_token', data.token);
