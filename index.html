@@ -609,7 +609,7 @@
   }
 
   // Base URL API backend Laravel. Ganti sesuai environment (local/production).
-  const API_BASE_URL = 'http://127.0.0.1:8000/api';
+  const API_BASE_URL = 'https://libra-production-32ea.up.railway.app/api';
 
   loginForm.addEventListener('submit', async function(e){
     e.preventDefault(); // mencegah submit default (reload halaman)
@@ -631,18 +631,18 @@
     submitBtn.textContent = 'Memproses...';
 
     try{
-      const res = await fetch(`${API_BASE_URL}/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          nim: usernameVal,
-          password: passwordVal
-        })
-      });
-
+const res = await fetch(`${API_BASE_URL}/login`, {
+    method: 'POST',
+    mode: 'cors',
+    headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    },
+    body: JSON.stringify({
+        nim: usernameVal,
+        password: passwordVal
+    })
+});
       const data = await res.json();
 
       if(!res.ok || !data.success){
