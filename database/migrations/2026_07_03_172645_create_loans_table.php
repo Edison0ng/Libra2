@@ -9,15 +9,15 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up() {
-    Schema::create('loans', function (Blueprint $table) {
-        $table->id();
-        $table->foreignId('user_id')->constrained();
-        $table->foreignId('book_id')->constrained();
-        $table->date('tanggal_pinjam');
-        $table->date('tanggal_kembali')->nullable();
-        $table->timestamps();
-     });
+    public function up(): void{
+        Schema::create('loans', function (Blueprint $table) {
+            $table->id(); 
+            $table->uuid('user_id'); // Menggunakan uuid agar cocok dengan id di tabel users
+            $table->foreignId('book_id')->constrained('books')->onDelete('cascade');
+            $table->date('tanggal_pinjam');
+            $table->date('tanggal_kembali')->nullable();
+            $table->timestamps();
+        });
     }
 
     /**

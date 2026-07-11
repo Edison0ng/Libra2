@@ -12,11 +12,17 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware): void {
-        //
+    ->withMiddleware(function (Middleware $middleware) {
+        // Middleware global
+        $middleware->web(append: [
+            // Tambahkan middleware global untuk web di sini
+        ]);
+
+        // Register middleware alias
+        $middleware->alias([
+            'username.spaces' => \App\Http\Middleware\HandleUsernameSpaces::class,
+        ]);
     })
-    ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*'),
-        );
+    ->withExceptions(function (Exceptions $exceptions) {
+        //
     })->create();

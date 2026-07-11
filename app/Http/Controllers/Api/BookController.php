@@ -1,38 +1,35 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
-use App\Models\Book;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Models\User;
 
 class BookController extends Controller
 {
     public function index()
     {
-        return response()->json(Book::all());
-    }
-
-    public function show($id)
-    {
-        $book = Book::find($id);
-        if (! $book) return response()->json(['message' => 'Not Found'], 404);
-        return response()->json($book);
-    }
-
-    // Create/Update/Delete not implemented to avoid accidental writes
-    public function store(Request $request)
-    {
-        return response()->json(['message' => 'Not implemented'], 405);
-    }
-
-    public function update(Request $request, $id)
-    {
-        return response()->json(['message' => 'Not implemented'], 405);
-    }
-
-    public function destroy($id)
-    {
-        return response()->json(['message' => 'Not implemented'], 405);
+        $books = DB::table('books')->get();
+        
+        // Ambil user default (user pertama)
+        $userData = User::first();
+        
+        if (!$userData) {
+            $userData = (object) [
+                'id' => 1,
+                'name' => 'Ahmad Fauzi',
+                'username' => 'ahmadfauzi',
+                'nim' => '220194850',
+                'fakultas' => 'Fakultas Ilmu Komputer',
+                'avatar_url' => null,
+                'email' => 'ahmad@example.com'
+            ];
+        }
+        
+        return view('libra', [
+            'books' => $books,
+            'userData' => $userData
+        ]);
     }
 }
