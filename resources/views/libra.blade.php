@@ -302,17 +302,10 @@
                     </div>
                 </div>
 
-                <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800">
+                <div id="fine-breakdown-card" class="hidden bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800">
                     <h4 class="font-bold text-sm mb-4 text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="circ-fine-breakdown">Rincian Informasi Denda Berjalan</h4>
-                    <div class="space-y-3">
-                        <div class="p-3.5 bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/40 rounded-xl flex justify-between items-center text-xs">
-                            <div>
-                                <h5 class="font-bold text-slate-800 dark:text-white" data-i18n="circ-fine-item-title">Keterlambatan Pengembalian: "Sistem Basis Data"</h5>
-                                <p class="text-slate-400 mt-0.5" data-i18n="circ-fine-item-desc">Terlambat 5 hari × Rp 2.000 / hari</p>
-                            </div>
-                            <span class="font-mono font-bold text-rose-500 text-sm">Rp 10.000</span>
-                        </div>
-                        <p class="text-[11px] text-slate-400 leading-normal italic" data-i18n="circ-fine-note">*Silakan lakukan pembayaran denda langsung di meja loket sirkulasi perpustakaan pusat untuk mengaktifkan kembali hak peminjaman penuh Anda.</p>
+                    <div id="fine-breakdown-list" class="space-y-3">
+                        <!-- Akan diisi secara dinamis -->
                     </div>
                 </div>
             </div>
@@ -859,7 +852,7 @@
             }
 
             // Booking button
-            const bookingBtn = document.querySelector('#detail-modal .w-full.bg-slate-900');
+            const bookingBtn = document.querySelector('#booking-default-btn-container button');
             if (status === 'Dipinjam') {
                 bookingBtn.disabled = true;
                 bookingBtn.className = 'w-full bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-sm font-semibold py-3 rounded-xl shadow-md cursor-not-allowed opacity-60';
@@ -1316,10 +1309,108 @@
                 if (!response.ok) throw new Error('Gagal mengambil data peminjaman');
                 activeLoans = await response.json();
                 renderActiveLoans();
+                calculateFines();
                 updateCourierStatusVisibility();
+                await updateBookStatuses();
             } catch (err) {
                 console.error('Error loading loans:', err);
             }
+        }
+
+        async function updateBookStatuses() {
+            try {
+                const response = await fetch('/api/pinjam');
+                if (!response.ok) throw new Error('Gagal mengambil semua status peminjaman');
+                const allLoans = await response.json();
+
+                // Dapatkan ISBN buku yang sedang dipinjam (tanggal_kembali adalah null)
+                const borrowedBookISBNs = allLoans
+                    .filter(l => !l.tanggal_kembali)
+                    .map(l => l.book_id);
+
+                // Update status di card buku halaman pustaka
+                document.querySelectorAll('#live-library-container > .book-card').forEach(card => {
+                    const isbn = card.dataset.id;
+                    const statusBadge = card.querySelector('.status-badge');
+                    
+                    if (borrowedBookISBNs.includes(isbn)) {
+                        card.dataset.status = 'Dipinjam';
+                        if (statusBadge) {
+                            statusBadge.textContent = currentLang === 'id' ? 'Dipinjam' : 'On Loan';
+                            statusBadge.className = 'status-badge inline-block mt-2 px-2 py-0.5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 text-[9px] font-semibold rounded-full';
+                        }
+                    } else {
+                        card.dataset.status = 'Tersedia';
+                        if (statusBadge) {
+                            statusBadge.textContent = currentLang === 'id' ? 'Tersedia' : 'Available';
+                            statusBadge.className = 'status-badge inline-block mt-2 px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[9px] font-semibold rounded-full';
+                        }
+                    }
+                });
+
+                // Sinkronkan ulang data buku di Javascript
+                booksData = getBooksFromDOM();
+            } catch (err) {
+                console.error('Error updating book statuses:', err);
+            }
+        }
+
+        function calculateFines() {
+            let totalFine = 0;
+            const overdueItems = [];
+
+            activeLoans.forEach(loan => {
+                if (!loan.tanggal_kembali && loan.tenggat_waktu) {
+                    const dueDate = new Date(loan.tenggat_waktu);
+                    const today = new Date();
+                    dueDate.setHours(0, 0, 0, 0);
+                    today.setHours(0, 0, 0, 0);
+
+                    const diffTime = today - dueDate;
+                    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+                    if (diffDays > 0) {
+                        const fine = diffDays * 2000;
+                        totalFine += fine;
+                        overdueItems.push({
+                            title: loan.book_title || 'Buku',
+                            days: diffDays,
+                            amount: fine
+                        });
+                    }
+                }
+            });
+
+            userFine = totalFine;
+            
+            // Render rincian denda berjalan
+            const card = document.getElementById('fine-breakdown-card');
+            const list = document.getElementById('fine-breakdown-list');
+            if (card && list) {
+                if (userFine > 0) {
+                    list.innerHTML = overdueItems.map(item => `
+                        <div class="p-3.5 bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/40 rounded-xl flex justify-between items-center text-xs">
+                            <div>
+                                <h5 class="font-bold text-slate-800 dark:text-white">Keterlambatan Pengembalian: "${item.title}"</h5>
+                                <p class="text-slate-400 mt-0.5">Terlambat ${item.days} hari × Rp 2.000 / hari</p>
+                            </div>
+                            <span class="font-mono font-bold text-rose-500 text-sm">Rp ${item.amount.toLocaleString('id-ID')}</span>
+                        </div>
+                    `).join('') + `
+                        <p class="text-[11px] text-slate-400 leading-normal italic" data-i18n="circ-fine-note">*Silakan lakukan pembayaran denda langsung di meja loket sirkulasi perpustakaan pusat untuk mengaktifkan kembali hak peminjaman penuh Anda.</p>
+                    `;
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            }
+
+            // Tampilkan/sembunyikan floating widget denda di kiri bawah
+            const widget = document.getElementById('fine-widget');
+            if (widget) {
+                widget.classList.toggle('hidden', userFine === 0);
+            }
+            updateFineDisplay();
         }
 
         function formatDateIndo(dateStr) {
@@ -1363,7 +1454,6 @@
             }).join('');
         }
 
-        // Overwrite updateCourierStatusVisibility to check live loans
         function updateCourierStatusVisibility() {
             const box = document.getElementById('courier-status-box');
             const deadlineBox = document.getElementById('circ-deadline-box');
