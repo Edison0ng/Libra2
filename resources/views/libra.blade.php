@@ -736,7 +736,9 @@
 
         function logoutSesi() { 
             if(confirm(currentLang === 'id' ? "Keluar dari sesi?" : "Log out?")) { 
-                window.location.reload(); 
+                localStorage.removeItem('libra_token');
+                localStorage.removeItem('libra_user');
+                window.location.href = '/login';
             } 
         }
 

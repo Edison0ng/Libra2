@@ -578,6 +578,23 @@
 </div>
 
 <script>
+  // ===================== AUTO-REDIRECT IF ALREADY LOGGED IN =====================
+  (function() {
+    const token = localStorage.getItem('libra_token');
+    const userStr = localStorage.getItem('libra_user');
+    if (token && userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user) {
+          const isAdmin = user.nim && user.nim.toLowerCase() === 'admin';
+          window.location.href = isAdmin ? 'admin-dashboard.html' : ('/' + (user.username ?? user.nim));
+        }
+      } catch (e) {
+        console.error('Error auto-redirecting:', e);
+      }
+    }
+  })();
+
   // ===================== TOGGLE SHOW/HIDE PASSWORD =====================
   const togglePasswordBtn = document.getElementById('togglePassword');
   const passwordInput = document.getElementById('password');

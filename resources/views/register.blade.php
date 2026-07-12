@@ -373,6 +373,23 @@
 </div>
 
 <script>
+  // ===================== AUTO-REDIRECT IF ALREADY LOGGED IN =====================
+  (function() {
+    const token = localStorage.getItem('libra_token');
+    const userStr = localStorage.getItem('libra_user');
+    if (token && userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user) {
+          const isAdmin = user.nim && user.nim.toLowerCase() === 'admin';
+          window.location.href = isAdmin ? 'admin-dashboard.html' : ('/' + (user.username ?? user.nim));
+        }
+      } catch (e) {
+        console.error('Error auto-redirecting:', e);
+      }
+    }
+  })();
+
   const EYE_OPEN = '<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path><circle cx="12" cy="12" r="3"></circle>';
   const EYE_CLOSED = '<path d="M3 3l18 18"></path><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"></path><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 7 11 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61C4.13 8.36 2 11.6 1 12c0 0 1 2 2.6 3.8"></path>';
 
