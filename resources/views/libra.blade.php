@@ -768,7 +768,7 @@
         }
 
         // ============================================================
-        // FUNGSI BAHASA
+        // FUNGSI BAHASA Test 1
         // ============================================================
         function changeLanguage(lang) {
             currentLang = lang;
