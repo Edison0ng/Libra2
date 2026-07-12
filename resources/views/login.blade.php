@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LIBRA — Login</title>
+
+<!-- Google Fonts: Sora untuk heading/brand, Inter untuk body -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<style>
+  /* ===================== ROOT DESIGN TOKENS (Proto 4 LIBRA) ===================== */
+  :root{
+    --bg: #0A0E17;
+    --panel-solid: #10172A;
+    --panel-2: #151D34;
+    --line: #222B42;
+    --text: #E7EAF2;
+    --muted: #8A92A6;
+    --muted-2: #737F9C; /* kontras ditingkatkan dari #5C657B utk aksesibilitas */
+    --accent: #3D6BFF;
+    --accent-2: #7C9CFF;
+    --danger: #FF5470;
+    --radius: 14px;
+
+    /* turunan warna untuk badge/status, supaya konsisten dgn tema */
+    --success: #3DDC97;
+    --success-bg: rgba(61, 220, 151, 0.12);
+    --danger-bg: rgba(255, 84, 112, 0.12);
+    --accent-bg: rgba(61, 107, 255, 0.12);
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html, body{
+    height:100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a{ color: var(--accent-2); text-decoration:none; }
+  a:hover{ text-decoration: underline; }
+
+  /* ===================== LAYOUT UTAMA: 2 KOLOM ===================== */
+  .auth-shell{
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1.1fr 1fr; /* kiri sedikit lebih lebar utk konten info */
+  }
+
+  /* Background sedikit gradasi supaya tidak flat datar */
+  .auth-shell{
+    background:
+      radial-gradient(900px 500px at 0% 0%, rgba(61,107,255,0.08), transparent 60%),
+      radial-gradient(700px 500px at 100% 100%, rgba(124,156,255,0.06), transparent 60%),
+      var(--bg);
+  }
+
+  /* ===================== KOLOM KIRI: PANEL INFO & SIRKULASI ===================== */
+  .info-panel{
+    padding: 56px 64px;
+    display:flex;
+    flex-direction: column;
+    border-right: 1px solid var(--line);
+  }
+
+  .brand-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom: 48px;
+  }
+
+  .brand-row .logo-mark{
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Sora', sans-serif;
+    font-weight:800;
+    font-size:16px;
+    color:#fff;
+    flex-shrink:0;
+  }
+
+  .brand-row .brand-name{
+    font-family:'Sora', sans-serif;
+    font-weight:700;
+    font-size: 18px;
+    letter-spacing: 0.5px;
+    color: var(--text);
+  }
+
+  /* Judul sekunder pada panel info (konten pendukung, bukan judul utama dokumen) */
+  .info-panel h2{
+    font-family:'Sora', sans-serif;
+    font-weight:700;
+    font-size: 28px;
+    line-height:1.3;
+    margin-bottom: 8px;
+  }
+
+  .info-panel .subtitle{
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 32px;
+  }
+
+  /* Ledger / log style container */
+  .ledger{
+    background: var(--panel-solid);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display:flex;
+    flex-direction: column;
+    margin-bottom: auto;
+  }
+
+  .ledger-header{
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background: var(--panel-2);
+  }
+
+  .ledger-header .label{
+    font-size: 12px;
+    font-weight:600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .ledger-header .live-dot{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size: 11px;
+    color: var(--success);
+  }
+
+  .live-dot span.dot{
+    width:7px; height:7px;
+    border-radius:50%;
+    background: var(--success);
+    box-shadow: 0 0 0 0 rgba(61,220,151,0.6);
+    animation: pulse 1.8s infinite;
+  }
+
+  @keyframes pulse{
+    0%{ box-shadow: 0 0 0 0 rgba(61,220,151,0.5); }
+    70%{ box-shadow: 0 0 0 6px rgba(61,220,151,0); }
+    100%{ box-shadow: 0 0 0 0 rgba(61,220,151,0); }
+  }
+
+  /* ledger-row: satu baris informasi/log */
+.ledger-row{
+  display:flex;
+  align-items:flex-start;
+  gap:14px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.ledger-row:last-child{ border-bottom: none; }
+
+.ledger-row:hover{
+  background: rgba(255,255,255,0.015);
+}
+
+.badge{
+  flex-shrink:0;
+  flex-grow:0;
+  width: 104px;              /* lebar tetap & seragam, kunci utama perataan */
+  box-sizing: border-box;
+  text-align: center;        /* teks badge tetap center meski lebar seragam */
+  font-size: 11px;
+  font-weight:700;
+  padding: 4px 6px;
+  border-radius: 999px;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;   /* jaga-jaga jika ada label lebih panjang di masa depan */
+  margin-top: 2px;
+}
+
+.badge.new{ background: var(--accent-bg); color: var(--accent-2); }
+.badge.empty{ background: var(--danger-bg); color: var(--danger); }
+.badge.update{ background: var(--success-bg); color: var(--success); }
+
+.ledger-row .row-content{
+  flex: 1 1 auto;
+  min-width: 0;              /* mencegah overflow mendorong lebar kolom badge */
+}
+
+.ledger-row .row-content p{
+  font-size: 13.5px;
+  line-height:1.55;
+  color: var(--text);
+}
+
+.ledger-row .row-content .row-time{
+  display:block;
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: var(--muted-2);
+}
+
+  .ledger-footer{
+    padding: 14px 20px;
+    text-align:center;
+    font-size: 12px;
+    color: var(--muted-2);
+    border-top: 1px solid var(--line);
+  }
+
+  /* ===================== KOLOM KANAN: CARD LOGIN ===================== */
+  .form-panel{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 40px;
+  }
+
+  .login-card{
+    width: 100%;
+    max-width: 400px;
+    background: var(--panel-solid);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 40px 36px;
+  }
+
+  .login-card .card-logo{
+    text-align:center;
+    margin-bottom: 6px;
+  }
+
+  /* Judul utama dokumen: identitas LIBRA pada kartu login (satu-satunya h1 halaman) */
+  .login-card .card-logo .logo-text{
+    display:block;
+    font-family:'Sora', sans-serif;
+    font-weight:800;
+    font-size: 32px;
+    letter-spacing: 1px;
+    background: linear-gradient(135deg, var(--text), var(--accent-2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .login-card .card-tagline{
+    text-align:center;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 32px;
+  }
+
+  /* err-banner: kotak pesan error bawaan Proto 4 */
+  .err-banner{
+    display:none; /* default hidden, di-toggle lewat JS */
+    align-items:flex-start;
+    gap:10px;
+    background: var(--danger-bg);
+    border: 1px solid rgba(255, 84, 112, 0.35);
+    color: var(--danger);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height:1.4;
+    margin-bottom: 20px;
+  }
+
+  .err-banner.show{ display:flex; }
+
+  .err-banner .err-icon{
+    flex-shrink:0;
+    font-weight:700;
+  }
+
+  .field-group{
+    margin-bottom: 18px;
+  }
+
+  .field-group label{
+    display:block;
+    font-size: 12.5px;
+    font-weight:600;
+    color: var(--muted);
+    margin-bottom: 7px;
+  }
+
+  .input-wrap{
+    position: relative;
+    display:flex;
+    align-items:center;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .input-wrap:focus-within{
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(61,107,255,0.15);
+  }
+
+  .input-wrap .input-icon{
+    width: 42px;
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color: var(--muted-2);
+  }
+
+  .input-wrap input{
+    flex:1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family:'Inter', sans-serif;
+    font-size: 14px;
+    padding: 12px 12px 12px 0;
+  }
+
+  .input-wrap input::placeholder{
+    color: var(--muted-2);
+  }
+
+  .toggle-eye{
+    width: 42px;
+    flex-shrink:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    color: var(--muted-2);
+    background:none;
+    border:none;
+    padding:0;
+  }
+
+  .toggle-eye:hover{ color: var(--muted); }
+
+  /* baris remember me + lupa password */
+  .options-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom: 24px;
+    font-size: 13px;
+  }
+
+  .remember-me{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    color: var(--muted);
+    cursor:pointer;
+    user-select:none;
+  }
+
+  .remember-me input[type="checkbox"]{
+    width: 15px;
+    height: 15px;
+    accent-color: var(--accent);
+    cursor:pointer;
+  }
+
+  .forgot-link{
+    font-size: 13px;
+    color: var(--accent-2);
+  }
+
+  /* tombol utama */
+  .btn-primary{
+    width:100%;
+    background: var(--accent);
+    color:#fff;
+    border:none;
+    border-radius: 10px;
+    padding: 13px 0;
+    font-family:'Inter', sans-serif;
+    font-weight:600;
+    font-size: 14.5px;
+    cursor:pointer;
+    transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  }
+
+  .btn-primary:hover{
+    background: var(--accent-2);
+    box-shadow: 0 6px 18px rgba(61,107,255,0.35);
+  }
+
+  .btn-primary:active{
+    transform: translateY(1px);
+  }
+
+  .signup-footer{
+    text-align:center;
+    margin-top: 24px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .signup-footer a{
+    font-weight:600;
+  }
+
+  /* ===================== RESPONSIVE: STACKED 1 KOLOM DI MOBILE ===================== */
+  @media (max-width: 880px){
+    .auth-shell{
+      grid-template-columns: 1fr;
+    }
+
+    .info-panel{
+      border-right: none;
+      border-bottom: 1px solid var(--line);
+      padding: 36px 24px;
+    }
+
+    .info-panel h2{ font-size: 22px; }
+
+    .form-panel{
+      padding: 32px 20px 56px;
+    }
+
+    .login-card{
+      padding: 32px 24px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="auth-shell">
+
+  <!-- ===================== KOLOM KIRI: PANEL INFO & SIRKULASI BUKU ===================== -->
+  <section class="info-panel">
+    <div class="brand-row">
+      <div class="logo-mark">L</div>
+      <div class="brand-name">LIBRA</div>
+    </div>
+
+    <!-- h2: konten pendukung, bukan judul utama dokumen -->
+    <h2>Informasi Buku Perpustakaan</h2>
+    <p class="subtitle">Status Koleksi Perpustakaan Kampus.</p>
+
+    <div class="ledger">
+      <div class="ledger-header">
+        <span class="label">Informasi</span>
+        <div class="live-dot"><span class="dot"></span>Live Update</div>
+      </div>
+
+      <!-- Baris 1: Buku Baru -->
+      <div class="ledger-row">
+        <span class="badge new">BUKU BARU</span>
+        <div class="row-content">
+          <p>"Artificial Intelligence: A Modern Approach (Edisi 4)" kini tersedia di Rak Utama.</p>
+          <span class="row-time">2 menit yang lalu</span>
+        </div>
+      </div>
+
+      <!-- Baris 2: Stok Kosong -->
+      <div class="ledger-row">
+        <span class="badge empty">STOK KOSONG</span>
+        <div class="row-content">
+          <p>"Sistem Operasi (Silberschatz)" saat ini kosong karena sedang dipinjam seluruhnya.</p>
+          <span class="row-time">17 menit yang lalu</span>
+        </div>
+      </div>
+
+      <!-- Baris 3: Buku Baru -->
+      <div class="ledger-row">
+        <span class="badge new">BUKU BARU</span>
+        <div class="row-content">
+          <p>"Dasar Pemrograman Python untuk Pemula" telah ditambahkan ke katalog digital.</p>
+          <span class="row-time">1 jam yang lalu</span>
+        </div>
+      </div>
+
+      <!-- Baris 4: Update pengembalian -->
+      <div class="ledger-row">
+        <span class="badge update">DIKEMBALIKAN</span>
+        <div class="row-content">
+          <p>"Database System Concepts (Silberschatz)" baru dikembalikan dan siap dipinjam kembali.</p>
+          <span class="row-time">3 jam yang lalu</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===================== KOLOM KANAN: CARD LOGIN TERPADU ===================== -->
+  <section class="form-panel">
+    <div class="login-card">
+      <div class="card-logo">
+        <!-- h1: satu-satunya judul utama dokumen, merepresentasikan identitas & tujuan halaman -->
+        <h1 class="logo-text">LIBRA</h1>
+      </div>
+      <p class="card-tagline">Sistem Informasi Perpustakaan Terpadu</p>
+
+      <!-- err-banner: muncul via JS jika form kosong -->
+      <div class="err-banner" id="errBanner">
+        <span class="err-icon">⚠</span>
+        <span id="errBannerText">NIM/Username dan kata sandi wajib diisi.</span>
+      </div>
+
+      <form id="loginForm" novalidate>
+        <!-- Input NIM / Username Admin -->
+        <div class="field-group">
+          <label for="username">NIM (Mahasiswa) / Username (Admin)</label>
+          <div class="input-wrap">
+            <span class="input-icon">
+              <!-- ikon user -->
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <circle cx="12" cy="8" r="4"></circle>
+                <path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"></path>
+              </svg>
+            </span>
+            <input type="text" id="username" name="username" placeholder="Masukkan NIM atau username admin" autocomplete="username">
+          </div>
+        </div>
+
+        <!-- Input Password dengan toggle show/hide -->
+        <div class="field-group">
+          <label for="password">Kata Sandi</label>
+          <div class="input-wrap">
+            <span class="input-icon">
+              <!-- ikon lock -->
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <rect x="5" y="11" width="14" height="9" rx="2"></rect>
+                <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
+              </svg>
+            </span>
+            <input type="password" id="password" name="password" placeholder="Masukkan kata sandi" autocomplete="current-password">
+            <button type="button" class="toggle-eye" id="togglePassword" aria-label="Tampilkan/sembunyikan kata sandi">
+              <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Remember me + Lupa Password -->
+        <div class="options-row">
+          <label class="remember-me">
+            <input type="checkbox" id="rememberMe" name="rememberMe">
+            Ingat Saya
+          </label>
+          <a href="#" class="forgot-link">Lupa Password?</a>
+        </div>
+
+        <!-- Tombol submit -->
+        <button type="submit" class="btn-primary">Masuk ke Sistem</button>
+      </form>
+
+      <p class="signup-footer">
+        Belum memiliki akun? <a href="{{ route('register') }}">Daftar Sekarang</a>
+      </p>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  // ===================== TOGGLE SHOW/HIDE PASSWORD =====================
+  const togglePasswordBtn = document.getElementById('togglePassword');
+  const passwordInput = document.getElementById('password');
+  const eyeIcon = document.getElementById('eyeIcon');
+
+  // Path SVG untuk ikon "mata tertutup" (saat password ditampilkan)
+  const EYE_OPEN = '<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path><circle cx="12" cy="12" r="3"></circle>';
+  const EYE_CLOSED = '<path d="M3 3l18 18"></path><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"></path><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 7 11 7a13.16 13.16 0 0 1-1.67 2.68"></path><path d="M6.61 6.61C4.13 8.36 2 11.6 1 12c0 0 1 2 2.6 3.8"></path>';
+
+  togglePasswordBtn.addEventListener('click', () => {
+    const isPassword = passwordInput.type === 'password';
+    passwordInput.type = isPassword ? 'text' : 'password';
+    eyeIcon.innerHTML = isPassword ? EYE_CLOSED : EYE_OPEN;
+  });
+
+  // ===================== HANDLE SUBMIT LOGIN =====================
+  const loginForm = document.getElementById('loginForm');
+  const errBanner = document.getElementById('errBanner');
+  const errBannerText = document.getElementById('errBannerText');
+  const usernameInput = document.getElementById('username');
+
+  function showError(message){
+    errBannerText.textContent = message;
+    errBanner.classList.add('show');
+  }
+
+  function hideError(){
+    errBanner.classList.remove('show');
+  }
+
+  // Base URL API backend Laravel. Ganti sesuai environment (local/production).
+  const API_BASE_URL = 'https://libra-production-32ea.up.railway.app/api';
+
+  loginForm.addEventListener('submit', async function(e){
+    e.preventDefault(); // mencegah submit default (reload halaman)
+
+    const usernameVal = usernameInput.value.trim();
+    const passwordVal = passwordInput.value.trim();
+
+    // Validasi: form tidak boleh kosong
+    if(usernameVal === '' || passwordVal === ''){
+      showError('NIM/Username dan kata sandi wajib diisi.');
+      return;
+    }
+
+    hideError();
+
+    const submitBtn = loginForm.querySelector('.btn-primary');
+    const originalBtnText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Memproses...';
+
+try{
+    const res = await fetch(`${API_BASE_URL}/login`, {
+        method: 'POST',
+        mode: 'cors',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            nim: usernameVal,
+            password: passwordVal
+        })
+    });
+
+    console.log("Status:", res.status);   // <-- TAMBAHKAN DI SINI
+
+    const data = await res.json();
+
+    console.log("Response:", data);       // <-- TAMBAHKAN DI SINI
+
+    if(!res.ok || !data.success){
+        showError(data.message || 'Username atau kata sandi salah.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalBtnText;
+        return;
+    }
+
+      // Simpan token & data user untuk dipakai halaman lain
+      localStorage.setItem('libra_token', data.token);
+      localStorage.setItem('libra_user', JSON.stringify(data.user));
+
+      // Redirect sesuai role yang dikirim backend (admin / mahasiswa)
+      window.location.href = data.redirect || 'index.html';
+
+    } catch (err){
+      console.error('Login error:', err);
+      showError('Tidak bisa terhubung ke server. Pastikan backend sedang berjalan.');
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalBtnText;
+    }
+  });
+
+  // ===================== REAL-TIME CLEAR ERROR SAAT MENGETIK =====================
+  // Begitu user mulai memperbaiki input, err-banner langsung hilang tanpa perlu submit ulang
+  usernameInput.addEventListener('input', () => {
+    if(errBanner.classList.contains('show')){
+      hideError();
+    }
+  });
+
+  passwordInput.addEventListener('input', () => {
+    if(errBanner.classList.contains('show')){
+      hideError();
+    }
+  });
+</script>
+
+</body>
+</html>
