@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistem Libra</title>
+    <script>
+        (function() {
+            const token = localStorage.getItem('libra_token');
+            const userStr = localStorage.getItem('libra_user');
+            if (!token || !userStr) {
+                window.location.href = '/login';
+            }
+        })();
+    </script>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome Icons -->
@@ -160,13 +169,6 @@
             
             <!-- TAB 1: BERANDA -->
             <div id="beranda" class="tab-content active max-w-5xl mx-auto space-y-6">
-                <h3 class="font-bold text-slate-800 dark:text-white text-base md:text-lg flex items-center gap-2 pt-2">
-                    <i class="fa-solid fa-hourglass-half text-blue-500"></i> <span data-i18n="continue-reading">Lanjutkan Membaca</span>
-                </h3>
-                
-                <div id="reading-progress" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- Akan diisi secara dinamis -->
-                </div>
 
                 <h3 class="font-bold text-slate-800 dark:text-white text-base md:text-lg flex items-center gap-2 pt-2">
                     <i class="fa-solid fa-star text-amber-500"></i> <span data-i18n="recommended">Direkomendasikan Untukmu</span>
@@ -474,6 +476,9 @@
     <!-- MODAL DETAIL BUKU -->
     <div id="detail-modal" class="hidden fixed inset-0 z-50 flex justify-center items-center p-4 bg-black/60 backdrop-blur-sm modal-overlay" onclick="if(event.target === this) closeDetailModal()">
         <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-3xl p-6 shadow-2xl border border-slate-100 dark:border-slate-800 relative modal-content">
+            <button onclick="toggleWishlist()" class="absolute top-4 right-14 w-8 h-8 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-full flex items-center justify-center hover:bg-rose-50 dark:hover:bg-rose-950/30 hover:text-rose-500 transition-colors" title="Tambah ke Wishlist">
+                <i id="modal-wishlist-icon" class="fa-regular fa-heart"></i>
+            </button>
             <button onclick="closeDetailModal()" class="absolute top-4 right-4 w-8 h-8 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-full flex items-center justify-center hover:bg-slate-200 transition-colors">
                 <i class="fa-solid fa-xmark"></i>
             </button>
@@ -851,6 +856,17 @@
                 badge.className = 'inline-block px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 text-[10px] font-semibold rounded-full';
             }
 
+            // Wishlist icon state
+            const wishlistIcon = document.getElementById('modal-wishlist-icon');
+            if (wishlistIcon) {
+                const isInWishlist = wishlistBooks.map(String).includes(String(id));
+                if (isInWishlist) {
+                    wishlistIcon.className = 'fa-solid fa-heart text-rose-500';
+                } else {
+                    wishlistIcon.className = 'fa-regular fa-heart text-slate-500';
+                }
+            }
+
             // Booking button
             const bookingBtn = document.querySelector('#booking-default-btn-container button');
             if (status === 'Dipinjam') {
@@ -896,21 +912,22 @@
             const book = booksData.find(b => b.id === activeBookId);
             if(!book) return;
 
-            if (book.status !== 'Dipinjam') {
-                showToast(currentLang === 'id' ? 'Info' : 'Info', 
-                    currentLang === 'id' ? 'Wishlist hanya untuk buku yang sedang dipinjam.' : 'Wishlist is only for borrowed books.');
-                return;
-            }
-
-            const idx = wishlistBooks.findIndex(id => id === activeBookId);
+            const idx = wishlistBooks.findIndex(id => String(id) === String(activeBookId));
             const isId = currentLang === 'id';
+            const wishlistIcon = document.getElementById('modal-wishlist-icon');
             
             if(idx > -1) {
                 wishlistBooks.splice(idx, 1);
+                if (wishlistIcon) {
+                    wishlistIcon.className = 'fa-regular fa-heart text-slate-500';
+                }
                 showToast(isId ? "Dihapus dari Wishlist" : "Removed from Wishlist", 
                         isId ? `Buku "${book.title}" berhasil dilepas.` : `Book "${book.title}" has been removed.`);
             } else {
                 wishlistBooks.push(activeBookId);
+                if (wishlistIcon) {
+                    wishlistIcon.className = 'fa-solid fa-heart text-rose-500';
+                }
                 showToast(isId ? "Ditambahkan ke Wishlist" : "Added to Wishlist", 
                         isId ? `Buku "${book.title}" berhasil disimpan.` : `Book "${book.title}" has been added to your wishlist.`);
             }
@@ -935,7 +952,7 @@
                 const book = booksData.find(b => b.id === id);
                 if(book) {
                     container.insertAdjacentHTML('beforeend', `
-                        <div onclick="openBookDetail(${book.id})" class="wishlist-card-item bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 overflow-hidden pb-3 relative cursor-pointer">
+                        <div onclick="openBookDetail('${book.id}')" class="wishlist-card-item bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 overflow-hidden pb-3 relative cursor-pointer">
                             <button onclick="removeFromWishlist(${index}, event)" class="absolute top-2 right-2 bg-white/80 backdrop-blur-sm dark:bg-slate-900/80 w-6 h-6 rounded-full text-rose-500 flex items-center justify-center shadow-sm text-xs hover:bg-rose-50 transition-colors">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
@@ -966,7 +983,7 @@
             
             const recommended = booksData.slice(0, 4);
             container.innerHTML = recommended.map(book => `
-                <div onclick="openBookDetail(${book.id})" class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 overflow-hidden pb-3 cursor-pointer hover:shadow-md transition-shadow">
+                <div onclick="openBookDetail('${book.id}')" class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 overflow-hidden pb-3 cursor-pointer hover:shadow-md transition-shadow">
                     <img src="${book.cover}" class="w-full aspect-[4/5] object-cover">
                     <div class="p-3">
                         <h4 class="font-bold text-xs md:text-sm text-slate-800 dark:text-white line-clamp-1">${book.title}</h4>
@@ -976,74 +993,27 @@
             `).join('');
         }
 
-        // ============================================================
-        // FUNGSI READING PROGRESS
-        // ============================================================
-        function renderReadingProgress() {
-            const container = document.getElementById('reading-progress');
-            if (!container) return;
-            
-            const progressData = [
-                { title: "Metodologi Penelitian Bisnis", author: "Prof. Dr. Sugiyono", progress: 75, cover: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=150&auto=format&fit=crop&q=60" },
-                { title: "Artificial Intelligence: Modern Approach", author: "Stuart Russell", progress: 30, cover: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=150&auto=format&fit=crop&q=60" }
-            ];
-
-            container.innerHTML = progressData.map(item => `
-                <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 flex gap-4 items-center">
-                    <div class="w-14 h-20 rounded-lg bg-blue-100 overflow-hidden flex-shrink-0">
-                        <img src="${item.cover}" class="w-full h-full object-cover">
-                    </div>
-                    <div class="flex-1">
-                        <h4 class="font-bold text-slate-800 dark:text-white text-sm line-clamp-1">${item.title}</h4>
-                        <p class="text-xs text-slate-400 mt-0.5 mb-2">${item.author}</p>
-                        <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5">
-                            <div class="bg-blue-500 h-1.5 rounded-full progress-bar" style="width: ${item.progress}%"></div>
-                        </div>
-                        <span class="text-[9px] text-slate-400 block text-right mt-1">${item.progress}% Selesai</span>
-                    </div>
-                </div>
-            `).join('');
-        }
+        // Note: FUNGSI READING PROGRESS (renderReadingProgress) dihapus atas permintaan user.
 
         // ============================================================
-        // FUNGSI SIRKULASI
+        // FUNGSI SIRKULASI & TIMER
         // ============================================================
-        function updateCourierStatusVisibility() {
-            const box = document.getElementById('courier-status-box');
-            const deadlineBox = document.getElementById('circ-deadline-box');
-            const isActive = localStorage.getItem('libra-courier-active') === 'true';
-
-            if (box) {
-                box.classList.toggle('hidden', !isActive);
-                if (isActive) {
-                    const location = localStorage.getItem('libra-courier-location') || 'current';
-                    const descEl = document.getElementById('courier-status-1-desc');
-                    const dict = langDictionary[currentLang];
-                    if (descEl) descEl.innerText = dict[`circ-status-1-desc-${location}`] || dict['circ-status-1-desc'];
-                }
-            }
-
-            if (deadlineBox) {
-                deadlineBox.classList.toggle('hidden', isActive);
-                if (!isActive) {
-                    startCountdown();
-                }
-            }
-        }
-
+        let countdownInterval = null;
         function startCountdown() {
+            if (countdownInterval) return; // Mencegah duplikasi interval
             let time = 6300;
             const timerElement = document.getElementById('countdown-timer');
             if (!timerElement) return;
 
-            const interval = setInterval(() => {
+            countdownInterval = setInterval(() => {
                 const hours = Math.floor(time / 3600);
                 const minutes = Math.floor((time % 3600) / 60);
                 const seconds = time % 60;
                 timerElement.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
                 
                 if (time <= 0) {
-                    clearInterval(interval);
+                    clearInterval(countdownInterval);
+                    countdownInterval = null;
                     timerElement.textContent = '00:00:00';
                 }
                 time--;
@@ -1411,9 +1381,111 @@
                 calculateFines();
                 updateCourierStatusVisibility();
                 await updateBookStatuses();
+                renderUserNotifications();
             } catch (err) {
                 console.error('Error loading loans:', err);
             }
+        }
+
+        function renderUserNotifications() {
+            const container = document.getElementById('notif-list');
+            const badge = document.getElementById('notif-badge');
+            if (!container) return;
+
+            const notifications = [];
+
+            activeLoans.forEach(loan => {
+                // 1. Bukunya siap diantar
+                if (loan.status === 'Diantar Kurir') {
+                    notifications.push({
+                        title: currentLang === 'id' ? 'Buku Siap Diantar!' : 'Book Ready for Delivery!',
+                        titleColor: 'text-blue-500',
+                        desc: currentLang === 'id' 
+                            ? `Buku "${loan.book_title || 'Buku'}" sedang diantarkan oleh kurir ke alamat Anda.` 
+                            : `Book "${loan.book_title || 'Book'}" is being delivered by the courier to your address.`,
+                        time: 'Baru saja'
+                    });
+                }
+                // 2. Booking ditolak
+                else if (loan.status === 'ditolak') {
+                    notifications.push({
+                        title: currentLang === 'id' ? 'Booking Ditolak' : 'Booking Rejected',
+                        titleColor: 'text-rose-500',
+                        desc: currentLang === 'id'
+                            ? `Booking buku "${loan.book_title || 'Buku'}" ditolak oleh pustakawan.`
+                            : `Booking for book "${loan.book_title || 'Book'}" was rejected by the librarian.`,
+                        time: 'Baru saja'
+                    });
+                }
+                // 3. Notifikasi pengembalian buku & pengingat pengembalian
+                else if (loan.status === 'dipinjam' || loan.status === 'Terlambat') {
+                    if (!loan.tanggal_kembali && loan.tenggat_waktu) {
+                        const dueDate = new Date(loan.tenggat_waktu);
+                        const today = new Date();
+                        dueDate.setHours(0,0,0,0);
+                        today.setHours(0,0,0,0);
+                        
+                        const diffTime = today - dueDate;
+                        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+                        if (diffDays > 0) {
+                            notifications.push({
+                                title: currentLang === 'id' ? 'Terlambat Mengembalikan!' : 'Overdue Return!',
+                                titleColor: 'text-rose-500',
+                                desc: currentLang === 'id'
+                                    ? `Buku "${loan.book_title || 'Buku'}" terlambat ${diffDays} hari. Harap segera kembalikan.`
+                                    : `Book "${loan.book_title || 'Book'}" is overdue by ${diffDays} days. Please return it immediately.`,
+                                time: `${diffDays} hari lalu`
+                            });
+                        } else if (diffDays >= -2) {
+                            const daysLeft = Math.abs(diffDays);
+                            const daysLeftStr = daysLeft === 0 
+                                ? (currentLang === 'id' ? 'hari ini' : 'today') 
+                                : (currentLang === 'id' ? `${daysLeft} hari lagi` : `in ${daysLeft} days`);
+                            notifications.push({
+                                title: currentLang === 'id' ? 'Pengingat Pengembalian' : 'Return Reminder',
+                                titleColor: 'text-amber-500',
+                                desc: currentLang === 'id'
+                                    ? `Buku "${loan.book_title || 'Buku'}" harus dikembalikan ${daysLeftStr} (${formatDateIndo(loan.tenggat_waktu)}).`
+                                    : `Book "${loan.book_title || 'Book'}" must be returned ${daysLeftStr} (${formatDateIndo(loan.tenggat_waktu)}).`,
+                                time: 'Mendekati batas'
+                            });
+                        }
+                    }
+                }
+                else if (loan.status === 'dikembalikan') {
+                    notifications.push({
+                        title: currentLang === 'id' ? 'Buku Dikembalikan' : 'Book Returned',
+                        titleColor: 'text-green-500',
+                        desc: currentLang === 'id'
+                            ? `Terima kasih! Buku "${loan.book_title || 'Buku'}" telah dikembalikan.`
+                            : `Thank you! Book "${loan.book_title || 'Book'}" has been successfully returned.`,
+                        time: 'Selesai'
+                    });
+                }
+            });
+
+            if (notifications.length === 0) {
+                container.innerHTML = `
+                    <div class="py-8 text-center text-slate-400 text-xs italic">
+                        ${currentLang === 'id' ? 'Tidak ada notifikasi baru' : 'No new notifications'}
+                    </div>
+                `;
+                if (badge) badge.classList.add('hidden');
+                return;
+            }
+
+            if (badge) badge.classList.remove('hidden');
+
+            container.innerHTML = notifications.map(notif => `
+                <div class="border-b border-slate-100 dark:border-slate-800 pb-2.5 last:border-b-0 last:pb-0">
+                    <div class="flex justify-between text-[11px] mb-1">
+                        <span class="font-bold ${notif.titleColor}">${notif.title}</span>
+                        <span class="text-slate-400">${notif.time}</span>
+                    </div>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 leading-normal">${notif.desc}</p>
+                </div>
+            `).join('');
         }
 
         async function updateBookStatuses() {
@@ -1422,9 +1494,9 @@
                 if (!response.ok) throw new Error('Gagal mengambil semua status peminjaman');
                 const allLoans = await response.json();
 
-                // Dapatkan ISBN buku yang sedang dipinjam (tanggal_kembali adalah null)
+                // Dapatkan ISBN buku yang sedang dipinjam/booking/diantar kurir (tanggal_kembali adalah null dan status bukan dikembalikan/ditolak)
                 const borrowedBookISBNs = allLoans
-                    .filter(l => !l.tanggal_kembali)
+                    .filter(l => !l.tanggal_kembali && l.status !== 'dikembalikan' && l.status !== 'ditolak')
                     .map(l => l.book_id);
 
                 // Update status di card buku halaman pustaka
@@ -1522,7 +1594,10 @@
             const tbody = document.getElementById('active-loans-tbody');
             if (!tbody) return;
 
-            if (activeLoans.length === 0) {
+            // Hanya tampilkan peminjaman yang tidak dikembalikan dan tidak ditolak
+            const filteredLoans = activeLoans.filter(loan => loan.status !== 'dikembalikan' && loan.status !== 'ditolak' && !loan.tanggal_kembali);
+
+            if (filteredLoans.length === 0) {
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="3" class="text-center py-8 text-slate-400 italic">
@@ -1533,7 +1608,7 @@
                 return;
             }
 
-            tbody.innerHTML = activeLoans.map(loan => {
+            tbody.innerHTML = filteredLoans.map(loan => {
                 const isOverdue = new Date(loan.tenggat_waktu) < new Date() && !loan.tanggal_kembali;
                 const dateClass = isOverdue ? 'text-rose-500 font-semibold' : 'text-slate-500 dark:text-slate-400';
                 const dateSuffix = isOverdue ? ' (Terlambat)' : '';
@@ -1568,6 +1643,11 @@
                 deadlineBox.classList.toggle('hidden', !hasPickup);
                 if (hasPickup) {
                     startCountdown();
+                } else {
+                    if (countdownInterval) {
+                        clearInterval(countdownInterval);
+                        countdownInterval = null;
+                    }
                 }
             }
         }
@@ -1596,7 +1676,6 @@
             loadUserDonations();
             renderWishlist();
             renderRecommendedBooks();
-            renderReadingProgress();
             loadUserLoans();
             updateFineDisplay();
 

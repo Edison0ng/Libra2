@@ -4,6 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LIBRA — Login</title>
+<script>
+  (function() {
+    const token = localStorage.getItem('libra_token');
+    const userStr = localStorage.getItem('libra_user');
+    if (token && userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        const isAdmin = user.role === 'admin' || user.nim === 'admin' || user.username === 'admin';
+        if (isAdmin) {
+          window.location.href = '/admin.html';
+        } else {
+          window.location.href = '/' + (user.username || user.nim);
+        }
+      } catch (e) {}
+    }
+  })();
+</script>
 
 <!-- Google Fonts: Sora untuk heading/brand, Inter untuk body -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
