@@ -11,21 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-Schema::create('complaints', function (Blueprint $table) {
-    $table->id();
-
-    $table->string('peminjam_id');
-
-    $table->text('pesan');
-
-    $table->enum('status', [
-        'pending',
-        'diproses',
-        'selesai'
-    ])->default('pending');
-
-    $table->timestamps();
-});
+        if (!Schema::hasTable('complaints')) {
+            Schema::create('complaints', function (Blueprint $table) {
+                $table->id();
+                $table->string('peminjam_id');
+                $table->text('pesan');
+                $table->enum('status', [
+                    'pending',
+                    'diproses',
+                    'selesai'
+                ])->default('pending');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

@@ -11,22 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-Schema::create('invoices', function (Blueprint $table) {
-    $table->id();
-
-    $table->string('book_isbn');
-    $table->string('peminjam_id');
-
-    $table->date('tanggal_pinjam');
-    $table->date('tanggal_kembali')->nullable();
-
-    $table->enum('status', [
-        'dipinjam',
-        'dikembalikan'
-    ])->default('dipinjam');
-
-    $table->timestamps();
-});
+        if (!Schema::hasTable('invoices')) {
+            Schema::create('invoices', function (Blueprint $table) {
+                $table->id();
+                $table->string('book_isbn');
+                $table->string('peminjam_id');
+                $table->date('tanggal_pinjam');
+                $table->date('tanggal_kembali')->nullable();
+                $table->enum('status', [
+                    'dipinjam',
+                    'dikembalikan'
+                ])->default('dipinjam');
+                $table->timestamps();
+            });
+        }
     }
 
     /**
