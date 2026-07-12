@@ -732,7 +732,7 @@
                 liveSearch();
             }
             if (tabId === 'profil') {
-                renderDonationHistory();
+                loadUserDonations();
             }
             if (tabId === 'beranda') {
                 renderWishlist();
@@ -1092,7 +1092,33 @@
         // ============================================================
         // FUNGSI DONASI
         // ============================================================
-        function submitDonation() {
+        async function loadUserDonations() {
+            const userStr = localStorage.getItem('libra_user');
+            if (!userStr) return;
+            const user = JSON.parse(userStr);
+
+            try {
+                const response = await fetch(`/api/donations?user_id=${encodeURIComponent(user.id)}`, {
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (response.ok) {
+                    userDonations = await response.json();
+                    renderDonationHistory();
+                }
+            } catch (err) {
+                console.error("Gagal memuat riwayat donasi:", err);
+            }
+        }
+
+        async function submitDonation() {
+            const userStr = localStorage.getItem('libra_user');
+            if (!userStr) {
+                alert('Sesi habis. Silakan login kembali.');
+                window.location.href = '/login';
+                return;
+            }
+            const user = JSON.parse(userStr);
+
             const titleInp = document.getElementById('donate-book-title');
             const authorInp = document.getElementById('donate-book-author');
             const categoryInp = document.getElementById('donate-book-category');
@@ -1105,33 +1131,60 @@
                 return;
             }
 
+            const submitBtn = document.querySelector('#donation-form button[type="submit"]');
+            const originalText = submitBtn ? submitBtn.textContent : '';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = currentLang === 'id' ? 'Mengirim...' : 'Sending...';
+            }
+
             const now = new Date();
-            const formattedDate = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+            const formattedDate = now.toISOString().slice(0, 10); // Format YYYY-MM-DD
 
-            const newDonation = {
-                title: titleInp.value.trim(),
-                author: authorInp.value.trim(),
-                category: categoryInp.value,
-                condition: conditionInp.value,
-                note: noteInp.value.trim(),
-                date: formattedDate,
-                status: "Menunggu Verifikasi"
-            };
+            try {
+                const response = await fetch('/api/donations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        user_id: user.id,
+                        title: titleInp.value.trim(),
+                        author: authorInp.value.trim(),
+                        category: categoryInp.value,
+                        condition: conditionInp.value,
+                        note: noteInp.value.trim(),
+                        tanggal_donasi: formattedDate
+                    })
+                });
 
-            userDonations.unshift(newDonation);
-            localStorage.setItem('libra-donations', JSON.stringify(userDonations));
-            renderDonationHistory();
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.message || 'Gagal mengirim donasi');
+                }
 
-            titleInp.value = '';
-            authorInp.value = '';
-            noteInp.value = '';
-            categoryInp.selectedIndex = 0;
-            conditionInp.selectedIndex = 0;
+                titleInp.value = '';
+                authorInp.value = '';
+                noteInp.value = '';
+                categoryInp.selectedIndex = 0;
+                conditionInp.selectedIndex = 0;
 
-            const isId = currentLang === 'id';
-            showToast(isId ? "Donasi Diajukan!" : "Donation Submitted!", 
-                    isId ? "Terima kasih! Pengajuan donasi Anda berhasil dikirim ke admin perpustakaan." 
-                    : "Thank you! Your donation request has been sent successfully.");
+                await loadUserDonations();
+
+                const isId = currentLang === 'id';
+                showToast(isId ? "Donasi Diajukan!" : "Donation Submitted!", 
+                        isId ? "Terima kasih! Pengajuan donasi Anda berhasil dikirim ke admin perpustakaan." 
+                        : "Thank you! Your donation request has been sent successfully.");
+            } catch (err) {
+                alert(err.message);
+                console.error(err);
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                }
+            }
         }
 
         function renderDonationHistory() {
@@ -1139,18 +1192,28 @@
             if (!container) return;
             
             if (userDonations.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-400 py-4 text-center italic">${langDictionary[currentLang]['donate-empty']}</p>`;
+                const emptyText = currentLang === 'id' ? "Belum ada riwayat donasi buku." : "No book donation history yet.";
+                container.innerHTML = `<p class="text-xs text-slate-400 py-4 text-center italic">${emptyText}</p>`;
                 return;
             }
 
             container.innerHTML = '';
             userDonations.forEach(donasi => {
+                const rawDate = donasi.tanggal_donasi || donasi.date || '';
+                let formattedDate = rawDate;
+                if (rawDate) {
+                    try {
+                        const d = new Date(rawDate);
+                        formattedDate = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+                    } catch(e) {}
+                }
                 const statusText = donasi.status === "Menunggu Verifikasi" ? (currentLang === 'id' ? "Menunggu Verifikasi" : "Pending Verification") : donasi.status;
+                
                 container.insertAdjacentHTML('beforeend', `
                     <div class="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200/50 dark:border-slate-800 flex justify-between items-center">
                         <div>
                             <h6 class="text-xs font-bold text-slate-800 dark:text-white line-clamp-1">${donasi.title}</h6>
-                            <p class="text-[10px] text-slate-400 mt-0.5">${donasi.author} • ${donasi.date}</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">${donasi.author} • ${formattedDate}</p>
                         </div>
                         <span class="text-[9px] font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-500 dark:bg-amber-950/40 border border-amber-200/50 dark:border-amber-900/40">${statusText}</span>
                     </div>
@@ -1530,7 +1593,7 @@
             if (localStorage.getItem('libra-theme') === 'dark') document.documentElement.classList.add('dark');
             applyTranslations();
             switchTab(activeTabId);
-            renderDonationHistory();
+            loadUserDonations();
             renderWishlist();
             renderRecommendedBooks();
             renderReadingProgress();
