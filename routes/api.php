@@ -1,20 +1,17 @@
 <?php
 
-// Update API routes untuk deployment Railway
-
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BookController;
+use App\Http\Controllers\Api\PinjamController;
+use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\InvoiceController;
+use App\Http\Controllers\Api\ComplaintController;
 use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
-|
-| Semua route di file ini otomatis memiliki prefix /api
-| Contoh:
-| /api/login
-| /api/register
-|
 */
 
 // ===================== TEST BACKEND =====================
@@ -24,7 +21,6 @@ Route::get('/test', function () {
         'message' => 'API siap digunakan'
     ]);
 });
-
 
 // ===================== RUTE PUBLIK =====================
 
@@ -37,7 +33,6 @@ Route::post('/login', [AuthController::class, 'login']);
 
 // ===================== RUTE TERPROTEKSI =====================
 // Membutuhkan token Laravel Sanctum
-
 Route::middleware('auth:sanctum')->group(function () {
 
     // Logout user
@@ -47,3 +42,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'me']);
 
 });
+
+// API Resources dari backend-pengguna-v2
+Route::apiResource('books', BookController::class);
+Route::apiResource('users', UserController::class);
+Route::apiResource('pinjam', PinjamController::class);
+Route::apiResource('invoices', InvoiceController::class);
+Route::apiResource('complaints', ComplaintController::class);

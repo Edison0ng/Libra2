@@ -31,6 +31,7 @@ class User extends Authenticatable
     protected $fillable = [
         'id',
         'nama_lengkap',
+        'username',
         'nim',
         'fakultas',
         'no_telepon',
@@ -41,12 +42,23 @@ class User extends Authenticatable
 
     protected $hidden = [
         'password',
+        'remember_token',
     ];
+
+    protected $appends = [
+        'name',
+    ];
+
+    public function getNameAttribute()
+    {
+        return $this->nama_lengkap;
+    }
 
     protected function casts(): array
     {
         return [
             'created_at' => 'datetime',
+            'email_verified_at' => 'datetime',
             'password'   => 'hashed', // otomatis di-hash saat diisi (Laravel 10+)
         ];
     }

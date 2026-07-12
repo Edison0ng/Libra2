@@ -99,7 +99,7 @@ class AuthController extends Controller
             'user'     => $user,
             'token'    => $token,
             'role'     => $user->isAdmin() ? 'admin' : 'mahasiswa',
-            'redirect' => $user->isAdmin() ? 'admin-dashboard.html' : 'index.html',
+            'redirect' => $user->isAdmin() ? 'admin-dashboard.html' : url('/' . ($user->username ?? $user->nim)),
         ]);
     }
 

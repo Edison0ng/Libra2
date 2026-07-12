@@ -1,19 +1,31 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\BookController;
+use App\Http\Controllers\Api\UserController;
 
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
+
+// Halaman utama default diarahkan ke login
 Route::get('/', function () {
     return view('login');
 })->name('login');
-// ===================== HALAMAN LOGIN & REGISTER (LIBRA) =====================
-// Sengaja dibuat sebagai view terpisah (login.blade.php & register.blade.php),
-// BUKAN welcome.blade.php, supaya tidak bentrok (merge conflict) dengan
-// welcome.blade.php milik branch/teman lain saat digabung ke main.
 
 Route::get('/login', function () {
     return view('login');
-})->name('login');
+})->name('login.view');
 
 Route::get('/register', function () {
     return view('register');
 })->name('register');
+
+// Route untuk halaman libra (menampilkan daftar buku)
+Route::get('/libra', [BookController::class, 'index']);
+
+// Route untuk user profile dengan username/NIM
+Route::get('/{username}', [UserController::class, 'showByUsername'])
+    ->where('username', '[a-zA-Z0-9\s\-]+'); // Izinkan huruf, angka, spasi, dan dash
