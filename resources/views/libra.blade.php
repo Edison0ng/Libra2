@@ -293,16 +293,9 @@
                                     <th class="pb-3 font-semibold" data-i18n="circ-table-due-date">Batas Kembali</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-300">
+                            <tbody id="active-loans-tbody" class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-300">
                                 <tr>
-                                    <td class="py-3.5 font-semibold text-slate-800 dark:text-white">Clean Code: Handbook of Agile Software Craftsmanship</td>
-                                    <td class="py-3.5" data-i18n="circ-loan-date-1">22 Juni 2026</td>
-                                    <td class="py-3.5 text-rose-500 font-semibold" data-i18n="circ-due-date-1">29 Juni 2026 (Hari Ini)</td>
-                                </tr>
-                                <tr>
-                                    <td class="py-3.5 font-semibold text-slate-800 dark:text-white">Introduction to Algorithms</td>
-                                    <td class="py-3.5" data-i18n="circ-loan-date-2">15 Juni 2026</td>
-                                    <td class="py-3.5 text-slate-400" data-i18n="circ-due-date-2">05 Juli 2026</td>
+                                    <td colspan="3" class="text-center py-8 text-slate-400 italic">Memuat data peminjaman...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -513,10 +506,46 @@
                 </div>
             </div>
 
-            <div class="mt-6">
-                <button onclick="triggerToast()" class="w-full bg-slate-900 dark:bg-blue-600 text-white text-sm font-semibold py-3 rounded-xl shadow-md hover:bg-slate-800 dark:hover:bg-blue-700 active:scale-[0.98] transition-all">
+            <!-- Tombol Default untuk membuka form -->
+            <div class="mt-6" id="booking-default-btn-container">
+                <button onclick="openBookingForm()" class="w-full bg-slate-900 dark:bg-blue-600 text-white text-sm font-semibold py-3 rounded-xl shadow-md hover:bg-slate-800 dark:hover:bg-blue-700 active:scale-[0.98] transition-all">
                     <i class="fa-solid fa-book-open mr-2"></i> Booking & Antar ke Rumah
                 </button>
+            </div>
+
+            <!-- Form Peminjaman Buku (Hidden by default) -->
+            <div id="booking-form-section" class="hidden mt-6 border-t border-slate-100 dark:border-slate-800 pt-4 space-y-4 text-xs">
+                <h5 class="font-bold text-xs text-slate-700 dark:text-slate-300 uppercase tracking-wider">Formulir Peminjaman Buku</h5>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-500 dark:text-slate-400 mb-1 font-semibold">Mulai Tanggal</label>
+                        <input type="date" id="loan-start-date" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-slate-800 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-slate-500 dark:text-slate-400 mb-1 font-semibold">Sampai Tanggal</label>
+                        <input type="date" id="loan-due-date" class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-slate-800 dark:text-white">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-slate-500 dark:text-slate-400 mb-1.5 font-semibold">Opsi Pengambilan</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="flex items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300">
+                            <input type="radio" name="pickup-option" value="Booking" checked class="accent-blue-500">
+                            <span>Ambil Sendiri</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300">
+                            <input type="radio" name="pickup-option" value="Diantar Kurir" class="accent-blue-500">
+                            <span>Jasa Pengantaran</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="flex gap-2 pt-2">
+                    <button type="button" onclick="cancelBookingForm()" class="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold py-2.5 rounded-xl border border-slate-200/60 dark:border-slate-700 hover:bg-slate-200 transition-all">Batal</button>
+                    <button type="button" onclick="submitBookingForm()" class="flex-1 bg-blue-600 text-white font-semibold py-2.5 rounded-xl hover:bg-blue-700 transition-all shadow-md">Konfirmasi</button>
+                </div>
             </div>
         </div>
     </div>
@@ -716,6 +745,9 @@
                 renderWishlist();
                 renderRecommendedBooks();
             }
+            if (tabId === 'sirkulasi') {
+                loadUserLoans();
+            }
         }
 
         function toggleNotif(event) { 
@@ -791,6 +823,9 @@
         // FUNGSI BOOK DETAIL MODAL - VERSI PERBAIKAN
         // ============================================================
         function openBookDetail(id) {
+            activeBookId = id;
+            cancelBookingForm();
+
             // Cari card buku berdasarkan data-id
             const card = document.querySelector(`.book-card[data-id="${id}"]`);
             if (!card) {
@@ -1171,6 +1206,184 @@
         }
 
         // ============================================================
+        // FUNGSI BOOKING PEMINJAMAN (SUPABASE)
+        // ============================================================
+        let activeLoans = [];
+
+        function openBookingForm() {
+            // Sembunyikan rekomendasi buku dan tombol default
+            document.getElementById('modal-rekomendasi-container').parentElement.classList.add('hidden');
+            document.getElementById('booking-default-btn-container').classList.add('hidden');
+            
+            // Set default tanggal pinjam (hari ini) dan kembali (7 hari lagi)
+            const today = new Date();
+            const startStr = today.toISOString().split('T')[0];
+            const nextWeek = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+            const dueStr = nextWeek.toISOString().split('T')[0];
+            
+            document.getElementById('loan-start-date').value = startStr;
+            document.getElementById('loan-start-date').min = startStr;
+            document.getElementById('loan-due-date').value = dueStr;
+            document.getElementById('loan-due-date').min = startStr;
+            
+            // Tampilkan form peminjaman
+            document.getElementById('booking-form-section').classList.remove('hidden');
+        }
+
+        function cancelBookingForm() {
+            // Tampilkan kembali rekomendasi buku dan tombol default
+            document.getElementById('modal-rekomendasi-container').parentElement.classList.remove('hidden');
+            document.getElementById('booking-default-btn-container').classList.remove('hidden');
+            
+            // Sembunyikan form peminjaman
+            document.getElementById('booking-form-section').classList.add('hidden');
+        }
+
+        async function submitBookingForm() {
+            const userStr = localStorage.getItem('libra_user');
+            if (!userStr) {
+                alert('Sesi habis. Silakan login kembali.');
+                window.location.href = '/login';
+                return;
+            }
+            const user = JSON.parse(userStr);
+
+            const startVal = document.getElementById('loan-start-date').value;
+            const dueVal = document.getElementById('loan-due-date').value;
+            const statusVal = document.querySelector('input[name="pickup-option"]:checked').value;
+
+            if (!startVal || !dueVal) {
+                alert('Mohon isi tanggal pinjam dan batas pengembalian!');
+                return;
+            }
+
+            if (new Date(dueVal) <= new Date(startVal)) {
+                alert('Batas pengembalian harus setelah tanggal pinjam!');
+                return;
+            }
+
+            const confirmBtn = document.querySelector('#booking-form-section button[onclick="submitBookingForm()"]');
+            const originalText = confirmBtn.textContent;
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Memproses...';
+
+            try {
+                const response = await fetch('/api/pinjam', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        user_id: user.id,
+                        book_id: activeBookId,
+                        tanggal_pinjam: startVal,
+                        tenggat_waktu: dueVal,
+                        status: statusVal
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || 'Gagal menyimpan peminjaman');
+                }
+
+                // Sukses
+                closeDetailModal();
+                showToast('Peminjaman Berhasil!', `Buku berhasil disimpan ke sirkulasi Anda.`);
+                
+                // Refresh data peminjaman
+                await loadUserLoans();
+                // Pindah ke tab sirkulasi
+                switchTab('sirkulasi');
+            } catch (err) {
+                alert(err.message);
+                console.error(err);
+            } finally {
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = originalText;
+            }
+        }
+
+        async function loadUserLoans() {
+            const userStr = localStorage.getItem('libra_user');
+            if (!userStr) return;
+            const user = JSON.parse(userStr);
+
+            try {
+                const response = await fetch(`/api/pinjam?user_id=${user.id}`);
+                if (!response.ok) throw new Error('Gagal mengambil data peminjaman');
+                activeLoans = await response.json();
+                renderActiveLoans();
+                updateCourierStatusVisibility();
+            } catch (err) {
+                console.error('Error loading loans:', err);
+            }
+        }
+
+        function formatDateIndo(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+
+        function renderActiveLoans() {
+            const tbody = document.getElementById('active-loans-tbody');
+            if (!tbody) return;
+
+            if (activeLoans.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="text-center py-8 text-slate-400 italic">
+                            Belum ada peminjaman aktif.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = activeLoans.map(loan => {
+                const isOverdue = new Date(loan.tenggat_waktu) < new Date() && !loan.tanggal_kembali;
+                const dateClass = isOverdue ? 'text-rose-500 font-semibold' : 'text-slate-500 dark:text-slate-400';
+                const dateSuffix = isOverdue ? ' (Terlambat)' : '';
+                return `
+                    <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
+                        <td class="py-3.5 font-semibold text-slate-800 dark:text-white pr-4">
+                            ${loan.book_title || 'Buku'}
+                        </td>
+                        <td class="py-3.5 text-slate-500 dark:text-slate-400">
+                            ${formatDateIndo(loan.tanggal_pinjam)}
+                        </td>
+                        <td class="py-3.5 ${dateClass}">
+                            ${formatDateIndo(loan.tenggat_waktu)}${dateSuffix}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Overwrite updateCourierStatusVisibility to check live loans
+        function updateCourierStatusVisibility() {
+            const box = document.getElementById('courier-status-box');
+            const deadlineBox = document.getElementById('circ-deadline-box');
+
+            const hasDelivery = activeLoans.some(l => l.status === 'Diantar Kurir');
+            const hasPickup = activeLoans.some(l => l.status === 'Booking');
+
+            if (box) {
+                box.classList.toggle('hidden', !hasDelivery);
+            }
+
+            if (deadlineBox) {
+                deadlineBox.classList.toggle('hidden', !hasPickup);
+                if (hasPickup) {
+                    startCountdown();
+                }
+            }
+        }
+
+        // ============================================================
         // EVENT LISTENER
         // ============================================================
         document.addEventListener('click', (e) => {
@@ -1195,7 +1408,7 @@
             renderWishlist();
             renderRecommendedBooks();
             renderReadingProgress();
-            updateCourierStatusVisibility();
+            loadUserLoans();
             updateFineDisplay();
 
             if (userFine > 0) {
