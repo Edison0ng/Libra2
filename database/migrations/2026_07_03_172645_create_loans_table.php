@@ -10,14 +10,17 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void{
-        Schema::create('loans', function (Blueprint $table) {
-            $table->id(); 
-            $table->uuid('user_id'); // Menggunakan uuid agar cocok dengan id di tabel users
-            $table->foreignId('book_id')->constrained('books')->onDelete('cascade');
-            $table->date('tanggal_pinjam');
-            $table->date('tanggal_kembali')->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('loans')) {
+            Schema::create('loans', function (Blueprint $table) {
+                $table->id(); 
+                $table->uuid('user_id'); // Menggunakan uuid agar cocok dengan id di tabel users
+                $table->string('book_id');
+                $table->foreign('book_id')->references('ISBN')->on('books')->onDelete('cascade');
+                $table->date('tanggal_pinjam');
+                $table->date('tanggal_kembali')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**

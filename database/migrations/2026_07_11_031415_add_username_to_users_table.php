@@ -9,20 +9,30 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // Tambahkan kolom username (unique)
-            $table->string('username')->unique()->nullable()->after('name');
+            if (!Schema::hasColumn('users', 'username')) {
+                // Tambahkan kolom username (unique) setelah nama_lengkap
+                $table->string('username')->unique()->nullable()->after('nama_lengkap');
+            }
             
-            // Tambahkan kolom lain yang mungkin diperlukan
-            $table->string('nim')->nullable()->after('username');
-            $table->string('fakultas')->nullable()->after('nim');
-            $table->string('avatar_url')->nullable()->after('fakultas');
+            // Tambahkan kolom lain hanya jika belum ada di database
+            if (!Schema::hasColumn('users', 'nim')) {
+                $table->string('nim')->nullable()->after('username');
+            }
+            if (!Schema::hasColumn('users', 'fakultas')) {
+                $table->string('fakultas')->nullable()->after('nim');
+            }
+            if (!Schema::hasColumn('users', 'avatar_url')) {
+                $table->string('avatar_url')->nullable()->after('fakultas');
+            }
         });
     }
 
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn(['username', 'nim', 'fakultas', 'avatar_url']);
+            if (Schema::hasColumn('users', 'username')) {
+                $table->dropColumn('username');
+            }
         });
     }
 };
