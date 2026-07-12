@@ -1161,7 +1161,15 @@
         // ============================================================
         // FUNGSI FEEDBACK
         // ============================================================
-        function submitFeedback() {
+        async function submitFeedback() {
+            const userStr = localStorage.getItem('libra_user');
+            if (!userStr) {
+                alert('Sesi habis. Silakan login kembali.');
+                window.location.href = '/login';
+                return;
+            }
+            const user = JSON.parse(userStr);
+
             const category = document.getElementById('feedback-category').value;
             const message = document.getElementById('feedback-message').value.trim();
             
@@ -1170,21 +1178,49 @@
                 alert(isId ? 'Harap isi pesan feedback Anda!' : 'Please fill in your feedback message!');
                 return;
             }
+
+            const submitBtn = document.querySelector('#feedback-form button[type="button"]') 
+                           || document.querySelector('#feedback-form button[onclick="submitFeedback()"]');
+            const originalText = submitBtn ? submitBtn.textContent : '';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = currentLang === 'id' ? 'Mengirim...' : 'Sending...';
+            }
             
-            const feedbacks = JSON.parse(localStorage.getItem('libra-feedbacks') || '[]');
-            feedbacks.push({ 
-                category: category, 
-                message: message, 
-                date: new Date().toISOString() 
-            });
-            localStorage.setItem('libra-feedbacks', JSON.stringify(feedbacks));
-            
-            document.getElementById('feedback-form').reset();
-            
-            const isId = currentLang === 'id';
-            showToast(isId ? "Feedback Terkirim!" : "Feedback Sent!", 
-                    isId ? "Terima kasih atas masukan Anda untuk peningkatan Sistem Libra." 
-                    : "Thank you for your feedback to help enhance the Libra System.");
+            try {
+                const response = await fetch('/api/complaints', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        peminjam_id: user.id,
+                        pesan: `[Kategori: ${category}] ${message}`,
+                        status: 'pending'
+                    })
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.message || 'Gagal mengirim masukan');
+                }
+                
+                document.getElementById('feedback-form').reset();
+                
+                const isId = currentLang === 'id';
+                showToast(isId ? "Feedback Terkirim!" : "Feedback Sent!", 
+                        isId ? "Terima kasih atas masukan Anda untuk peningkatan Sistem Libra." 
+                        : "Thank you for your feedback to help enhance the Libra System.");
+            } catch (err) {
+                alert(err.message);
+                console.error(err);
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = originalText;
+                }
+            }
         }
 
         // ============================================================
