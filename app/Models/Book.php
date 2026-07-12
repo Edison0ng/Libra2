@@ -17,6 +17,17 @@ class Book extends Model
 
     public $timestamps = false;
 
+    protected $fillable = [
+        'ISBN',
+        'Book-Title',
+        'Book-Author',
+        'Year-Of-Publication',
+        'Publisher',
+        'Image-URL-S',
+        'Image-URL-M',
+        'Image-URL-L'
+    ];
+
     protected $appends = ['title', 'author', 'year', 'image_url', 'status'];
 
     protected function title(): Attribute

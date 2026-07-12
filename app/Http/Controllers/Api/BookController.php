@@ -1,35 +1,47 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
+use App\Models\Book;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use App\Models\User;
 
 class BookController extends Controller
 {
     public function index()
     {
-        $books = DB::table('books')->get();
-        
-        // Ambil user default (user pertama)
-        $userData = User::first();
-        
-        if (!$userData) {
-            $userData = (object) [
-                'id' => 1,
-                'name' => 'Ahmad Fauzi',
-                'username' => 'ahmadfauzi',
-                'nim' => '220194850',
-                'fakultas' => 'Fakultas Ilmu Komputer',
-                'avatar_url' => null,
-                'email' => 'ahmad@example.com'
-            ];
-        }
-        
-        return view('libra', [
-            'books' => $books,
-            'userData' => $userData
+        return response()->json(Book::all());
+    }
+
+    public function store(Request $request)
+    {
+        $book = Book::create($request->all());
+
+        return response()->json($book, 201);
+    }
+
+    public function show(string $id)
+    {
+        return response()->json(
+            Book::findOrFail($id)
+        );
+    }
+
+    public function update(Request $request, string $id)
+    {
+        $book = Book::findOrFail($id);
+
+        $book->update($request->all());
+
+        return response()->json($book);
+    }
+
+    public function destroy(string $id)
+    {
+        Book::findOrFail($id)->delete();
+
+        return response()->json([
+            'message' => 'Book deleted'
         ]);
     }
 }

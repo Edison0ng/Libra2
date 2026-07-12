@@ -12,6 +12,8 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    protected $table = 'users';
+
     /**
      * Primary key tabel `users` berupa UUID, bukan auto-increment integer.
      */
@@ -59,13 +61,12 @@ class User extends Authenticatable
         return [
             'created_at' => 'datetime',
             'email_verified_at' => 'datetime',
-            'password'   => 'hashed', // otomatis di-hash saat diisi (Laravel 10+)
+            'password'   => 'hashed', // otomatis di-hash saat diisi
         ];
     }
 
     /**
-     * Generate UUID otomatis saat user baru dibuat (kalau id belum diisi manual),
-     * konsisten dengan pola id yang sudah dipakai di data existing (mis. Budi, Siti, dst).
+     * Generate UUID otomatis saat user baru dibuat (kalau id belum diisi manual)
      */
     protected static function boot()
     {
@@ -85,5 +86,13 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return strtolower($this->nim) === 'admin';
+    }
+
+    /**
+     * Relasi dengan tabel pinjam (sirkulasi) untuk backend-admin-v2
+     */
+    public function pinjams()
+    {
+        return $this->hasMany(Pinjam::class);
     }
 }

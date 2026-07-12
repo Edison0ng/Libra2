@@ -3,41 +3,72 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Complaint;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 class ComplaintController extends Controller
 {
+    // GET /api/complaints
     public function index()
     {
-        if (! Schema::hasTable('complaints')) {
-            return response()->json([]);
-        }
-        $rows = DB::table('complaints')->get();
-        return response()->json($rows);
+        return response()->json(
+            Complaint::all()
+        );
     }
 
-    public function show($id)
-    {
-        if (! Schema::hasTable('complaints')) return response()->json(['message' => 'Not Found'], 404);
-        $row = DB::table('complaints')->where('id', $id)->first();
-        if (! $row) return response()->json(['message' => 'Not Found'], 404);
-        return response()->json($row);
-    }
-
+    // POST /api/complaints
     public function store(Request $request)
     {
-        return response()->json(['message' => 'Not implemented'], 405);
+        $validated = $request->validate([
+            'peminjam_id' => 'required',
+            'pesan'       => 'required|string',
+            'status'      => 'required|string'
+        ]);
+
+        $complaint = Complaint::create($validated);
+
+        return response()->json([
+            'message' => 'Complaint berhasil ditambahkan',
+            'data' => $complaint
+        ], 201);
     }
 
-    public function update(Request $request, $id)
+    // GET /api/complaints/{id}
+    public function show(string $id)
     {
-        return response()->json(['message' => 'Not implemented'], 405);
+        return response()->json(
+            Complaint::findOrFail($id)
+        );
     }
 
-    public function destroy($id)
+    // PUT /api/complaints/{id}
+    public function update(Request $request, string $id)
     {
-        return response()->json(['message' => 'Not implemented'], 405);
+        $complaint = Complaint::findOrFail($id);
+
+        $validated = $request->validate([
+            'peminjam_id' => 'sometimes|required',
+            'pesan'       => 'sometimes|required|string',
+            'status'      => 'sometimes|required|string'
+        ]);
+
+        $complaint->update($validated);
+
+        return response()->json([
+            'message' => 'Complaint berhasil diupdate',
+            'data' => $complaint
+        ]);
+    }
+
+    // DELETE /api/complaints/{id}
+    public function destroy(string $id)
+    {
+        $complaint = Complaint::findOrFail($id);
+
+        $complaint->delete();
+
+        return response()->json([
+            'message' => 'Complaint berhasil dihapus'
+        ]);
     }
 }

@@ -9,11 +9,13 @@ use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
+    // GET /api/users
     public function index()
     {
         return response()->json(User::all());
     }
 
+    // GET /api/users/{id}
     public function show($id)
     {
         $user = User::find($id);
@@ -44,18 +46,58 @@ class UserController extends Controller
         ]);
     }
 
+    // POST /api/users
     public function store(Request $request)
     {
-        return response()->json(['message' => 'Not implemented'], 405);
+        $validated = $request->validate([
+            'id'            => 'required|string|unique:users,id',
+            'nama_lengkap'  => 'required|string|max:255',
+            'nim'           => 'required|string|max:50',
+            'fakultas'      => 'nullable|string|max:255',
+            'no_telepon'    => 'nullable|string|max:30',
+            'alamat_kirim'  => 'nullable|string',
+            'avatar_url'    => 'nullable|string'
+        ]);
+
+        $user = User::create($validated);
+
+        return response()->json([
+            'message' => 'User berhasil ditambahkan',
+            'data' => $user
+        ], 201);
     }
 
-    public function update(Request $request, $id)
+    // PUT /api/users/{id}
+    public function update(Request $request, string $id)
     {
-        return response()->json(['message' => 'Not implemented'], 405);
+        $user = User::findOrFail($id);
+
+        $validated = $request->validate([
+            'nama_lengkap'  => 'sometimes|required|string|max:255',
+            'nim'           => 'sometimes|required|string|max:50',
+            'fakultas'      => 'nullable|string|max:255',
+            'no_telepon'    => 'nullable|string|max:30',
+            'alamat_kirim'  => 'nullable|string',
+            'avatar_url'    => 'nullable|string'
+        ]);
+
+        $user->update($validated);
+
+        return response()->json([
+            'message' => 'User berhasil diupdate',
+            'data' => $user
+        ]);
     }
 
-    public function destroy($id)
+    // DELETE /api/users/{id}
+    public function destroy(string $id)
     {
-        return response()->json(['message' => 'Not implemented'], 405);
+        $user = User::findOrFail($id);
+
+        $user->delete();
+
+        return response()->json([
+            'message' => 'User berhasil dihapus'
+        ]);
     }
 }

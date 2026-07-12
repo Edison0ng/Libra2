@@ -3,41 +3,74 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Invoice;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 class InvoiceController extends Controller
 {
+    // GET /api/invoices
     public function index()
     {
-        if (! Schema::hasTable('invoices')) {
-            return response()->json([]);
-        }
-        $invoices = DB::table('invoices')->get();
-        return response()->json($invoices);
+        return response()->json(Invoice::all());
     }
 
-    public function show($id)
-    {
-        if (! Schema::hasTable('invoices')) return response()->json(['message' => 'Not Found'], 404);
-        $inv = DB::table('invoices')->where('id', $id)->first();
-        if (! $inv) return response()->json(['message' => 'Not Found'], 404);
-        return response()->json($inv);
-    }
-
+    // POST /api/invoices
     public function store(Request $request)
     {
-        return response()->json(['message' => 'Not implemented'], 405);
+        $validated = $request->validate([
+            'book_isbn'        => 'required|string',
+            'peminjam_id'      => 'required',
+            'tanggal_pinjam'   => 'required|date',
+            'tanggal_kembali'  => 'nullable|date',
+            'status'           => 'required|string'
+        ]);
+
+        $invoice = Invoice::create($validated);
+
+        return response()->json([
+            'message' => 'Invoice berhasil ditambahkan',
+            'data' => $invoice
+        ], 201);
     }
 
-    public function update(Request $request, $id)
+    // GET /api/invoices/{id}
+    public function show(string $id)
     {
-        return response()->json(['message' => 'Not implemented'], 405);
+        return response()->json(
+            Invoice::findOrFail($id)
+        );
     }
 
-    public function destroy($id)
+    // PUT /api/invoices/{id}
+    public function update(Request $request, string $id)
     {
-        return response()->json(['message' => 'Not implemented'], 405);
+        $invoice = Invoice::findOrFail($id);
+
+        $validated = $request->validate([
+            'book_isbn'        => 'sometimes|required|string',
+            'peminjam_id'      => 'sometimes|required',
+            'tanggal_pinjam'   => 'sometimes|required|date',
+            'tanggal_kembali'  => 'nullable|date',
+            'status'           => 'sometimes|required|string'
+        ]);
+
+        $invoice->update($validated);
+
+        return response()->json([
+            'message' => 'Invoice berhasil diupdate',
+            'data' => $invoice
+        ]);
+    }
+
+    // DELETE /api/invoices/{id}
+    public function destroy(string $id)
+    {
+        $invoice = Invoice::findOrFail($id);
+
+        $invoice->delete();
+
+        return response()->json([
+            'message' => 'Invoice berhasil dihapus'
+        ]);
     }
 }

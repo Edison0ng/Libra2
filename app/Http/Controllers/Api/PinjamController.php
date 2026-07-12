@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 class PinjamController extends Controller
 {
@@ -39,13 +40,16 @@ class PinjamController extends Controller
 
     public function show($id)
     {
-        $table = 'pinjam';
+        $loan = DB::table('pinjam as l')
+            ->leftJoin('books', 'l.book_id', '=', 'books.ISBN')
+            ->select(
+                'l.*',
+                DB::raw('books."Book-Title" as book_title'),
+                DB::raw('books."Image-URL-M" as book_cover')
+            )
+            ->where('l.id', $id)
+            ->first();
 
-        if (!Schema::hasTable($table)) {
-            return response()->json(['message' => 'Table not found'], 404);
-        }
-
-        $loan = DB::table($table)->where('id', $id)->first();
         if (! $loan) return response()->json(['message' => 'Not Found'], 404);
         return response()->json($loan);
     }
@@ -60,14 +64,18 @@ class PinjamController extends Controller
             'status' => ['required', 'string'],
         ]);
 
-        $id = DB::table('pinjam')->insertGetId([
+        // Generate UUID untuk ID peminjaman jika belum ada
+        $id = $request->input('id') ?: (string) Str::uuid();
+
+        DB::table('pinjam')->insert([
+            'id' => $id,
             'user_id' => $request->user_id,
             'book_id' => $request->book_id,
             'tanggal_pinjam' => $request->tanggal_pinjam,
             'tenggat_waktu' => $request->tenggat_waktu,
             'status' => $request->status,
-            'tanggal_kembali' => null,
-            'denda' => 0
+            'tanggal_kembali' => $request->tanggal_kembali ?: null,
+            'denda' => $request->denda ?: 0
         ]);
 
         $newLoan = DB::table('pinjam as l')
@@ -89,11 +97,27 @@ class PinjamController extends Controller
 
     public function update(Request $request, $id)
     {
-        return response()->json(['message' => 'Not implemented'], 405);
+        $request->validate([
+            'status' => ['sometimes', 'string'],
+            'tanggal_kembali' => ['sometimes', 'nullable', 'date'],
+            'denda' => ['sometimes', 'integer'],
+        ]);
+
+        $data = $request->only(['status', 'tanggal_kembali', 'denda']);
+        
+        DB::table('pinjam')->where('id', $id)->update($data);
+
+        $loan = DB::table('pinjam')->where('id', $id)->first();
+
+        return response()->json($loan);
     }
 
     public function destroy($id)
     {
-        return response()->json(['message' => 'Not implemented'], 405);
+        DB::table('pinjam')->where('id', $id)->delete();
+
+        return response()->json([
+            'message' => 'Pinjam deleted'
+        ]);
     }
 }
