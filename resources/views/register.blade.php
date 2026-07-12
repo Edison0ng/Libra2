@@ -392,8 +392,9 @@
   setupPasswordToggle('toggleConfirmPassword', 'confirmPassword', 'eyeIcon2');
 
   // ===================== VALIDASI & SUBMIT FORM REGISTER =====================
-  // Base URL API backend Laravel. Disamakan dengan login.blade.php (production Railway).
-  const API_BASE_URL = 'https://libra-production-32ea.up.railway.app/api';
+  // Base URL API backend Laravel. Gunakan URL aplikasi saat ini agar
+  // request tetap mengarah ke backend Laravel yang sama.
+  const API_BASE_URL = '{{ url('/api') }}';
 
   const registerForm = document.getElementById('registerForm');
   const errBanner = document.getElementById('errBanner');
@@ -490,7 +491,7 @@
       successBanner.classList.add('show');
 
       setTimeout(() => {
-        window.location.href = 'login.html';
+        window.location.href = '{{ route('login') }}';
       }, 1200);
 
     } catch (err){

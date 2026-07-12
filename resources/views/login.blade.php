@@ -608,8 +608,9 @@
     errBanner.classList.remove('show');
   }
 
-  // Base URL API backend Laravel. Ganti sesuai environment (local/production).
-  const API_BASE_URL = 'https://libra-production-32ea.up.railway.app/api';
+  // Base URL API backend Laravel. Gunakan URL aplikasi saat ini agar
+  // request tetap mengarah ke backend Laravel yang sama.
+  const API_BASE_URL = '{{ url('/api') }}';
 
   loginForm.addEventListener('submit', async function(e){
     e.preventDefault(); // mencegah submit default (reload halaman)
