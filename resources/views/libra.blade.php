@@ -173,7 +173,7 @@
                 <!-- Grid Buku dari Database (Supabase via Blade) -->
                 <div id="live-library-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                     @foreach($books as $book)
-                    <div class="book-card bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 overflow-hidden pb-3 hover:shadow-md transition-shadow cursor-pointer" 
+                    <div class="book-card relative bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 overflow-hidden pb-3 hover:shadow-md transition-shadow cursor-pointer" 
                         onclick="openBookDetail('{{ $book->ISBN }}')" 
                         data-id="{{ $book->ISBN }}"
                         data-title="{{ $book->{'Book-Title'} }}"
@@ -183,7 +183,14 @@
                         data-genre="Science"
                         data-rating="4.5"
                         data-desc="Deskripsi buku tidak tersedia.">
-                        
+
+                        <button type="button"
+                            onclick="event.stopPropagation(); toggleWishlistFromCard('{{ $book->ISBN }}')"
+                            class="wishlist-toggle-btn hidden absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm flex items-center justify-center shadow-sm text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors"
+                            title="Wishlist">
+                            <i class="fa-regular fa-heart wishlist-toggle-icon"></i>
+                        </button>
+
                         <img src="{{ $book->{'Image-URL-M'} }}" alt="{{ $book->{'Book-Title'} }}" class="w-full aspect-[4/5] object-cover">
                     
                         <div class="p-3">
@@ -209,57 +216,68 @@
 
             <!-- TAB 3: SIRKULASI -->
             <div id="sirkulasi" class="tab-content max-w-3xl mx-auto space-y-6">
-                <div id="circ-deadline-box" class="hidden bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
-                    <div class="flex items-center gap-3">
-                        <div class="bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-400 p-2.5 rounded-xl">
-                            <i class="fa-regular fa-clock text-xl"></i>
-                        </div>
-                        <div>
-                            <h4 class="text-sm font-bold text-amber-800 dark:text-amber-300" data-i18n="circ-deadline-title">Batas Pengambilan Resv.</h4>
-                            <p class="text-xs text-amber-600 dark:text-amber-400/80" data-i18n="circ-deadline-desc">Ambil buku langsung ke meja sirkulasi perpustakaan.</p>
-                        </div>
-                    </div>
-                    <div class="bg-white dark:bg-slate-900 px-4 py-2 rounded-xl border border-amber-200 dark:border-amber-800 font-mono font-bold text-amber-600 dark:text-amber-400 text-sm w-max self-end sm:self-auto">
-                        <span data-i18n="circ-remaining-time">Sisa Waktu:</span> <span id="countdown-timer">01:45:00</span>
-                    </div>
-                </div>
+                <!-- Kontainer status booking: dirender satu kartu PER booking aktif (bukan satu box global),
+                     supaya booking baru tidak menimpa tampilan status/countdown booking sebelumnya. -->
+                <div id="circ-status-container" class="space-y-4"></div>
 
-                <div id="courier-status-box" class="hidden bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800">
-                    <h4 class="font-bold text-sm mb-5 text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2" data-i18n="circ-courier-status">
-                        <i class="fa-solid fa-truck text-blue-500"></i> Status Pengiriman Kurir
-                    </h4>
-                    <div class="relative ml-2">
-                        <div class="absolute left-2.5 top-2 bottom-4 w-0.5 bg-slate-200 dark:bg-slate-800"></div>
+                <!-- TEMPLATE (disembunyikan, dipakai oleh JS untuk clone per booking) -->
+                <template id="circ-deadline-template">
+                    <div class="circ-deadline-card bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-400 p-2.5 rounded-xl">
+                                <i class="fa-regular fa-clock text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-bold text-amber-800 dark:text-amber-300 circ-deadline-title-el" data-i18n="circ-deadline-title">Batas Pengambilan Resv.</h4>
+                                <p class="text-xs text-amber-600 dark:text-amber-400/80 circ-deadline-desc-el" data-i18n="circ-deadline-desc">Ambil buku langsung ke meja sirkulasi perpustakaan.</p>
+                                <p class="text-[11px] text-amber-500/80 dark:text-amber-500/70 mt-0.5 circ-deadline-book-el"></p>
+                            </div>
+                        </div>
+                        <div class="bg-white dark:bg-slate-900 px-4 py-2 rounded-xl border border-amber-200 dark:border-amber-800 font-mono font-bold text-amber-600 dark:text-amber-400 text-sm w-max self-end sm:self-auto">
+                            <span data-i18n="circ-remaining-time">Sisa Waktu:</span> <span class="countdown-timer-el">--:--:--</span>
+                        </div>
+                    </div>
+                </template>
 
-                        <div class="relative flex items-start gap-4 mb-6">
-                            <div class="z-10 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center border-4 border-white dark:border-slate-900 flex-shrink-0">
-                                <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                <template id="circ-courier-template">
+                    <div class="courier-status-card bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800">
+                        <h4 class="font-bold text-sm mb-1 text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2" data-i18n="circ-courier-status">
+                            <i class="fa-solid fa-truck text-blue-500"></i> Status Pengiriman Kurir
+                        </h4>
+                        <p class="text-[11px] text-slate-400 mb-4 circ-courier-book-el"></p>
+                        <div class="relative ml-2">
+                            <div class="absolute left-2.5 top-2 bottom-4 w-0.5 bg-slate-200 dark:bg-slate-800"></div>
+
+                            <div class="relative flex items-start gap-4 mb-6">
+                                <div class="z-10 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center border-4 border-white dark:border-slate-900 flex-shrink-0">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                                </div>
+                                <div>
+                                    <h5 class="text-sm font-bold text-blue-600 dark:text-blue-400" data-i18n="circ-status-1-title">Diantar Kurir</h5>
+                                    <p class="text-xs text-slate-400 mt-0.5 courier-status-1-desc-el">Kurir sedang menuju ke Fakultas Ilmu Komputer. Estimasi 10 menit.</p>
+                                </div>
                             </div>
-                            <div>
-                                <h5 class="text-sm font-bold text-blue-600 dark:text-blue-400" data-i18n="circ-status-1-title">Diantar Kurir</h5>
-                                <p id="courier-status-1-desc" class="text-xs text-slate-400 mt-0.5">Kurir sedang menuju ke Fakultas Ilmu Komputer. Estimasi 10 menit.</p>
+                            <div class="relative flex items-start gap-4 mb-6">
+                                <div class="z-10 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center border-4 border-white dark:border-slate-900 flex-shrink-0">
+                                    <i class="fa-solid fa-check text-[8px] text-white"></i>
+                                </div>
+                                <div>
+                                    <h5 class="text-sm font-semibold text-slate-600 dark:text-slate-400" data-i18n="circ-status-2-title">Buku Selesai Dikemas</h5>
+                                    <p class="text-xs text-slate-400 mt-0.5" data-i18n="circ-status-2-desc">Buku telah diserahkan ke kurir internal.</p>
+                                </div>
                             </div>
-                        </div>
-                        <div class="relative flex items-start gap-4 mb-6">
-                            <div class="z-10 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center border-4 border-white dark:border-slate-900 flex-shrink-0">
-                                <i class="fa-solid fa-check text-[8px] text-white"></i>
-                            </div>
-                            <div>
-                                <h5 class="text-sm font-semibold text-slate-600 dark:text-slate-400" data-i18n="circ-status-2-title">Buku Selesai Dikemas</h5>
-                                <p class="text-xs text-slate-400 mt-0.5" data-i18n="circ-status-2-desc">Buku telah diserahkan ke kurir internal.</p>
-                            </div>
-                        </div>
-                        <div class="relative flex items-start gap-4">
-                            <div class="z-10 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center border-4 border-white dark:border-slate-900 flex-shrink-0">
-                                <i class="fa-solid fa-check text-[8px] text-white"></i>
-                            </div>
-                            <div>
-                                <h5 class="text-sm font-semibold text-slate-600 dark:text-slate-400" data-i18n="circ-status-3-title">Booking Dikonfirmasi</h5>
-                                <p class="text-xs text-slate-400 mt-0.5" data-i18n="circ-status-3-desc">Permintaan disetujui oleh sistem.</p>
+                            <div class="relative flex items-start gap-4">
+                                <div class="z-10 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center border-4 border-white dark:border-slate-900 flex-shrink-0">
+                                    <i class="fa-solid fa-check text-[8px] text-white"></i>
+                                </div>
+                                <div>
+                                    <h5 class="text-sm font-semibold text-slate-600 dark:text-slate-400" data-i18n="circ-status-3-title">Booking Dikonfirmasi</h5>
+                                    <p class="text-xs text-slate-400 mt-0.5" data-i18n="circ-status-3-desc">Permintaan disetujui oleh sistem.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                </template>
 
                 <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800">
                     <h4 class="font-bold text-sm mb-4 text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="circ-active-loans">Peminjaman Aktif Saya</h4>
@@ -331,58 +349,6 @@
                             <i class="fa-solid fa-wallet text-lg text-rose-500"></i> <span data-i18n="fine-status">Status Informasi Denda</span>
                         </div>
                         <span class="text-xs text-blue-500 font-semibold flex items-center gap-1"><span data-i18n="show-action">Tampilkan</span> <i class="fa-solid fa-chevron-right text-[10px]"></i></span>
-                    </div>
-
-                    <!-- Formulir Donasi Buku -->
-                    <div class="p-4 border-b border-slate-100 dark:border-slate-800">
-                        <div class="flex items-center gap-2 mb-1">
-                            <i class="fa-solid fa-hand-holding-heart text-blue-500 text-sm"></i>
-                            <h4 class="font-bold text-sm text-slate-800 dark:text-white" data-i18n="donate-form-title">Formulir Donasi Buku</h4>
-                        </div>
-                        <p class="text-xs text-slate-400 leading-normal mb-4" data-i18n="donate-form-desc">Bantu perluas literasi kampus dengan mendonasikan buku layak bacamu ke koleksi Sistem Libra.</p>
-                        
-                        <form id="donation-form" onsubmit="event.preventDefault(); submitDonation();" class="space-y-4">
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1" data-i18n="donate-title">Judul Buku</label>
-                                    <input type="text" id="donate-book-title" required class="w-full px-3 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-slate-800 dark:text-white transition-colors">
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1" data-i18n="donate-author">Penulis / Pengarang</label>
-                                    <input type="text" id="donate-book-author" required class="w-full px-3 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-slate-800 dark:text-white transition-colors">
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1" data-i18n="donate-category-label">Kategori</label>
-                                    <select id="donate-book-category" class="w-full px-3 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-slate-800 dark:text-white">
-                                        <option value="Science" data-i18n="donate-cat-science">Sains & Teknologi</option>
-                                        <option value="Romance" data-i18n="donate-cat-romance">Fiksi / Novel</option>
-                                        <option value="Action" data-i18n="donate-cat-action">Komik / Petualangan</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1" data-i18n="donate-condition-label">Kondisi Buku</label>
-                                    <select id="donate-book-condition" class="w-full px-3 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-slate-800 dark:text-white">
-                                        <option value="Sangat Baik" data-i18n="donate-cond-verygood">Sangat Baik (Seperti Baru)</option>
-                                        <option value="Baik" data-i18n="donate-cond-good">Baik (Ada Sedikit Lecet)</option>
-                                        <option value="Cukup" data-i18n="donate-cond-fair">Cukup Layak</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1" data-i18n="donate-notes-label">Catatan Tambahan (Opsional)</label>
-                                <textarea id="donate-book-note" rows="2" class="w-full px-3 py-2.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-slate-800 dark:text-white resize-none"></textarea>
-                            </div>
-                            <button type="submit" data-i18n="donate-btn-submit" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl shadow-md transition-colors">
-                                Ajukan Donasi Buku
-                            </button>
-                        </form>
-
-                        <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                            <h5 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3" data-i18n="donate-history-title">Riwayat Donasi Kamu</h5>
-                            <div id="donation-history-container" class="space-y-3"></div>
-                        </div>
                     </div>
 
                     <!-- Formulir Feedback -->
@@ -467,6 +433,11 @@
                     <p id="modal-author" class="text-xs text-slate-400 mb-2"></p>
                     <div class="flex items-center gap-2">
                         <span id="modal-status-badge" class="inline-block px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[10px] font-semibold rounded-full">Tersedia</span>
+                        <button id="modal-wishlist-btn" type="button" onclick="toggleWishlist()"
+                            class="hidden w-7 h-7 rounded-full border border-rose-200 dark:border-rose-900 flex items-center justify-center text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-colors"
+                            title="Wishlist">
+                            <i class="fa-regular fa-heart" id="modal-wishlist-icon"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -548,7 +519,6 @@
         let activeBookId = null;
         let userFine = 10000;
         let wishlistBooks = JSON.parse(localStorage.getItem('libra-wishlist') || '[]');
-        let userDonations = JSON.parse(localStorage.getItem('libra-donations') || '[]');
 
         // ============================================================
         // AMBIL DATA BUKU DARI DOM
@@ -581,19 +551,14 @@
                 'dark-mode': 'Tema Gelap', 'language': 'Bahasa', 'fine-status': 'Status Informasi Denda', 
                 'logout': 'Keluar Sesi', 'show-action': 'Tampilkan',
                 'wishlist-empty': 'Belum ada buku di wishlist kamu.',
-                'donate-form-title': 'Formulir Donasi Buku', 'donate-form-desc': 'Bantu perluas literasi kampus dengan mendonasikan buku layak bacamu ke koleksi Sistem Libra.',
-                'donate-title': 'Judul Buku', 'donate-author': 'Penulis / Pengarang', 'donate-empty': 'Belum ada riwayat pengajuan donasi.',
+
                 'feedback-title': 'Kirim Masukan / Feedback', 
                 'feedback-desc': 'Bantu kami meningkatkan Sistem Libra dengan memberikan saran atau laporan kendala Anda.',
                 'feedback-label-cat': 'Kategori Masukan',
                 'feedback-opt-saran': 'Saran & Fitur Baru', 'feedback-opt-bug': 'Laporan Bug / Error', 
                 'feedback-opt-pelayanan': 'Fasilitas Perpustakaan', 'feedback-opt-lainnya': 'Lainnya',
                 'feedback-label-msg': 'Pesan Anda', 'feedback-btn-submit': 'Kirim Feedback',
-                'donate-category-label': 'Kategori',
-                'donate-cat-science': 'Sains & Teknologi', 'donate-cat-romance': 'Fiksi / Novel', 'donate-cat-action': 'Komik / Petualangan',
-                'donate-condition-label': 'Kondisi Buku',
-                'donate-cond-verygood': 'Sangat Baik (Seperti Baru)', 'donate-cond-good': 'Baik (Ada Sedikit Lecet)', 'donate-cond-fair': 'Cukup Layak',
-                'donate-notes-label': 'Catatan Tambahan (Opsional)', 'donate-btn-submit': 'Ajukan Donasi Buku', 'donate-history-title': 'Riwayat Donasi Kamu',
+
                 'circ-deadline-title': 'Batas Pengambilan Resv.',
                 'circ-deadline-desc': 'Ambil buku langsung ke meja sirkulasi perpustakaan sebelum batas waktu habis.',
                 'circ-remaining-time': 'Sisa Waktu:',
@@ -623,19 +588,14 @@
                 'dark-mode': 'Dark Mode', 'language': 'Language', 'fine-status': 'Fine Information Status', 
                 'logout': 'Logout', 'show-action': 'Show',
                 'wishlist-empty': 'No books in your wishlist yet.',
-                'donate-form-title': 'Book Donation Form', 'donate-form-desc': 'Help expand campus literacy by donating your readable books to the Libra System collection.',
-                'donate-title': 'Book Title', 'donate-author': 'Author / Writer', 'donate-empty': 'No donation application history yet.',
+
                 'feedback-title': 'Submit Feedback',
                 'feedback-desc': 'Help us improve the Libra System by providing your suggestions or reporting your issues.',
                 'feedback-label-cat': 'Feedback Category',
                 'feedback-opt-saran': 'Suggestions & New Features', 'feedback-opt-bug': 'Bug Report / Error',
                 'feedback-opt-pelayanan': 'Library Facilities', 'feedback-opt-lainnya': 'Others',
                 'feedback-label-msg': 'Your Message', 'feedback-btn-submit': 'Submit Feedback',
-                'donate-category-label': 'Category',
-                'donate-cat-science': 'Science & Technology', 'donate-cat-romance': 'Fiction / Novel', 'donate-cat-action': 'Comic / Adventure',
-                'donate-condition-label': 'Book Condition',
-                'donate-cond-verygood': 'Very Good (Like New)', 'donate-cond-good': 'Good (Minor Scratches)', 'donate-cond-fair': 'Fair / Readable',
-                'donate-notes-label': 'Additional Notes (Optional)', 'donate-btn-submit': 'Submit Book Donation', 'donate-history-title': 'Your Donation History',
+
                 'circ-deadline-title': 'Reservation Pickup Deadline',
                 'circ-deadline-desc': 'Pick up the book directly at the library circulation desk before the deadline.',
                 'circ-remaining-time': 'Remaining Time:',
@@ -666,7 +626,7 @@
                 'beranda': { title: 'Beranda', sub: 'Selamat datang kembali, Mahasiswa!' },
                 'buku': { title: 'Pustaka Digital', sub: 'Cari koleksi katalog buku perpustakaan secara live' },
                 'sirkulasi': { title: 'Sirkulasi', sub: 'Kelola peminjaman, tracking kurir, dan denda' },
-                'profil': { title: 'Profil Pengguna', sub: 'Pengaturan akun, preferensi tema, donasi, dan masukan' }
+                'profil': { title: 'Profil Pengguna', sub: 'Pengaturan akun, preferensi tema, dan masukan' }
             },
             en: {
                 'beranda': { title: 'Home', sub: 'Welcome back, Student!' },
@@ -709,9 +669,6 @@
                 const searchInput = document.getElementById('search-input');
                 if (searchInput) searchInput.value = '';
                 liveSearch();
-            }
-            if (tabId === 'profil') {
-                loadUserDonations();
             }
             if (tabId === 'beranda') {
                 renderWishlist();
@@ -915,6 +872,9 @@
             // Rekomendasi buku
             renderRecommendations(id);
 
+            // Sinkronkan tampilan tombol wishlist (hanya muncul untuk buku Dipinjam)
+            syncWishlistUI();
+
             // Tampilkan modal
             document.getElementById('detail-modal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
@@ -941,6 +901,13 @@
         // ============================================================
         // FUNGSI WISHLIST
         // ============================================================
+
+        // Cek apakah buku dengan id tertentu sedang dipinjam oleh user yang sedang login,
+        // berdasarkan activeLoans (hasil /api/pinjam?user_id=...) yang belum dikembalikan.
+        function isBookBorrowedByMe(id) {
+            return activeLoans.some(loan => loan.book_id === id && !loan.tanggal_kembali);
+        }
+
         function toggleWishlist() {
             const book = booksData.find(b => b.id === activeBookId);
             if(!book) return;
@@ -948,6 +915,12 @@
             if (book.status !== 'Dipinjam') {
                 showToast(currentLang === 'id' ? 'Info' : 'Info', 
                     currentLang === 'id' ? 'Wishlist hanya untuk buku yang sedang dipinjam.' : 'Wishlist is only for borrowed books.');
+                return;
+            }
+
+            if (isBookBorrowedByMe(activeBookId)) {
+                showToast(currentLang === 'id' ? 'Info' : 'Info',
+                    currentLang === 'id' ? 'Kamu tidak bisa mewishlist buku yang sedang kamu pinjam sendiri.' : "You can't wishlist a book you're currently borrowing yourself.");
                 return;
             }
 
@@ -966,6 +939,100 @@
 
             localStorage.setItem('libra-wishlist', JSON.stringify(wishlistBooks));
             renderWishlist();
+            syncWishlistUI();
+        }
+
+        // Toggle wishlist langsung dari kartu buku di halaman Pustaka (tanpa buka modal)
+        function toggleWishlistFromCard(id) {
+            const card = document.querySelector(`.book-card[data-id="${id}"]`);
+            if (!card) return;
+
+            const isId = currentLang === 'id';
+
+            if (card.dataset.status !== 'Dipinjam') {
+                showToast(isId ? 'Info' : 'Info',
+                    isId ? 'Wishlist hanya untuk buku yang sedang dipinjam.' : 'Wishlist is only for borrowed books.');
+                return;
+            }
+
+            if (isBookBorrowedByMe(id)) {
+                showToast(isId ? 'Info' : 'Info',
+                    isId ? 'Kamu tidak bisa mewishlist buku yang sedang kamu pinjam sendiri.' : "You can't wishlist a book you're currently borrowing yourself.");
+                return;
+            }
+
+            const title = card.dataset.title;
+            const idx = wishlistBooks.findIndex(bookId => bookId === id);
+
+            if (idx > -1) {
+                wishlistBooks.splice(idx, 1);
+                showToast(isId ? "Dihapus dari Wishlist" : "Removed from Wishlist",
+                    isId ? `Buku "${title}" berhasil dilepas.` : `Book "${title}" has been removed.`);
+            } else {
+                wishlistBooks.push(id);
+                showToast(isId ? "Ditambahkan ke Wishlist" : "Added to Wishlist",
+                    isId ? `Buku "${title}" berhasil disimpan.` : `Book "${title}" has been added to your wishlist.`);
+            }
+
+            localStorage.setItem('libra-wishlist', JSON.stringify(wishlistBooks));
+            renderWishlist();
+            syncWishlistUI();
+        }
+
+        // Sinkronkan tampilan ikon hati (kartu pustaka & tombol modal) dengan status buku & isi wishlist
+        function syncWishlistUI() {
+            // Kartu buku di halaman Pustaka
+            document.querySelectorAll('#live-library-container > .book-card').forEach(card => {
+                const id = card.dataset.id;
+                const status = card.dataset.status;
+                const btn = card.querySelector('.wishlist-toggle-btn');
+                const icon = card.querySelector('.wishlist-toggle-icon');
+                if (!btn || !icon) return;
+
+                if (status === 'Dipinjam') {
+                    btn.classList.remove('hidden');
+                } else {
+                    btn.classList.add('hidden');
+                }
+
+                if (isBookBorrowedByMe(id)) {
+                    // Buku sedang dipinjam oleh user sendiri: tombol wishlist dinonaktifkan.
+                    icon.className = 'fa-regular fa-heart wishlist-toggle-icon';
+                    btn.classList.remove('bg-rose-500', 'text-white');
+                    btn.classList.add('opacity-40', 'cursor-not-allowed');
+                    btn.title = currentLang === 'id' ? 'Buku sedang kamu pinjam sendiri' : "You're currently borrowing this book";
+                } else if (wishlistBooks.includes(id)) {
+                    icon.className = 'fa-solid fa-heart wishlist-toggle-icon';
+                    btn.classList.add('bg-rose-500', 'text-white');
+                    btn.classList.remove('opacity-40', 'cursor-not-allowed');
+                    btn.title = '';
+                } else {
+                    icon.className = 'fa-regular fa-heart wishlist-toggle-icon';
+                    btn.classList.remove('bg-rose-500', 'text-white', 'opacity-40', 'cursor-not-allowed');
+                    btn.title = '';
+                }
+            });
+
+            // Tombol wishlist di modal detail buku (jika sedang terbuka / pernah dibuka)
+            const modalBtn = document.getElementById('modal-wishlist-btn');
+            const modalIcon = document.getElementById('modal-wishlist-icon');
+            if (modalBtn && modalIcon && activeBookId) {
+                const activeCard = document.querySelector(`.book-card[data-id="${activeBookId}"]`);
+                const status = activeCard ? activeCard.dataset.status : null;
+
+                if (status === 'Dipinjam') {
+                    modalBtn.classList.remove('hidden');
+                    if (wishlistBooks.includes(activeBookId)) {
+                        modalIcon.className = 'fa-solid fa-heart';
+                        modalBtn.classList.add('bg-rose-500', 'text-white', 'border-rose-500');
+                    } else {
+                        modalIcon.className = 'fa-regular fa-heart';
+                        modalBtn.classList.remove('bg-rose-500', 'text-white', 'border-rose-500');
+                    }
+                } else {
+                    modalBtn.classList.add('hidden');
+                }
+            }
         }
 
         function renderWishlist() {
@@ -1030,46 +1097,42 @@
         // ============================================================
         // FUNGSI SIRKULASI
         // ============================================================
-        function updateCourierStatusVisibility() {
-            const box = document.getElementById('courier-status-box');
-            const deadlineBox = document.getElementById('circ-deadline-box');
-            const isActive = localStorage.getItem('libra-courier-active') === 'true';
+        // Catatan perbaikan: sebelumnya hanya ada SATU box deadline & SATU box
+        // status kurir untuk seluruh booking (berbasis localStorage global / .some()),
+        // sehingga booking baru selalu menimpa tampilan booking sebelumnya, dan
+        // setiap kali loadUserLoans() dipanggil, startCountdown() membuat interval
+        // BARU tanpa membersihkan interval lama (menumpuk & reset ke nilai hardcode).
+        // Sekarang setiap booking aktif (status Booking / Diantar Kurir) dirender
+        // sebagai kartu terpisah berdasarkan id booking-nya masing-masing.
+        const circCountdownIntervals = {};
 
-            if (box) {
-                box.classList.toggle('hidden', !isActive);
-                if (isActive) {
-                    const location = localStorage.getItem('libra-courier-location') || 'current';
-                    const descEl = document.getElementById('courier-status-1-desc');
-                    const dict = langDictionary[currentLang];
-                    if (descEl) descEl.innerText = dict[`circ-status-1-desc-${location}`] || dict['circ-status-1-desc'];
-                }
-            }
-
-            if (deadlineBox) {
-                deadlineBox.classList.toggle('hidden', isActive);
-                if (!isActive) {
-                    startCountdown();
-                }
-            }
+        function clearAllCircCountdowns() {
+            Object.values(circCountdownIntervals).forEach(id => clearInterval(id));
+            for (const key in circCountdownIntervals) delete circCountdownIntervals[key];
         }
 
-        function startCountdown() {
-            let time = 6300;
-            const timerElement = document.getElementById('countdown-timer');
-            if (!timerElement) return;
+        function startCountdownForCard(loanId, timerEl, deadlineDate) {
+            if (circCountdownIntervals[loanId]) {
+                clearInterval(circCountdownIntervals[loanId]);
+            }
 
-            const interval = setInterval(() => {
-                const hours = Math.floor(time / 3600);
-                const minutes = Math.floor((time % 3600) / 60);
-                const seconds = time % 60;
-                timerElement.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-                
-                if (time <= 0) {
-                    clearInterval(interval);
-                    timerElement.textContent = '00:00:00';
+            const tick = () => {
+                const diffMs = deadlineDate.getTime() - Date.now();
+                if (diffMs <= 0) {
+                    timerEl.textContent = '00:00:00';
+                    clearInterval(circCountdownIntervals[loanId]);
+                    delete circCountdownIntervals[loanId];
+                    return;
                 }
-                time--;
-            }, 1000);
+                const totalSeconds = Math.floor(diffMs / 1000);
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+                timerEl.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            };
+
+            tick();
+            circCountdownIntervals[loanId] = setInterval(tick, 1000);
         }
 
         function triggerToast() {
@@ -1109,138 +1172,6 @@
             if (amountEl) {
                 amountEl.innerText = `Rp ${userFine.toLocaleString('id-ID')}`;
             }
-        }
-
-        // ============================================================
-        // FUNGSI DONASI
-        // ============================================================
-        async function loadUserDonations() {
-            const userStr = localStorage.getItem('libra_user');
-            if (!userStr) return;
-            const user = JSON.parse(userStr);
-
-            try {
-                const response = await fetch(`/api/donations?user_id=${encodeURIComponent(user.id)}`, {
-                    headers: { 'Accept': 'application/json' }
-                });
-                if (response.ok) {
-                    userDonations = await response.json();
-                    renderDonationHistory();
-                }
-            } catch (err) {
-                console.error("Gagal memuat riwayat donasi:", err);
-            }
-        }
-
-        async function submitDonation() {
-            const userStr = localStorage.getItem('libra_user');
-            if (!userStr) {
-                alert('Sesi habis. Silakan login kembali.');
-                window.location.href = '/login';
-                return;
-            }
-            const user = JSON.parse(userStr);
-
-            const titleInp = document.getElementById('donate-book-title');
-            const authorInp = document.getElementById('donate-book-author');
-            const categoryInp = document.getElementById('donate-book-category');
-            const conditionInp = document.getElementById('donate-book-condition');
-            const noteInp = document.getElementById('donate-book-note');
-
-            if (!titleInp.value.trim() || !authorInp.value.trim()) {
-                const isId = currentLang === 'id';
-                alert(isId ? 'Harap isi judul dan penulis buku!' : 'Please fill in the book title and author!');
-                return;
-            }
-
-            const submitBtn = document.querySelector('#donation-form button[type="submit"]');
-            const originalText = submitBtn ? submitBtn.textContent : '';
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.textContent = currentLang === 'id' ? 'Mengirim...' : 'Sending...';
-            }
-
-            const now = new Date();
-            const formattedDate = now.toISOString().slice(0, 10); // Format YYYY-MM-DD
-
-            try {
-                const response = await fetch('/api/donations', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        user_id: user.id,
-                        title: titleInp.value.trim(),
-                        author: authorInp.value.trim(),
-                        category: categoryInp.value,
-                        condition: conditionInp.value,
-                        note: noteInp.value.trim(),
-                        tanggal_donasi: formattedDate
-                    })
-                });
-
-                if (!response.ok) {
-                    const errData = await response.json();
-                    throw new Error(errData.message || 'Gagal mengirim donasi');
-                }
-
-                titleInp.value = '';
-                authorInp.value = '';
-                noteInp.value = '';
-                categoryInp.selectedIndex = 0;
-                conditionInp.selectedIndex = 0;
-
-                await loadUserDonations();
-
-                const isId = currentLang === 'id';
-                showToast(isId ? "Donasi Diajukan!" : "Donation Submitted!", 
-                        isId ? "Terima kasih! Pengajuan donasi Anda berhasil dikirim ke admin perpustakaan." 
-                        : "Thank you! Your donation request has been sent successfully.");
-            } catch (err) {
-                alert(err.message);
-                console.error(err);
-            } finally {
-                if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = originalText;
-                }
-            }
-        }
-
-        function renderDonationHistory() {
-            const container = document.getElementById('donation-history-container');
-            if (!container) return;
-            
-            if (userDonations.length === 0) {
-                const emptyText = currentLang === 'id' ? "Belum ada riwayat donasi buku." : "No book donation history yet.";
-                container.innerHTML = `<p class="text-xs text-slate-400 py-4 text-center italic">${emptyText}</p>`;
-                return;
-            }
-
-            container.innerHTML = '';
-            userDonations.forEach(donasi => {
-                const rawDate = donasi.tanggal_donasi || donasi.date || '';
-                let formattedDate = rawDate;
-                if (rawDate) {
-                    try {
-                        const d = new Date(rawDate);
-                        formattedDate = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
-                    } catch(e) {}
-                }
-                const statusText = donasi.status === "Menunggu Verifikasi" ? (currentLang === 'id' ? "Menunggu Verifikasi" : "Pending Verification") : donasi.status;
-                
-                container.insertAdjacentHTML('beforeend', `
-                    <div class="p-3 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-200/50 dark:border-slate-800 flex justify-between items-center">
-                        <div>
-                            <h6 class="text-xs font-bold text-slate-800 dark:text-white line-clamp-1">${donasi.title}</h6>
-                            <p class="text-[10px] text-slate-400 mt-0.5">${donasi.author} • ${formattedDate}</p>
-                        </div>
-                        <span class="text-[9px] font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-500 dark:bg-amber-950/40 border border-amber-200/50 dark:border-amber-900/40">${statusText}</span>
-                    </div>
-                `);
-            });
         }
 
         // ============================================================
@@ -1469,6 +1400,7 @@
                 calculateFines();
                 updateCourierStatusVisibility();
                 await updateBookStatuses();
+                syncWishlistUI();
             } catch (err) {
                 console.error('Error loading loans:', err);
             }
@@ -1507,6 +1439,9 @@
 
                 // Sinkronkan ulang data buku di Javascript
                 booksData = getBooksFromDOM();
+
+                // Sinkronkan tampilan tombol wishlist dengan status terbaru
+                syncWishlistUI();
             } catch (err) {
                 console.error('Error updating book statuses:', err);
             }
@@ -1612,22 +1547,69 @@
         }
 
         function updateCourierStatusVisibility() {
-            const box = document.getElementById('courier-status-box');
-            const deadlineBox = document.getElementById('circ-deadline-box');
+            const container = document.getElementById('circ-status-container');
+            const deadlineTpl = document.getElementById('circ-deadline-template');
+            const courierTpl = document.getElementById('circ-courier-template');
+            if (!container || !deadlineTpl || !courierTpl) return;
 
-            const hasDelivery = activeLoans.some(l => l.status === 'Diantar Kurir');
-            const hasPickup = activeLoans.some(l => l.status === 'Booking');
+            // Bersihkan semua kartu & interval lama sebelum render ulang,
+            // supaya tidak ada kartu/interval "bekas" yang menumpuk.
+            clearAllCircCountdowns();
+            container.innerHTML = '';
 
-            if (box) {
-                box.classList.toggle('hidden', !hasDelivery);
-            }
+            // Booking yang belum selesai (belum dikembalikan) & masih butuh perhatian:
+            // status 'Booking' (ambil sendiri) atau 'Diantar Kurir'.
+            const pendingLoans = activeLoans.filter(l =>
+                !l.tanggal_kembali && (l.status === 'Booking' || l.status === 'Diantar Kurir')
+            );
 
-            if (deadlineBox) {
-                deadlineBox.classList.toggle('hidden', !hasPickup);
-                if (hasPickup) {
-                    startCountdown();
+            pendingLoans.forEach(loan => {
+                if (loan.status === 'Booking') {
+                    container.appendChild(buildDeadlineCard(loan, deadlineTpl));
+                } else if (loan.status === 'Diantar Kurir') {
+                    container.appendChild(buildCourierCard(loan, courierTpl));
                 }
+            });
+
+            // Terapkan bahasa aktif ke kartu-kartu yang baru saja di-clone.
+            if (typeof applyTranslations === 'function') applyTranslations();
+        }
+
+        function buildDeadlineCard(loan, template) {
+            const node = template.content.firstElementChild.cloneNode(true);
+
+            const bookEl = node.querySelector('.circ-deadline-book-el');
+            if (bookEl) bookEl.textContent = loan.book_title || '';
+
+            // Belum ada kolom "batas pengambilan" tersendiri di database, jadi
+            // deadline diambil dari waktu booking dibuat + jendela pengambilan 24 jam.
+            // Dasarnya adalah created_at milik booking INI SAJA, sehingga tiap
+            // booking punya deadline sendiri-sendiri dan tidak saling menimpa.
+            const createdAt = loan.created_at ? new Date(loan.created_at) : new Date();
+            const pickupWindowMs = 24 * 60 * 60 * 1000;
+            const deadlineDate = new Date(createdAt.getTime() + pickupWindowMs);
+
+            const timerEl = node.querySelector('.countdown-timer-el');
+            if (timerEl) {
+                startCountdownForCard(loan.id, timerEl, deadlineDate);
             }
+
+            return node;
+        }
+
+        function buildCourierCard(loan, template) {
+            const node = template.content.firstElementChild.cloneNode(true);
+
+            const bookEl = node.querySelector('.circ-courier-book-el');
+            if (bookEl) bookEl.textContent = loan.book_title || '';
+
+            const descEl = node.querySelector('.courier-status-1-desc-el');
+            if (descEl) {
+                const dict = langDictionary[currentLang];
+                descEl.innerText = dict['circ-status-1-desc'] || descEl.innerText;
+            }
+
+            return node;
         }
 
         // ============================================================
@@ -1651,8 +1633,8 @@
             if (localStorage.getItem('libra-theme') === 'dark') document.documentElement.classList.add('dark');
             applyTranslations();
             switchTab(activeTabId);
-            loadUserDonations();
             renderWishlist();
+            syncWishlistUI();
             renderRecommendedBooks();
             loadUserLoans();
             loadNotifications();
