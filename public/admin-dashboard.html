@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin LIBRA - Pro Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="manifest" href="manifest.json">
+    <link href="./output.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .animate-slide-up { animation: slideUp 0.3s ease-out forwards; }
+        
+        /* CSS Timeline Custom untuk Pop-up Detail */
+        .timeline-item { position: relative; padding-left: 1.5rem; border-left: 2px solid #e2e8f0; padding-bottom: 1rem; }
+        .dark .timeline-item { border-left-color: #334155; }
+        .timeline-item::before { content: ''; position: absolute; left: -0.35rem; top: 0.25rem; width: 0.6rem; height: 0.6rem; border-radius: 50%; background: #3b82f6; border: 2px solid #fff; }
+        .dark .timeline-item::before { border-color: #1e293b; }
+        .timeline-item:last-child { border-left: 2px solid transparent; padding-bottom: 0; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-900 dark:text-slate-200 h-screen overflow-hidden flex transition-colors duration-300">
+
+    <aside class="hidden md:flex flex-col w-64 bg-white border-r border-slate-200 dark:bg-slate-800 dark:border-slate-700 h-full z-20 transition-colors duration-300">
+        <div class="p-6 border-b border-slate-200 dark:border-slate-700">
+            <h1 class="text-xl font-bold text-slate-800 dark:text-white tracking-wider">
+                <i class="fa-solid fa-book-open text-blue-600 dark:text-blue-500 mr-2"></i>LIBRA <span class="text-xs text-blue-500 dark:text-blue-400 font-normal">ADMIN</span>
+            </h1>
+        </div>
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto hide-scrollbar">
+            <button onclick="switchTab('dashboard')" id="nav-desktop-dashboard" class="nav-desktop w-full flex items-center gap-3 bg-blue-600 text-white p-3 rounded-xl font-medium shadow-lg shadow-blue-500/20 transition-all">
+                <i class="fa-solid fa-chart-pie w-5"></i> Dashboard
+            </button>
+            <button onclick="switchTab('books')" id="nav-desktop-books" class="nav-desktop w-full flex items-center gap-3 text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white p-3 rounded-xl font-medium transition-all">
+                <i class="fa-solid fa-book w-5"></i> Kelola Pustaka
+            </button>
+            <button onclick="switchTab('users')" id="nav-desktop-users" class="nav-desktop w-full flex items-center gap-3 text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white p-3 rounded-xl font-medium transition-all">
+                <i class="fa-solid fa-users w-5"></i> Pengguna
+            </button>
+            <button onclick="switchTab('peminjams')" id="nav-desktop-peminjams" class="nav-desktop w-full flex items-center gap-3 text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white p-3 rounded-xl font-medium transition-all">
+                <i class="fa-solid fa-rotate w-5"></i> Sirkulasi
+            </button>
+            <button onclick="switchTab('invoices')" id="nav-desktop-invoices" class="nav-desktop w-full flex items-center gap-3 text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white p-3 rounded-xl font-medium transition-all">
+                <i class="fa-solid fa-file-invoice w-5"></i> Invoices
+            </button>
+            <button onclick="switchTab('complaints')" id="nav-desktop-complaints" class="nav-desktop w-full flex items-center gap-3 text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white p-3 rounded-xl font-medium transition-all">
+                <i class="fa-solid fa-envelope w-5"></i> Pengaduan
+            </button>
+        </nav>
+        <div class="p-4 border-t border-slate-200 dark:border-slate-700">
+            <button onclick="localStorage.removeItem('libra_token'); localStorage.removeItem('libra_user'); alert('Sesi berakhir. Kembali ke halaman login.'); window.location.href='/login';" class="w-full flex items-center justify-center gap-2 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 p-3 rounded-xl font-medium transition-colors">
+                <i class="fa-solid fa-right-from-bracket"></i> Keluar
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-full relative w-full">
+        <header class="bg-white border-b border-slate-200 dark:bg-slate-800 dark:border-slate-700 p-4 flex justify-between items-center z-10 sticky top-0 transition-colors duration-300 shadow-sm dark:shadow-none">
+            <h2 id="header-title" class="text-lg md:text-xl font-semibold text-slate-800 dark:text-white">Dashboard</h2>
+            <div class="flex items-center gap-4">
+                <button onclick="printReport()" class="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 px-3 py-2 rounded-xl transition-colors" title="Cetak laporan data yang sedang ditampilkan">
+                    <i class="fa-solid fa-print"></i>
+                    <span class="hidden md:inline">Cetak Laporan</span>
+                </button>
+                <button onclick="toggleTheme()" class="text-slate-400 hover:text-amber-500 dark:hover:text-amber-400 transition-colors w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center" title="Toggle Tema">
+                    <i id="theme-icon" class="fa-solid fa-sun"></i>
+                </button>
+                <div class="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-700">
+                    <div class="hidden md:block text-right">
+                        <p class="text-sm font-medium text-slate-800 dark:text-white">Admin Utama</p>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider">Pustakawan</p>
+                    </div>
+                    <div class="w-9 h-9 rounded-full bg-blue-100 border border-blue-200 dark:bg-blue-500/20 dark:border-blue-500/50 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-4 md:p-6 pb-24 md:pb-8 hide-scrollbar">
+            
+            <div id="tab-dashboard" class="tab-content block animate-slide-up">
+                <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-5 mb-6 text-white shadow-lg shadow-blue-500/30 flex items-center gap-4">
+                    <div class="text-3xl"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                    <div>
+                        <h4 class="font-bold text-lg">Insight Server</h4>
+                        <p class="text-sm text-blue-100 mt-1">Sistem LIBRA telah terhubung secara real-time dengan Database API.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 flex items-center justify-center text-xl flex-shrink-0"><i class="fa-solid fa-book"></i></div>
+                        <div><p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Total Buku</p><h3 id="stat-books" class="text-2xl font-bold text-slate-800 dark:text-white">-</h3></div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 flex items-center justify-center text-xl flex-shrink-0"><i class="fa-solid fa-users"></i></div>
+                        <div><p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Pengguna</p><h3 id="stat-users" class="text-2xl font-bold text-slate-800 dark:text-white">-</h3></div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 flex items-center justify-center text-xl flex-shrink-0"><i class="fa-solid fa-rotate"></i></div>
+                        <div><p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Sirkulasi</p><h3 id="stat-peminjams" class="text-2xl font-bold text-slate-800 dark:text-white">-</h3></div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-red-50 text-red-600 dark:bg-red-500/20 dark:text-red-400 flex items-center justify-center text-xl flex-shrink-0"><i class="fa-solid fa-wallet"></i></div>
+                        <div><p class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Invoices</p><h3 id="stat-invoices" class="text-2xl font-bold text-slate-800 dark:text-white">-</h3></div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-800 p-5 md:p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm mt-2 md:mt-0 mb-8 animate-slide-up" style="animation-delay: 0.1s;">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold text-slate-800 dark:text-white">Tren Aktivitas Sistem</h3>
+                    </div>
+                    <div class="relative w-full h-64 md:h-80">
+                        <canvas id="chartPeminjaman"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-books" class="tab-content hidden animate-slide-up">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-800 dark:text-white">Master Data Buku</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Inventaris perpustakaan terhubung ke API.</p>
+                    </div>
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <button onclick="fetchBooks()" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-white py-2 px-4 rounded-xl font-medium transition shadow-sm"><i class="fa-solid fa-rotate-right"></i></button>
+                        <button onclick="openModalForm('modal-book')" class="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-5 rounded-xl font-medium transition flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
+                            <i class="fa-solid fa-plus"></i> Tambah Buku
+                        </button>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex gap-3">
+                        <div class="relative w-full">
+                            <input type="text" id="search-books" placeholder="Cari buku berdasarkan judul atau penulis..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pl-10 p-2.5">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400"></i>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                            <span id="book-count">0</span> data
+                        </div>
+                    </div>
+                    <div class="overflow-auto" style="max-height: 500px;">
+                        <table class="w-full text-left text-sm text-slate-600 dark:text-slate-400">
+                            <thead class="text-xs uppercase bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 sticky top-0 z-10">
+                                <tr>
+                                    <th class="px-4 py-3 min-w-[110px]">ISBN</th>
+                                    <th class="px-4 py-3 min-w-[200px]">Judul Buku</th>
+                                    <th class="px-4 py-3 min-w-[180px]">Penulis</th>
+                                    <th class="px-4 py-3 min-w-[200px]">Penerbit</th>
+                                    <th class="px-4 py-3 min-w-[100px]">Tahun</th>
+                                    <th class="px-4 py-3 min-w-[120px] text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-books"></tbody>
+                        </table>
+                    </div>
+                    <div class="p-3 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex justify-between items-center text-xs text-slate-500 dark:text-slate-400">
+                        <span>Total data: <span id="book-total">0</span> buku</span>
+                        <div class="flex gap-2">
+                            <button onclick="fetchBooks()" class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition">
+                                <i class="fa-solid fa-rotate-right mr-1"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-users" class="tab-content hidden animate-slide-up">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-800 dark:text-white">Manajemen Pengguna</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Daftar pengguna & mahasiswa.</p>
+                    </div>
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <button onclick="fetchUsers()" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-white py-2 px-4 rounded-xl font-medium transition shadow-sm"><i class="fa-solid fa-rotate-right"></i></button>
+                        <button onclick="openModalForm('modal-user')" class="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-5 rounded-xl font-medium transition flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
+                            <i class="fa-solid fa-plus"></i> Tambah Pengguna
+                        </button>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex gap-3">
+                        <div class="relative w-full">
+                            <input type="text" id="search-users" placeholder="Cari nama, NIM, fakultas, atau no. telepon..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pl-10 p-2.5">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400"></i>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                            <thead class="text-xs uppercase bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
+                                <tr>
+                                    <th class="px-4 py-3">Avatar</th>
+                                    <th class="px-4 py-3">Nama Lengkap</th>
+                                    <th class="px-4 py-3">NIM</th>
+                                    <th class="px-4 py-3">Fakultas</th>
+                                    <th class="px-4 py-3">No. Telepon</th>
+                                    <th class="px-4 py-3">Alamat Kirim</th>
+                                    <th class="px-4 py-3 text-center">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-users"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-peminjams" class="tab-content hidden animate-slide-up">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-800 dark:text-white">Sirkulasi & Logistik</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Kelola peminjaman dan pengembalian.</p>
+                    </div>
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <button onclick="fetchPeminjams()" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-white py-2 px-4 rounded-xl font-medium transition shadow-sm"><i class="fa-solid fa-rotate-right"></i></button>
+                        <button onclick="openModalForm('modal-peminjam')" class="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-5 rounded-xl font-medium transition flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
+                            <i class="fa-solid fa-plus"></i> Pinjam Baru
+                        </button>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex gap-3">
+                        <div class="relative w-full">
+                            <input type="text" id="search-peminjams" placeholder="Cari sirkulasi..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pl-10 p-2.5">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400"></i>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                            <thead class="text-xs uppercase bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
+                                <tr>
+                                    <th class="px-4 py-3">ID</th>
+                                    <th class="px-4 py-3">User ID</th>
+                                    <th class="px-4 py-3">Book ID</th>
+                                    <th class="px-4 py-3">Tgl Pinjam - Kembali</th>
+                                    <th class="px-4 py-3">Status</th>
+                                    <th class="px-4 py-3">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-peminjams"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-invoices" class="tab-content hidden animate-slide-up">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-800 dark:text-white">Data Invoices</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Catatan denda dan tagihan.</p>
+                    </div>
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <button onclick="fetchInvoices()" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-white py-2 px-4 rounded-xl font-medium transition shadow-sm"><i class="fa-solid fa-rotate-right"></i></button>
+                        <button onclick="openModalForm('modal-invoice')" class="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-5 rounded-xl font-medium transition flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
+                            <i class="fa-solid fa-plus"></i> Tambah Invoice
+                        </button>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex gap-3">
+                        <div class="relative w-full">
+                            <input type="text" id="search-invoices" placeholder="Cari invoice..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pl-10 p-2.5">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400"></i>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                            <thead class="text-xs uppercase bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
+                                <tr>
+                                    <th class="px-4 py-3">ID</th>
+                                    <th class="px-4 py-3">Peminjam ID</th>
+                                    <th class="px-4 py-3">Buku ISBN</th>
+                                    <th class="px-4 py-3">Tgl Pinjam - Kembali</th>
+                                    <th class="px-4 py-3">Status</th>
+                                    <th class="px-4 py-3">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-invoices"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-complaints" class="tab-content hidden animate-slide-up">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-800 dark:text-white">Kotak Masuk Mahasiswa</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Umpan balik, pertanyaan, dan laporan masalah.</p>
+                    </div>
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <button onclick="fetchComplaints()" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-white py-2 px-4 rounded-xl font-medium transition shadow-sm"><i class="fa-solid fa-rotate-right"></i></button>
+                        <button onclick="openModalForm('modal-complaint')" class="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white py-2.5 px-5 rounded-xl font-medium transition flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20">
+                            <i class="fa-solid fa-plus"></i> Tiket Manual
+                        </button>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex gap-3">
+                        <div class="relative w-full">
+                            <input type="text" id="search-complaints" placeholder="Cari pengaduan..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pl-10 p-2.5">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400"></i>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                            <thead class="text-xs uppercase bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
+                                <tr>
+                                    <th class="px-4 py-3">ID</th>
+                                    <th class="px-4 py-3">Peminjam ID</th>
+                                    <th class="px-4 py-3">Pesan / Laporan</th>
+                                    <th class="px-4 py-3">Status</th>
+                                    <th class="px-4 py-3">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-complaints"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <nav class="md:hidden fixed bottom-0 w-full bg-white border-t border-slate-200 dark:bg-slate-800 dark:border-slate-700 z-50 flex justify-around p-2 text-xs">
+        <button onclick="switchTab('dashboard')" class="flex flex-col items-center gap-1 p-2 text-blue-600"><i class="fa-solid fa-chart-pie text-lg"></i></button>
+        <button onclick="switchTab('books')" class="flex flex-col items-center gap-1 p-2 text-slate-500 hover:text-slate-800 dark:text-slate-400"><i class="fa-solid fa-book text-lg"></i></button>
+        <button onclick="switchTab('users')" class="flex flex-col items-center gap-1 p-2 text-slate-500 hover:text-slate-800 dark:text-slate-400"><i class="fa-solid fa-users text-lg"></i></button>
+        <button onclick="switchTab('peminjams')" class="flex flex-col items-center gap-1 p-2 text-slate-500 hover:text-slate-800 dark:text-slate-400"><i class="fa-solid fa-rotate text-lg"></i></button>
+        <button onclick="switchTab('invoices')" class="flex flex-col items-center gap-1 p-2 text-slate-500 hover:text-slate-800 dark:text-slate-400"><i class="fa-solid fa-file-invoice text-lg"></i></button>
+    </nav>
+
+    <div id="toast" class="fixed bottom-20 md:bottom-10 right-4 md:right-10 z-[100] hidden transition-all">
+        <div id="toast-bg" class="bg-blue-600 text-white px-6 py-3 rounded-full shadow-xl font-medium flex items-center gap-3 border border-blue-500">
+            <i id="toast-icon" class="fa-solid fa-info-circle"></i>
+            <span id="toast-msg">Notifikasi</span>
+        </div>
+    </div>
+
+    <div id="modal-book" class="fixed inset-0 z-[60] hidden bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-md overflow-hidden flex flex-col animate-slide-up">
+            <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/80">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white">Form Buku</h3>
+                <button onclick="closeModal('modal-book')" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="form-book" class="p-4 space-y-4 overflow-y-auto" style="max-height:70vh;">
+                <input type="hidden" id="book-id">
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">ISBN <span class="text-red-500">*</span></label><input type="text" id="book-isbn" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200" placeholder="Kode unik buku"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Judul Buku</label><input type="text" id="book-title" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Penulis</label><input type="text" id="book-author" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Penerbit</label><input type="text" id="book-publisher" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tahun</label><input type="number" id="book-year" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+            </form>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-3 bg-slate-50 dark:bg-slate-800">
+                <button type="button" onclick="closeModal('modal-book')" class="py-2 px-4 rounded-xl font-medium text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700">Batal</button>
+                <button type="submit" form="form-book" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-xl font-medium">Simpan Data</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-user" class="fixed inset-0 z-[60] hidden bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-md overflow-hidden flex flex-col animate-slide-up">
+            <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/80">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white">Form Pengguna</h3>
+                <button onclick="closeModal('modal-user')" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="form-user" class="p-4 space-y-4 overflow-y-auto" style="max-height:70vh;">
+                <input type="hidden" id="user-id">
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap</label><input type="text" id="user-nama" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">NIM</label><input type="text" id="user-nim" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Fakultas</label><input type="text" id="user-fakultas" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">No. Telepon</label><input type="text" id="user-telepon" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Alamat Kirim</label><textarea id="user-alamat" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200 h-20"></textarea></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Avatar URL</label><input type="text" id="user-avatar" placeholder="https://..." class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Password</label><input type="text" id="user-password" placeholder="Isi jika ingin membuat/mengubah password" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+            </form>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-3 bg-slate-50 dark:bg-slate-800">
+                <button type="button" onclick="closeModal('modal-user')" class="py-2 px-4 rounded-xl font-medium text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700">Batal</button>
+                <button type="submit" form="form-user" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-xl font-medium">Simpan Data</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-peminjam" class="fixed inset-0 z-[60] hidden bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-md overflow-hidden flex flex-col animate-slide-up">
+            <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/80">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white">Form Sirkulasi</h3>
+                <button onclick="closeModal('modal-peminjam')" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="form-peminjam" class="p-4 space-y-4 overflow-y-auto" style="max-height:70vh;">
+                <input type="hidden" id="peminjam-id">
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">User ID</label><input type="text" id="peminjam-user" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Book ID</label><input type="text" id="peminjam-book" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tgl Pinjam</label><input type="date" id="peminjam-borrow" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                    <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tgl Kembali</label><input type="date" id="peminjam-return" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                </div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status</label><select id="peminjam-status" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"><option value="dipinjam">Dipinjam</option><option value="dikembalikan">Dikembalikan</option><option value="Terlambat">Terlambat</option><option value="Menunggu Kurir">Menunggu Kurir</option></select></div>
+            </form>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-3 bg-slate-50 dark:bg-slate-800">
+                <button type="button" onclick="closeModal('modal-peminjam')" class="py-2 px-4 rounded-xl font-medium text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700">Batal</button>
+                <button type="submit" form="form-peminjam" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-xl font-medium">Simpan Data</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-invoice" class="fixed inset-0 z-[60] hidden bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-md overflow-hidden flex flex-col animate-slide-up">
+            <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/80">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white">Form Invoice</h3>
+                <button onclick="closeModal('modal-invoice')" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="form-invoice" class="p-4 space-y-4 overflow-y-auto" style="max-height:70vh;">
+                <input type="hidden" id="invoice-id">
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Peminjam ID</label><input type="text" id="invoice-peminjam" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Buku ISBN</label><input type="text" id="invoice-isbn" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tgl Pinjam</label><input type="date" id="invoice-pinjam" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                    <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tgl Kembali</label><input type="date" id="invoice-kembali" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                </div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status</label><select id="invoice-status" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"><option value="unpaid">Unpaid</option><option value="paid">Paid</option></select></div>
+            </form>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-3 bg-slate-50 dark:bg-slate-800">
+                <button type="button" onclick="closeModal('modal-invoice')" class="py-2 px-4 rounded-xl font-medium text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700">Batal</button>
+                <button type="submit" form="form-invoice" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-xl font-medium">Simpan Data</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-complaint" class="fixed inset-0 z-[60] hidden bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-2xl w-full max-w-md overflow-hidden flex flex-col animate-slide-up">
+            <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/80">
+                <h3 class="text-lg font-bold text-slate-800 dark:text-white">Form Pengaduan</h3>
+                <button onclick="closeModal('modal-complaint')" class="text-slate-400 hover:text-red-500 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <form id="form-complaint" class="p-4 space-y-4 overflow-y-auto" style="max-height:70vh;">
+                <input type="hidden" id="complaint-id">
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Peminjam ID</label><input type="text" id="complaint-user" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Pesan Laporan</label><textarea id="complaint-message" required class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200 h-24"></textarea></div>
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status</label><select id="complaint-status" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"><option value="pending">Pending</option><option value="resolved">Resolved</option></select></div>
+            </form>
+            <div class="p-4 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-3 bg-slate-50 dark:bg-slate-800">
+                <button type="button" onclick="closeModal('modal-complaint')" class="py-2 px-4 rounded-xl font-medium text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700">Batal</button>
+                <button type="submit" form="form-complaint" class="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-xl font-medium">Simpan Data</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API = window.location.origin + "/api";
+
+        // State Arrays
+        let dataState = {
+            books: [], users: [], peminjams: [], invoices: [], complaints: []
+        };
+        let currentAdminTab = 'dashboard';
+
+        // Kemungkinan nama field primary key untuk tiap jenis data (dicoba berurutan).
+        // Ini dipakai bareng pickId() supaya tombol Edit/Hapus tetap dapat ID yang benar
+        // walau backend menamai kolom ID-nya beda dari yang diasumsikan di awal.
+        const ID_KEYS = {
+            user: ['id', 'user_id', 'id_user', 'uuid', 'ID'],
+            peminjam: ['id', 'peminjam_id', 'id_peminjam', 'id_sirkulasi', 'uuid'],
+            invoice: ['id', 'invoice_id', 'id_invoice', 'no_invoice', 'uuid'],
+            complaint: ['id', 'complaint_id', 'id_pengaduan', 'id_complaint', 'uuid']
+        };
+
+        // --- Core UI Functions ---
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            const icon = document.getElementById('theme-icon');
+            icon.className = document.documentElement.classList.contains('dark') ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+        }
+
+        function switchTab(tab) {
+            currentAdminTab = tab;
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            const activeTab = document.getElementById(`tab-${tab}`);
+            if(activeTab) activeTab.classList.remove('hidden');
+
+            document.querySelectorAll('.nav-desktop').forEach(el => {
+                el.className = "nav-desktop w-full flex items-center gap-3 text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white p-3 rounded-xl font-medium transition-all";
+            });
+            const activeNav = document.getElementById(`nav-desktop-${tab}`);
+            if(activeNav) activeNav.className = "nav-desktop w-full flex items-center gap-3 bg-blue-600 text-white p-3 rounded-xl font-medium shadow-lg shadow-blue-500/20 transition-all";
+
+            const titles = { 'dashboard': 'Dashboard Sistem', 'books': 'Kelola Pustaka', 'users': 'Manajemen Pengguna', 'peminjams': 'Sirkulasi & Logistik', 'invoices': 'Invoices', 'complaints': 'Kotak Pengaduan' };
+            document.getElementById('header-title').innerText = titles[tab] || 'Dashboard';
+        }
+
+        function triggerToast(message, color = 'blue') {
+            const toast = document.getElementById('toast');
+            const toastBg = document.getElementById('toast-bg');
+            const toastIcon = document.getElementById('toast-icon');
+            
+            document.getElementById('toast-msg').innerText = message;
+            if(color === 'red') {
+                toastBg.className = "bg-red-600 text-white px-6 py-3 rounded-full shadow-xl font-medium flex items-center gap-3 border border-red-500";
+                toastIcon.className = "fa-solid fa-triangle-exclamation";
+            } else if(color === 'emerald') {
+                toastBg.className = "bg-emerald-600 text-white px-6 py-3 rounded-full shadow-xl font-medium flex items-center gap-3 border border-emerald-500";
+                toastIcon.className = "fa-solid fa-check";
+            } else {
+                toastBg.className = "bg-blue-600 text-white px-6 py-3 rounded-full shadow-xl font-medium flex items-center gap-3 border border-blue-500";
+                toastIcon.className = "fa-solid fa-info-circle";
+            }
+            
+            toast.classList.remove('hidden');
+            const duration = color === 'red' ? 7000 : 3500;
+            clearTimeout(toast._hideTimer);
+            toast._hideTimer = setTimeout(() => toast.classList.add('hidden'), duration);
+        }
+
+        // Helper: aman-kan string untuk ditaruh di attribute HTML (hindari bug tanda kutip/karakter khusus)
+        function escAttr(str) {
+            return String(str ?? '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+        function escHtml(str) {
+            return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+        // Helper: potong string tanggal "YYYY-MM-DD HH:mm:ss" / ISO menjadi format yang dikenali <input type="date">
+        function toDateInputValue(v) {
+            if (!v) return '';
+            return String(v).slice(0, 10);
+        }
+        // Helper: ambil ID unik record dari beberapa kemungkinan nama field.
+        // Backend kadang menamai primary key beda-beda (id, uuid, user_id, dst),
+        // jadi kita coba semua kemungkinan supaya tombol Edit/Hapus tetap dapat ID yang benar.
+        function pickId(item, keys) {
+            for (const k of keys) {
+                const v = item?.[k];
+                if (v !== undefined && v !== null && v !== '') return v;
+            }
+            return '';
+        }
+
+        // Helper: set nilai <select> dengan aman. Kalau value dari database TIDAK ADA
+        // di antara <option> yang tersedia (mis. status "Terlambat" sementara dropdown
+        // cuma punya opsi "dipinjam"/"dikembalikan"), browser akan diam-diam mengosongkan
+        // pilihan itu -> saat disimpan jadi "" -> oleh Laravel diubah jadi null -> DB menolak
+        // (kolom status NOT NULL). Jadi kalau value tidak ketemu di antara option,
+        // kita tambahkan option-nya secara dinamis supaya nilai asli dari database
+        // tidak pernah hilang/kosong saat form disubmit.
+        function setSelectValueSafe(selectEl, value, fallback = '') {
+            const v = (value === null || value === undefined || value === '') ? fallback : String(value);
+            const exists = Array.from(selectEl.options).some(opt => opt.value === v);
+            if (!exists && v !== '') {
+                const opt = document.createElement('option');
+                opt.value = v;
+                opt.textContent = v;
+                selectEl.appendChild(opt);
+            }
+            selectEl.value = v;
+        }
+
+        function openModalForm(modalId, rawId = null) {
+            document.getElementById(modalId).classList.remove('hidden');
+            const type = modalId.replace('modal-', '');
+            const form = document.getElementById(`form-${type}`);
+            form.reset();
+
+            // rawId datang sebagai string dari onclick (selalu di-quote), '' berarti mode Tambah Baru
+            const id = (rawId === null || rawId === undefined || rawId === '' || rawId === 'null' || rawId === 'undefined') ? '' : rawId;
+            document.getElementById(`${type}-id`).value = id;
+
+            if (id !== '') {
+                let item = null;
+                if (type === 'book') {
+                    item = dataState.books.find(x => String(x?.ISBN ?? x?.isbn ?? x?.id ?? '') === String(id));
+                } else {
+                    item = dataState[`${type}s`].find(x => String(pickId(x, ID_KEYS[type] || ['id'])) === String(id));
+                }
+
+                if (item) {
+                    if (type === 'book') {
+                        document.getElementById('book-isbn').value = item?.ISBN ?? item?.isbn ?? id ?? '';
+                        document.getElementById('book-title').value = item?.['Book-Title'] || '';
+                        document.getElementById('book-author').value = item?.['Book-Author'] || '';
+                        document.getElementById('book-publisher').value = item?.['Publisher'] || '';
+                        document.getElementById('book-year').value = item?.['Year-Of-Publication'] || '';
+                    } else if (type === 'user') {
+                        document.getElementById('user-nama').value = item?.nama_lengkap || '';
+                        document.getElementById('user-nim').value = item?.nim || '';
+                        document.getElementById('user-fakultas').value = item?.fakultas || '';
+                        document.getElementById('user-telepon').value = item?.no_telepon || '';
+                        document.getElementById('user-alamat').value = item?.alamat_kirim || '';
+                        document.getElementById('user-avatar').value = item?.avatar_url || '';
+                        // password sengaja tidak diisi ulang (keamanan) - biarkan kosong = tidak diubah
+                    } else if (type === 'peminjam') {
+                        document.getElementById('peminjam-user').value = item?.user_id ?? item?.id_user ?? '';
+                        document.getElementById('peminjam-book').value = item?.book_id ?? item?.id_buku ?? '';
+                        document.getElementById('peminjam-borrow').value = toDateInputValue(item?.borrow_date || item?.tanggal_pinjam);
+                        document.getElementById('peminjam-return').value = toDateInputValue(item?.return_date || item?.tanggal_kembali);
+                        document.getElementById('peminjam-status') && setSelectValueSafe(document.getElementById('peminjam-status'), item?.status, 'dipinjam');
+                    } else if (type === 'invoice') {
+                        document.getElementById('invoice-peminjam').value = item?.peminjam_id ?? item?.id_peminjam ?? '';
+                        document.getElementById('invoice-isbn').value = item?.book_isbn ?? '';
+                        document.getElementById('invoice-pinjam').value = toDateInputValue(item?.tanggal_pinjam);
+                        document.getElementById('invoice-kembali').value = toDateInputValue(item?.tanggal_kembali);
+                        document.getElementById('invoice-status') && setSelectValueSafe(document.getElementById('invoice-status'), item?.status, 'unpaid');
+                    } else if (type === 'complaint') {
+                        document.getElementById('complaint-user').value = item?.peminjam_id ?? '';
+                        document.getElementById('complaint-message').value = item?.pesan || item?.message || '';
+                        document.getElementById('complaint-status') && setSelectValueSafe(document.getElementById('complaint-status'), item?.status, 'pending');
+                    }
+                } else {
+                    // PENTING: jangan biarkan form edit terbuka dalam keadaan kosong lalu bisa disubmit,
+                    // karena itu akan menimpa data asli di database dengan nilai kosong/null.
+                    console.warn(`Data ${type} dengan id/kunci "${id}" tidak ditemukan di cache lokal. Coba refresh data.`);
+                    triggerToast('Data tidak ditemukan di cache lokal. Klik tombol Refresh lalu coba lagi.', 'red');
+                    closeModal(modalId);
+                    return;
+                }
+            }
+        }
+        function closeModal(modalId) { document.getElementById(modalId).classList.add('hidden'); }
+
+        // Tombol submit ada di luar <form> (memakai atribut form="..."), jadi kita cari lewat selector ini
+        function setFormLoading(type, loading, loadingLabel = 'Menyimpan...') {
+            const btn = document.querySelector(`button[form="form-${type}"]`);
+            if (!btn) return;
+            if (loading) {
+                btn.dataset.originalText = btn.dataset.originalText || btn.innerText;
+                btn.innerText = loadingLabel;
+                btn.disabled = true;
+                btn.classList.add('opacity-60', 'cursor-not-allowed');
+            } else {
+                btn.innerText = btn.dataset.originalText || 'Simpan Data';
+                btn.disabled = false;
+                btn.classList.remove('opacity-60', 'cursor-not-allowed');
+            }
+        }
+
+        // --- Core API Functions ---
+        async function fetchAPI(endpoint) {
+            try {
+                const res = await fetch(`${API}/${endpoint}`, {
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                
+                const result = await res.json();
+                
+                let data = [];
+                if (Array.isArray(result)) {
+                    data = result;
+                } else if (result && result.data) {
+                    if (Array.isArray(result.data)) {
+                        data = result.data;
+                    } else if (result.data.data && Array.isArray(result.data.data)) {
+                        data = result.data.data;
+                    }
+                }
+                
+                return data;
+            } catch (err) {
+                console.error("Gagal mengambil data dari endpoint:", endpoint, err);
+                triggerToast(`Gagal memuat ${endpoint}`, 'red');
+                return [];
+            }
+        }
+
+        // saveAPI sekarang mengembalikan { success, message, data } supaya pesan error asli dari
+        // backend (validasi 422, 404 salah endpoint, dll) bisa ditampilkan ke admin, bukan cuma "gagal".
+        async function saveAPI(endpoint, payload, id = null) {
+            const hasId = id !== null && id !== undefined && id !== '';
+            const url = hasId ? `${API}/${endpoint}/${encodeURIComponent(id)}` : `${API}/${endpoint}`;
+            const method = hasId ? 'PUT' : 'POST';
+
+            // Log request supaya mudah ditelusuri lewat tab Console (F12) kalau ada masalah.
+            console.log(`[saveAPI] ${method} ${url}`, payload);
+
+            let res;
+            try {
+                res = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+            } catch (networkErr) {
+                console.error("Error jaringan saat menyimpan data (kemungkinan CORS/offline):", networkErr);
+                return { success: false, message: 'Tidak dapat terhubung ke server. Cek koneksi internet atau konfigurasi CORS backend.' };
+            }
+
+            // Ambil body response sebagai teks dulu (aman untuk JSON maupun bukan JSON,
+            // misalnya endpoint belum ada di backend dan malah balas halaman HTML 404).
+            const rawText = await res.text().catch(() => '');
+            let result = {};
+            try { result = rawText ? JSON.parse(rawText) : {}; } catch (_) { result = {}; }
+
+            if (!res.ok) {
+                let msg = result?.message || result?.error || `Gagal menyimpan data (HTTP ${res.status} ${res.statusText || ''})`.trim();
+                if (result?.errors && typeof result.errors === 'object') {
+                    const firstField = Object.keys(result.errors)[0];
+                    if (firstField && Array.isArray(result.errors[firstField])) {
+                        msg = `${firstField}: ${result.errors[firstField][0]}`;
+                    }
+                }
+                // Kalau backend tidak balas JSON sama sekali (kemungkinan besar endpoint/route
+                // "${endpoint}" belum tersedia di server untuk method ${method}), tandai secara eksplisit.
+                if (!result || Object.keys(result).length === 0) {
+                    if (res.status === 404) msg = `Endpoint "${endpoint}" (${method}) tidak ditemukan di server (404). Kemungkinan route belum dibuat di backend.`;
+                    else if (res.status === 405) msg = `Method ${method} tidak diizinkan untuk endpoint "${endpoint}" (405). Kemungkinan backend belum punya fungsi simpan/ubah untuk data ini.`;
+                    else msg = `Gagal menyimpan data (HTTP ${res.status}). Server tidak mengembalikan detail error.`;
+                }
+                console.error(`[saveAPI] Gagal ${method} ${url} ->`, res.status, rawText || '(kosong)');
+                return { success: false, message: msg, status: res.status };
+            }
+
+            return { success: true, data: result };
+        }
+
+        async function deleteAPI(endpoint, id, refreshCallback) {
+            if (id === null || id === undefined || id === '' || id === 'null' || id === 'undefined') {
+                triggerToast('ID data tidak valid, tidak bisa menghapus.', 'red');
+                return;
+            }
+            if (!confirm('Yakin ingin menghapus data ini?')) return;
+            const url = `${API}/${endpoint}/${encodeURIComponent(id)}`;
+            console.log(`[deleteAPI] DELETE ${url}`);
+            try {
+                const res = await fetch(url, {
+                    method: 'DELETE',
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (res.ok) {
+                    triggerToast('Data berhasil dihapus', 'emerald');
+                    refreshCallback();
+                } else {
+                    const rawText = await res.text().catch(() => '');
+                    let err = {};
+                    try { err = rawText ? JSON.parse(rawText) : {}; } catch (_) { err = {}; }
+                    let msg = err?.message || err?.error;
+                    if (!msg) {
+                        if (res.status === 404) msg = `Endpoint "${endpoint}" (DELETE) tidak ditemukan di server (404). Kemungkinan route hapus belum dibuat di backend.`;
+                        else if (res.status === 405) msg = `Method DELETE tidak diizinkan untuk endpoint "${endpoint}" (405). Kemungkinan backend belum punya fungsi hapus untuk data ini.`;
+                        else msg = `Gagal menghapus data (HTTP ${res.status})`;
+                    }
+                    console.error(`[deleteAPI] Gagal DELETE ${url} ->`, res.status, rawText || '(kosong)');
+                    triggerToast(msg, 'red');
+                }
+            } catch (e) {
+                console.error("Error jaringan saat menghapus data:", e);
+                triggerToast('Tidak dapat terhubung ke server (cek koneksi/CORS)', 'red');
+            }
+        }
+
+        // --- Books ---
+        async function fetchBooks() {
+            const data = await fetchAPI('books') || [];
+            dataState.books = data;
+            document.getElementById('stat-books').innerText = dataState.books.length;
+            renderBooks(dataState.books);
+        }
+        function bookKey(item) {
+            return item?.ISBN ?? item?.isbn ?? item?.id ?? '';
+        }
+        function renderBooks(data) {
+            const tbody = document.getElementById('tbody-books');
+            const totalSpan = document.getElementById('book-total');
+            const countSpan = document.getElementById('book-count');
+            
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-slate-400">📚 Belum ada data buku. Tambahkan buku baru!</td></tr>`;
+                if (totalSpan) totalSpan.innerText = '0';
+                if (countSpan) countSpan.innerText = '0';
+                return;
+            }
+            
+            tbody.innerHTML = data.map(item => {
+                const key = bookKey(item);
+                return `
+                <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                    <td class="px-4 py-3 font-mono text-xs">${escHtml(key) || '-'}</td>
+                    <td class="px-4 py-3 font-medium text-slate-800 dark:text-white break-words">${escHtml(item?.['Book-Title']) || '-'}</td>
+                    <td class="px-4 py-3">${escHtml(item?.['Book-Author']) || '-'}</td>
+                    <td class="px-4 py-3">${escHtml(item?.['Publisher']) || '-'}</td>
+                    <td class="px-4 py-3">${item?.['Year-Of-Publication'] || '-'}</td>
+                    <td class="px-4 py-3 text-center whitespace-nowrap">
+                        <button onclick="openModalForm('modal-book', '${escAttr(key)}')" class="text-blue-500 hover:text-blue-700 mr-3 transition" title="Edit">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button onclick="deleteAPI('books', '${escAttr(key)}', fetchBooks)" class="text-red-500 hover:text-red-700 transition" title="Hapus">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+            }).join('');
+            
+            if (totalSpan) totalSpan.innerText = data.length;
+            if (countSpan) countSpan.innerText = data.length;
+        }
+        
+        document.getElementById('form-book').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('book-id').value;
+
+            const yearVal = document.getElementById('book-year').value;
+            const payload = {
+                "ISBN": document.getElementById('book-isbn').value.trim(),
+                "Book-Title": document.getElementById('book-title').value.trim(),
+                "Book-Author": document.getElementById('book-author').value.trim(),
+                "Publisher": document.getElementById('book-publisher').value.trim(),
+                "Year-Of-Publication": yearVal ? parseInt(yearVal, 10) : null
+            };
+
+            setFormLoading('book', true);
+            try {
+                const result = await saveAPI('books', payload, id);
+                if (result.success) {
+                    closeModal('modal-book');
+                    triggerToast(id ? 'Data buku berhasil diupdate!' : 'Buku baru berhasil ditambahkan!', 'emerald');
+                    fetchBooks();
+                } else {
+                    triggerToast(result.message || 'Gagal menyimpan data ke server!', 'red');
+                }
+            } finally {
+                setFormLoading('book', false);
+            }
+        });
+
+        document.getElementById('search-books').addEventListener('input', (e) => {
+            const v = e.target.value.toLowerCase();
+            renderBooks(dataState.books.filter(b => (b?.['Book-Title'] || '').toLowerCase().includes(v) || (b?.['Book-Author'] || '').toLowerCase().includes(v)));
+        });
+
+        // --- Users ---
+        // Struktur tabel users (sesuai database): id (uuid), nama_lengkap, nim, fakultas,
+        // no_telepon, alamat_kirim, avatar_url, created_at, password
+        async function fetchUsers() {
+            const data = await fetchAPI('users') || [];
+            dataState.users = data;
+            document.getElementById('stat-users').innerText = dataState.users.length;
+            renderUsers(dataState.users);
+        }
+        function renderUsers(data) {
+            const tbody = document.getElementById('tbody-users');
+            if (!data || data.length === 0) return tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-4 text-center">Data Kosong</td></tr>`;
+            tbody.innerHTML = data.map(item => {
+                const key = pickId(item, ID_KEYS.user);
+                const seed = encodeURIComponent(item?.nama_lengkap || key || 'user');
+                const avatar = item?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
+                return `
+                <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <td class="px-4 py-3"><img src="${escAttr(avatar)}" class="w-8 h-8 rounded-full bg-slate-100 object-cover" onerror="this.style.visibility='hidden'"></td>
+                    <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">${escHtml(item?.nama_lengkap) || '-'}</td>
+                    <td class="px-4 py-3">${escHtml(item?.nim) || '-'}</td>
+                    <td class="px-4 py-3">${escHtml(item?.fakultas) || '-'}</td>
+                    <td class="px-4 py-3">${escHtml(item?.no_telepon) || '-'}</td>
+                    <td class="px-4 py-3 max-w-[220px] truncate" title="${escAttr(item?.alamat_kirim)}">${escHtml(item?.alamat_kirim) || '-'}</td>
+                    <td class="px-4 py-3 text-center whitespace-nowrap">
+                        <button onclick="openModalForm('modal-user', '${escAttr(key)}')" class="text-blue-500 hover:text-blue-700 mr-3 transition" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteAPI('users', '${escAttr(key)}', fetchUsers)" class="text-red-500 hover:text-red-700 transition" title="Hapus"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+        document.getElementById('form-user').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('user-id').value;
+            const payload = {
+                nama_lengkap: document.getElementById('user-nama').value.trim(),
+                nim: document.getElementById('user-nim').value.trim(),
+                fakultas: document.getElementById('user-fakultas').value.trim(),
+                no_telepon: document.getElementById('user-telepon').value.trim(),
+                alamat_kirim: document.getElementById('user-alamat').value.trim(),
+                avatar_url: document.getElementById('user-avatar').value.trim() || null
+            };
+            const pwd = document.getElementById('user-password').value;
+            if (pwd) payload.password = pwd;
+
+            setFormLoading('user', true);
+            try {
+                const result = await saveAPI('users', payload, id);
+                if (result.success) {
+                    closeModal('modal-user');
+                    triggerToast(id ? 'Data pengguna berhasil diupdate!' : 'Pengguna baru berhasil ditambahkan!', 'emerald');
+                    fetchUsers();
+                } else {
+                    triggerToast(result.message || 'Gagal menyimpan data pengguna!', 'red');
+                }
+            } finally {
+                setFormLoading('user', false);
+            }
+        });
+        document.getElementById('search-users').addEventListener('input', (e) => {
+            const v = e.target.value.toLowerCase();
+            renderUsers(dataState.users.filter(u =>
+                (u?.nama_lengkap || '').toLowerCase().includes(v) ||
+                (u?.nim || '').toLowerCase().includes(v) ||
+                (u?.fakultas || '').toLowerCase().includes(v) ||
+                (u?.no_telepon || '').toLowerCase().includes(v)
+            ));
+        });
+
+        // --- Peminjams ---
+        async function fetchPeminjams() {
+            const data = await fetchAPI('peminjams') || [];
+            dataState.peminjams = data;
+            document.getElementById('stat-peminjams').innerText = dataState.peminjams.length;
+            renderPeminjams(dataState.peminjams);
+        }
+        function renderPeminjams(data) {
+            const tbody = document.getElementById('tbody-peminjams');
+            if(!data || data.length === 0) return tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-4 text-center">Data Kosong</td></tr>`;
+            tbody.innerHTML = data.map(item => {
+                const key = pickId(item, ID_KEYS.peminjam);
+                return `
+                <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <td class="px-4 py-3 font-mono text-xs">${escHtml(key) || '-'}</td>
+                    <td class="px-4 py-3">${escHtml(item?.user_id ?? item?.id_user) || '-'}</td>
+                    <td class="px-4 py-3">${escHtml(item?.book_id ?? item?.id_buku) || '-'}</td>
+                    <td class="px-4 py-3 text-xs">${escHtml(item?.borrow_date || item?.tanggal_pinjam) || '-'} / ${escHtml(item?.return_date || item?.tanggal_kembali) || '-'}</td>
+                    <td class="px-4 py-3"><span class="px-2 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 rounded-lg text-xs">${escHtml(item?.status) || '-'}</span></td>
+                    <td class="px-4 py-3">
+                        <button onclick="openModalForm('modal-peminjam', '${escAttr(key)}')" class="text-blue-500 mr-3"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteAPI('peminjams', '${escAttr(key)}', fetchPeminjams)" class="text-red-500"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+        
+     document.getElementById('form-peminjam').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('peminjam-id').value;
+            
+            const payload = {
+                user_id: document.getElementById('peminjam-user').value.trim(),
+                book_id: document.getElementById('peminjam-book').value.trim(),
+                // Sesuaikan nama dengan kolom database:
+                tanggal_pinjam: document.getElementById('peminjam-borrow').value, 
+                tanggal_kembali: document.getElementById('peminjam-return').value || null,
+                status: document.getElementById('peminjam-status').value
+            };
+
+            setFormLoading('peminjam', true);
+            try {
+                const result = await saveAPI('peminjams', payload, id);
+                if (result.success) {
+                    closeModal('modal-peminjam');
+                    triggerToast('Data Sirkulasi disimpan!', 'emerald');
+                    fetchPeminjams();
+                } else {
+                    triggerToast(result.message || 'Gagal menyimpan data sirkulasi!', 'red');
+                }
+            } finally {
+                setFormLoading('peminjam', false);
+            }
+        });
+        
+        document.getElementById('search-peminjams').addEventListener('input', (e) => {
+            const v = e.target.value.toLowerCase();
+            renderPeminjams(dataState.peminjams.filter(p => String(p?.user_id || p?.id_user || '').toLowerCase().includes(v) || String(p?.book_id || p?.id_buku || '').toLowerCase().includes(v)));
+        });
+
+        // --- Invoices ---
+        async function fetchInvoices() {
+            const data = await fetchAPI('invoices') || [];
+            dataState.invoices = data;
+            document.getElementById('stat-invoices').innerText = dataState.invoices.length;
+            renderInvoices(dataState.invoices);
+        }
+
+        function renderInvoices(data) {
+            const tbody = document.getElementById('tbody-invoices');
+            if(!data || data.length === 0) return tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-4 text-center">Data Kosong</td></tr>`;
+            tbody.innerHTML = data.map(item => {
+                const key = pickId(item, ID_KEYS.invoice);
+                return `
+                <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <td class="px-4 py-3 font-mono text-xs">${escHtml(key) || '-'}</td>
+                    <td class="px-4 py-3">${escHtml(item?.peminjam_id) || '-'}</td>
+                    <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">${escHtml(item?.book_isbn) || '-'}</td>
+                    <td class="px-4 py-3 text-xs">${escHtml(item?.tanggal_pinjam) || '-'} / ${escHtml(item?.tanggal_kembali) || '-'}</td>
+                    <td class="px-4 py-3"><span class="px-2 py-1 ${item?.status==='paid'?'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300':'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'} rounded-lg text-xs uppercase">${escHtml(item?.status) || 'UNPAID'}</span></td>
+                    <td class="px-4 py-3">
+                        <button onclick="openModalForm('modal-invoice', '${escAttr(key)}')" class="text-blue-500 mr-3"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteAPI('invoices', '${escAttr(key)}', fetchInvoices)" class="text-red-500"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+        
+        document.getElementById('form-invoice').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('invoice-id').value;
+            const payload = {
+                peminjam_id: document.getElementById('invoice-peminjam').value.trim(),
+                book_isbn: document.getElementById('invoice-isbn').value.trim(),
+                tanggal_pinjam: document.getElementById('invoice-pinjam').value,
+                tanggal_kembali: document.getElementById('invoice-kembali').value || null,
+                status: document.getElementById('invoice-status').value
+            };
+
+            setFormLoading('invoice', true);
+            try {
+                const result = await saveAPI('invoices', payload, id);
+                if (result.success) {
+                    closeModal('modal-invoice');
+                    triggerToast('Data Invoices disimpan!', 'emerald');
+                    fetchInvoices();
+                } else {
+                    triggerToast(result.message || 'Gagal menyimpan data invoice!', 'red');
+                }
+            } finally {
+                setFormLoading('invoice', false);
+            }
+        });
+
+        document.getElementById('search-invoices').addEventListener('input', (e) => {
+            const v = e.target.value.toLowerCase();
+            renderInvoices(dataState.invoices.filter(i => String(i?.peminjam_id || i?.id_peminjam || '').toLowerCase().includes(v)));
+        });
+
+        // --- Complaints ---
+        async function fetchComplaints() {
+            const data = await fetchAPI('complaints') || [];
+            dataState.complaints = data;
+            renderComplaints(dataState.complaints);
+        }
+
+        function renderComplaints(data) {
+            const tbody = document.getElementById('tbody-complaints');
+            if(!data || data.length === 0) return tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-4 text-center">Tidak ada laporan hari ini. 🎉</td></tr>`;
+            tbody.innerHTML = data.map(item => {
+                const key = pickId(item, ID_KEYS.complaint);
+                return `
+                <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <td class="px-4 py-3 font-mono text-xs">${escHtml(key) || '-'}</td>
+                    <td class="px-4 py-3">${escHtml(item?.peminjam_id) || '-'}</td>
+                    <td class="px-4 py-3 text-xs max-w-[200px] truncate" title="${escAttr(item?.pesan || item?.message)}">${escHtml(item?.pesan || item?.message) || '-'}</td>
+                    <td class="px-4 py-3"><span class="px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded-lg text-xs uppercase">${escHtml(item?.status) || 'PENDING'}</span></td>
+                    <td class="px-4 py-3">
+                        <button onclick="openModalForm('modal-complaint', '${escAttr(key)}')" class="text-blue-500 mr-3"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteAPI('complaints', '${escAttr(key)}', fetchComplaints)" class="text-red-500"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+        
+        document.getElementById('form-complaint').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('complaint-id').value;
+            const payload = {
+                peminjam_id: document.getElementById('complaint-user').value.trim(),
+                pesan: document.getElementById('complaint-message').value.trim(),
+                status: document.getElementById('complaint-status').value
+            };
+
+            setFormLoading('complaint', true);
+            try {
+                const result = await saveAPI('complaints', payload, id);
+                if (result.success) {
+                    closeModal('modal-complaint');
+                    triggerToast('Data Pengaduan disimpan!', 'emerald');
+                    fetchComplaints();
+                } else {
+                    triggerToast(result.message || 'Gagal menyimpan data pengaduan!', 'red');
+                }
+            } finally {
+                setFormLoading('complaint', false);
+            }
+        });
+
+        document.getElementById('search-complaints').addEventListener('input', (e) => {
+            const v = e.target.value.toLowerCase();
+            renderComplaints(dataState.complaints.filter(c => (c?.message || c?.pesan || '').toLowerCase().includes(v)));
+        });
+
+        // --- Chart ---
+        let chartInstance = null;
+
+        // Hitung jumlah peminjaman per bulan (6 bulan terakhir) dari data asli dataState.peminjams
+        function getMonthlyPinjamCounts() {
+            const monthNames = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+            const now = new Date();
+
+            const buckets = [];
+            for (let i = 5; i >= 0; i--) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                buckets.push({ year: d.getFullYear(), month: d.getMonth(), label: monthNames[d.getMonth()], count: 0 });
+            }
+
+            const peminjams = dataState.peminjams || [];
+            peminjams.forEach(item => {
+                const tgl = item?.tanggal_pinjam || item?.borrow_date;
+                if (!tgl) return;
+                const d = new Date(tgl);
+                if (isNaN(d.getTime())) return;
+
+                const bucket = buckets.find(b => b.year === d.getFullYear() && b.month === d.getMonth());
+                if (bucket) bucket.count++;
+            });
+
+            return {
+                labels: buckets.map(b => b.label),
+                data: buckets.map(b => b.count)
+            };
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('chartPeminjaman');
+            if(!ctx) return;
+            
+            if(chartInstance) {
+                chartInstance.destroy();
+                chartInstance = null;
+            }
+
+            const { labels, data } = getMonthlyPinjamCounts();
+            
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{ 
+                        label: 'Jumlah Peminjaman Buku', 
+                        data: data, 
+                        borderColor: '#3b82f6', 
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)', 
+                        fill: true, 
+                        tension: 0.4 
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { precision: 0 }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: { color: document.documentElement.classList.contains('dark') ? '#e2e8f0' : '#1e293b' }
+                        }
+                    }
+                }
+            });
+        }
+
+        const originalSwitchTab = switchTab;
+        switchTab = function(tab) {
+            originalSwitchTab(tab);
+            if(tab === 'dashboard') {
+                setTimeout(initChart, 100);
+            }
+        };
+
+window.addEventListener('DOMContentLoaded', () => {
+            fetchBooks();
+            fetchUsers();
+            fetchPeminjams();
+            fetchInvoices();
+            fetchComplaints();
+            setTimeout(initChart, 500);
+        });
+
+        // --- Cetak Laporan ---
+        const REPORT_CONFIG = {
+            books: {
+                title: 'Laporan Data Buku',
+                columns: ['ISBN', 'Judul', 'Penulis', 'Penerbit', 'Tahun Terbit'],
+                rows: data => data.map(item => [
+                    bookKey(item), item?.['Book-Title'], item?.['Book-Author'],
+                    item?.['Publisher'], item?.['Year-Of-Publication']
+                ])
+            },
+            users: {
+                title: 'Laporan Data Pengguna',
+                columns: ['Nama Lengkap', 'NIM', 'Fakultas', 'No. Telepon', 'Alamat Kirim'],
+                rows: data => data.map(item => [
+                    item?.nama_lengkap, item?.nim, item?.fakultas, item?.no_telepon, item?.alamat_kirim
+                ])
+            },
+            peminjams: {
+                title: 'Laporan Sirkulasi Peminjaman',
+                columns: ['ID', 'User', 'Buku (ISBN)', 'Tgl Pinjam', 'Tgl Kembali', 'Status'],
+                rows: data => data.map(item => [
+                    pickId(item, ID_KEYS.peminjam), item?.user_id ?? item?.id_user,
+                    item?.book_id ?? item?.id_buku,
+                    item?.tanggal_pinjam || item?.borrow_date,
+                    item?.tanggal_kembali || item?.return_date,
+                    item?.status
+                ])
+            },
+            invoices: {
+                title: 'Laporan Invoices',
+                columns: ['ID', 'Peminjam', 'ISBN Buku', 'Tgl Pinjam', 'Tgl Kembali', 'Status'],
+                rows: data => data.map(item => [
+                    pickId(item, ID_KEYS.invoice), item?.peminjam_id, item?.book_isbn,
+                    item?.tanggal_pinjam, item?.tanggal_kembali, (item?.status || 'UNPAID').toUpperCase()
+                ])
+            },
+            complaints: {
+                title: 'Laporan Pengaduan',
+                columns: ['ID', 'Peminjam', 'Pesan', 'Status'],
+                rows: data => data.map(item => [
+                    pickId(item, ID_KEYS.complaint), item?.peminjam_id,
+                    item?.pesan || item?.message, (item?.status || 'PENDING').toUpperCase()
+                ])
+            }
+        };
+
+        function buildReportTableHtml(config, data) {
+            if (!data || data.length === 0) {
+                return `<p style="text-align:center; color:#94a3b8; padding: 24px 0;">Tidak ada data untuk dicetak.</p>`;
+            }
+            const head = config.columns.map(c => `<th>${c}</th>`).join('');
+            const body = config.rows(data).map(row => `
+                <tr>${row.map(cell => `<td>${escHtml(cell) || '-'}</td>`).join('')}</tr>
+            `).join('');
+            return `
+                <table>
+                    <thead><tr>${head}</tr></thead>
+                    <tbody>${body}</tbody>
+                </table>
+                <p class="report-count">Total data: ${data.length}</p>
+            `;
+        }
+
+        function buildDashboardSummaryHtml() {
+            return `
+                <table>
+                    <thead><tr><th>Modul</th><th>Jumlah Data</th></tr></thead>
+                    <tbody>
+                        <tr><td>Total Buku</td><td>${dataState.books.length}</td></tr>
+                        <tr><td>Total Pengguna</td><td>${dataState.users.length}</td></tr>
+                        <tr><td>Total Sirkulasi Peminjaman</td><td>${dataState.peminjams.length}</td></tr>
+                        <tr><td>Total Invoices</td><td>${dataState.invoices.length}</td></tr>
+                        <tr><td>Total Pengaduan</td><td>${dataState.complaints.length}</td></tr>
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function printReport() {
+            const tab = currentAdminTab;
+            const now = new Date();
+            const tanggalCetak = now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) +
+                ' ' + now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+            let title, bodyHtml;
+            if (tab === 'dashboard' || !REPORT_CONFIG[tab]) {
+                title = 'Laporan Ringkasan Sistem LIBRA';
+                bodyHtml = buildDashboardSummaryHtml();
+            } else {
+                const config = REPORT_CONFIG[tab];
+                title = config.title;
+                bodyHtml = buildReportTableHtml(config, dataState[tab]);
+            }
+
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html lang="id">
+                <head>
+                    <meta charset="UTF-8">
+                    <title>${title} - LIBRA</title>
+                    <style>
+                        * { box-sizing: border-box; }
+                        body { font-family: Arial, Helvetica, sans-serif; color: #1e293b; padding: 32px; }
+                        .report-header { text-align: center; margin-bottom: 24px; border-bottom: 2px solid #1e293b; padding-bottom: 16px; }
+                        .report-header h1 { margin: 0 0 4px; font-size: 20px; }
+                        .report-header p { margin: 2px 0; font-size: 12px; color: #64748b; }
+                        h2.report-title { font-size: 16px; margin: 24px 0 12px; }
+                        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+                        th, td { border: 1px solid #cbd5e1; padding: 6px 8px; text-align: left; word-break: break-word; }
+                        th { background: #f1f5f9; font-weight: 600; }
+                        tr:nth-child(even) td { background: #f8fafc; }
+                        .report-count { margin-top: 10px; font-size: 12px; font-weight: 600; text-align: right; }
+                        .report-footer { margin-top: 32px; display: flex; justify-content: flex-end; font-size: 12px; text-align: center; }
+                        .report-footer div { width: 200px; }
+                        .report-footer .sign-space { height: 60px; }
+                        @media print {
+                            body { padding: 12px; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="report-header">
+                        <h1>Sistem Informasi Perpustakaan LIBRA</h1>
+                        <p>Universitas Udayana</p>
+                        <p>Dicetak pada: ${tanggalCetak} oleh Admin Utama</p>
+                    </div>
+                    <h2 class="report-title">${title}</h2>
+                    ${bodyHtml}
+                    <div class="report-footer">
+                        <div>
+                            <p>Mengetahui,</p>
+                            <div class="sign-space"></div>
+                            <p>( Admin Utama )</p>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => {
+                printWindow.print();
+            }, 300);
+        }
+        
+        // Reminder untuk desain Data Flow Diagram (DFD):
+        // Pastikan penamaan data flow yang melibatkan fitur ini murni menggunakan KATA BENDA.
+        // Contoh: Gunakan label "Data Tagihan Otomatis" atau "Data Rincian Sirkulasi".
+        // Dilarang menggunakan label kata kerja/action (seperti "Melakukan Pembayaran").
+    </script>
+</body>
+</html>
