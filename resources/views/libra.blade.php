@@ -245,36 +245,8 @@
                             <i class="fa-solid fa-truck text-blue-500"></i> Status Pengiriman Kurir
                         </h4>
                         <p class="text-[11px] text-slate-400 mb-4 circ-courier-book-el"></p>
-                        <div class="relative ml-2">
-                            <div class="absolute left-2.5 top-2 bottom-4 w-0.5 bg-slate-200 dark:bg-slate-800"></div>
-
-                            <div class="relative flex items-start gap-4 mb-6">
-                                <div class="z-10 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center border-4 border-white dark:border-slate-900 flex-shrink-0">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
-                                </div>
-                                <div>
-                                    <h5 class="text-sm font-bold text-blue-600 dark:text-blue-400" data-i18n="circ-status-1-title">Diantar Kurir</h5>
-                                    <p class="text-xs text-slate-400 mt-0.5 courier-status-1-desc-el">Kurir sedang menuju ke Fakultas Ilmu Komputer. Estimasi 10 menit.</p>
-                                </div>
-                            </div>
-                            <div class="relative flex items-start gap-4 mb-6">
-                                <div class="z-10 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center border-4 border-white dark:border-slate-900 flex-shrink-0">
-                                    <i class="fa-solid fa-check text-[8px] text-white"></i>
-                                </div>
-                                <div>
-                                    <h5 class="text-sm font-semibold text-slate-600 dark:text-slate-400" data-i18n="circ-status-2-title">Buku Selesai Dikemas</h5>
-                                    <p class="text-xs text-slate-400 mt-0.5" data-i18n="circ-status-2-desc">Buku telah diserahkan ke kurir internal.</p>
-                                </div>
-                            </div>
-                            <div class="relative flex items-start gap-4">
-                                <div class="z-10 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center border-4 border-white dark:border-slate-900 flex-shrink-0">
-                                    <i class="fa-solid fa-check text-[8px] text-white"></i>
-                                </div>
-                                <div>
-                                    <h5 class="text-sm font-semibold text-slate-600 dark:text-slate-400" data-i18n="circ-status-3-title">Booking Dikonfirmasi</h5>
-                                    <p class="text-xs text-slate-400 mt-0.5" data-i18n="circ-status-3-desc">Permintaan disetujui oleh sistem.</p>
-                                </div>
-                            </div>
+                        <div class="relative ml-2 courier-steps-container">
+                            <!-- Diisi otomatis oleh JS (buildCourierCard) sesuai status ASLI dari database -->
                         </div>
                     </div>
                 </template>
@@ -479,7 +451,7 @@
                             <span>Ambil Sendiri</span>
                         </label>
                         <label class="flex items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300">
-                            <input type="radio" name="pickup-option" value="Diantar Kurir" class="accent-blue-500">
+                            <input type="radio" name="pickup-option" value="Menunggu Kurir" class="accent-blue-500">
                             <span>Jasa Pengantaran</span>
                         </label>
                     </div>
@@ -1546,6 +1518,58 @@
             }).join('');
         }
 
+        // ============================================================
+        // STATUS PENGIRIMAN KURIR - SUMBER KEBENARAN
+        // ============================================================
+        // Daftar status di bawah ini HARUS selalu sama persis (termasuk huruf
+        // besar/kecil) dengan opsi <select id="peminjam-status"> di halaman
+        // admin (public/admin-dashboard.html), supaya saat admin mengubah
+        // status sirkulasi, tampilan tracking kurir di sisi mahasiswa ikut
+        // berubah otomatis (bukan lagi teks statis/dummy).
+        //
+        // Urutan array = urutan tahapan pengiriman kurir dari awal ke akhir.
+        const COURIER_FLOW_STEPS = [
+            {
+                key: 'Booking Dikonfirmasi Admin',
+                titleId: 'Booking Dikonfirmasi Admin', titleEn: 'Booking Confirmed by Admin',
+                descId: 'Admin telah menyetujui permintaan peminjaman Anda.',
+                descEn: 'The admin has approved your loan request.'
+            },
+            {
+                key: 'Sedang Dikemas',
+                titleId: 'Sedang Dikemas', titleEn: 'Being Packaged',
+                descId: 'Buku Anda sedang dikemas oleh petugas perpustakaan.',
+                descEn: 'Your book is being packaged by library staff.'
+            },
+            {
+                key: 'Menunggu Kurir',
+                titleId: 'Menunggu Kurir', titleEn: 'Waiting for Courier',
+                descId: 'Buku Anda telah dikemas dan sedang menunggu diambil oleh kurir untuk diantar.',
+                descEn: 'Your book has been packaged and is waiting to be picked up by the courier for delivery.'
+            },
+            {
+                key: 'Sedang Diantar Kurir',
+                titleId: 'Sedang Diantar Kurir', titleEn: 'Out for Delivery',
+                descId: 'Buku sedang dalam perjalanan diantar kurir menuju Anda.',
+                descEn: 'The book is currently on its way, being delivered by courier.'
+            },
+        ];
+
+        // Alias untuk kompatibilitas data lama/legacy yang mungkin masih
+        // memakai istilah dummy sebelumnya, supaya tidak tampil kosong.
+        const COURIER_STATUS_ALIASES = {
+            'Diantar Kurir': 'Sedang Diantar Kurir'
+        };
+
+        function resolveCourierStatusKey(rawStatus) {
+            return COURIER_STATUS_ALIASES[rawStatus] || rawStatus;
+        }
+
+        function isCourierTrackedStatus(rawStatus) {
+            const key = resolveCourierStatusKey(rawStatus);
+            return COURIER_FLOW_STEPS.some(step => step.key === key);
+        }
+
         function updateCourierStatusVisibility() {
             const container = document.getElementById('circ-status-container');
             const deadlineTpl = document.getElementById('circ-deadline-template');
@@ -1558,15 +1582,17 @@
             container.innerHTML = '';
 
             // Booking yang belum selesai (belum dikembalikan) & masih butuh perhatian:
-            // status 'Booking' (ambil sendiri) atau 'Diantar Kurir'.
+            // - status 'Booking' -> mahasiswa memilih ambil sendiri ke meja sirkulasi.
+            // - salah satu status resmi di COURIER_FLOW_STEPS -> booking kurir yang
+            //   sedang diproses admin (nilainya SELALU berasal dari database, bukan teks tetap).
             const pendingLoans = activeLoans.filter(l =>
-                !l.tanggal_kembali && (l.status === 'Booking' || l.status === 'Diantar Kurir')
+                !l.tanggal_kembali && (l.status === 'Booking' || isCourierTrackedStatus(l.status))
             );
 
             pendingLoans.forEach(loan => {
                 if (loan.status === 'Booking') {
                     container.appendChild(buildDeadlineCard(loan, deadlineTpl));
-                } else if (loan.status === 'Diantar Kurir') {
+                } else if (isCourierTrackedStatus(loan.status)) {
                     container.appendChild(buildCourierCard(loan, courierTpl));
                 }
             });
@@ -1582,11 +1608,11 @@
             if (bookEl) bookEl.textContent = loan.book_title || '';
 
             // Belum ada kolom "batas pengambilan" tersendiri di database, jadi
-            // deadline diambil dari waktu booking dibuat + jendela pengambilan 24 jam.
+            // deadline diambil dari waktu booking dibuat + jendela pengambilan 2 jam.
             // Dasarnya adalah created_at milik booking INI SAJA, sehingga tiap
             // booking punya deadline sendiri-sendiri dan tidak saling menimpa.
             const createdAt = loan.created_at ? new Date(loan.created_at) : new Date();
-            const pickupWindowMs = 24 * 60 * 60 * 1000;
+            const pickupWindowMs = 2 * 60 * 60 * 1000;
             const deadlineDate = new Date(createdAt.getTime() + pickupWindowMs);
 
             const timerEl = node.querySelector('.countdown-timer-el');
@@ -1603,10 +1629,55 @@
             const bookEl = node.querySelector('.circ-courier-book-el');
             if (bookEl) bookEl.textContent = loan.book_title || '';
 
-            const descEl = node.querySelector('.courier-status-1-desc-el');
-            if (descEl) {
-                const dict = langDictionary[currentLang];
-                descEl.innerText = dict['circ-status-1-desc'] || descEl.innerText;
+            const stepsContainer = node.querySelector('.courier-steps-container');
+            if (stepsContainer) {
+                const isId = currentLang === 'id';
+                const statusKey = resolveCourierStatusKey(loan.status);
+                const currentIndex = COURIER_FLOW_STEPS.findIndex(step => step.key === statusKey);
+
+                stepsContainer.innerHTML = COURIER_FLOW_STEPS.map((step, idx) => {
+                    // done   : tahap sudah dilewati (lebih awal dari status saat ini)
+                    // active : tahap yang SEDANG berlangsung sekarang (sesuai status di database)
+                    // idle   : tahap yang belum tercapai
+                    const isDone = currentIndex > idx;
+                    const isActive = currentIndex === idx;
+                    const isLast = idx === COURIER_FLOW_STEPS.length - 1;
+
+                    const dotClass = isDone
+                        ? 'bg-emerald-500'
+                        : (isActive ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-700');
+
+                    const dotInner = isDone
+                        ? '<i class="fa-solid fa-check text-[8px] text-white"></i>'
+                        : (isActive ? '<span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>' : '');
+
+                    const titleClass = isActive
+                        ? 'text-sm font-bold text-blue-600 dark:text-blue-400'
+                        : (isDone
+                            ? 'text-sm font-semibold text-slate-600 dark:text-slate-400'
+                            : 'text-sm font-semibold text-slate-400 dark:text-slate-600');
+
+                    const title = isId ? step.titleId : step.titleEn;
+                    const desc = isId ? step.descId : step.descEn;
+                    const marginClass = isLast ? '' : 'mb-6';
+
+                    return `
+                        <div class="relative flex items-start gap-4 ${marginClass}">
+                            <div class="z-10 w-5 h-5 rounded-full ${dotClass} flex items-center justify-center border-4 border-white dark:border-slate-900 flex-shrink-0">
+                                ${dotInner}
+                            </div>
+                            <div>
+                                <h5 class="${titleClass}">${title}</h5>
+                                <p class="text-xs text-slate-400 mt-0.5">${desc}</p>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                // Garis vertikal timeline (dibuat ulang tiap render karena innerHTML di-reset)
+                const line = document.createElement('div');
+                line.className = 'absolute left-2.5 top-2 bottom-4 w-0.5 bg-slate-200 dark:bg-slate-800';
+                stepsContainer.prepend(line);
             }
 
             return node;

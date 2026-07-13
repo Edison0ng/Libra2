@@ -132,10 +132,11 @@ class PinjamController extends Controller
         $request->validate([
             'status' => ['sometimes', 'string'],
             'tanggal_kembali' => ['sometimes', 'nullable', 'date'],
+            'tenggat_waktu' => ['sometimes', 'nullable', 'date'],
             'denda' => ['sometimes', 'integer'],
         ]);
 
-        $data = $request->only(['status', 'tanggal_kembali', 'denda']);
+        $data = $request->only(['status', 'tanggal_kembali', 'tenggat_waktu', 'denda']);
         
         DB::table('pinjam')->where('id', $id)->update($data);
 
