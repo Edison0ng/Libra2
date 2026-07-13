@@ -50,7 +50,6 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'id'            => 'required|string|unique:users,id',
             'nama_lengkap'  => 'required|string|max:255',
             'nim'           => 'required|string|max:50',
             'fakultas'      => 'nullable|string|max:255',

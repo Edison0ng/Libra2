@@ -61,12 +61,15 @@ class PinjamController extends Controller
             'user_id' => ['required', 'string'],
             'book_id' => ['required', 'string'],
             'tanggal_pinjam' => ['required', 'date'],
+            // tenggat_waktu sekarang optional: jika tidak dikirim, akan di-set otomatis
             'tenggat_waktu' => [
-                'required',
+                'sometimes',
+                'nullable',
                 'date',
                 'after:tanggal_pinjam',
                 // Aturan bisnis LIBRA: durasi peminjaman maksimal 1 bulan
                 function ($attribute, $value, $fail) use ($request) {
+                    if (empty($value)) return; // jika tidak dikirim, skip pengecekan durasi
                     $mulai = \Carbon\Carbon::parse($request->tanggal_pinjam);
                     $batasMaksimal = $mulai->copy()->addMonth();
                     if (\Carbon\Carbon::parse($value)->gt($batasMaksimal)) {
@@ -80,12 +83,18 @@ class PinjamController extends Controller
         // Generate UUID untuk ID peminjaman jika belum ada
         $id = $request->input('id') ?: (string) Str::uuid();
 
+        // Jika tenggat_waktu tidak dikirim, set default (14 hari sejak tanggal_pinjam)
+        $tenggat = $request->input('tenggat_waktu');
+        if (empty($tenggat)) {
+            $tenggat = \Carbon\Carbon::parse($request->tanggal_pinjam)->addDays(14)->toDateString();
+        }
+
         DB::table('pinjam')->insert([
             'id' => $id,
             'user_id' => $request->user_id,
             'book_id' => $request->book_id,
             'tanggal_pinjam' => $request->tanggal_pinjam,
-            'tenggat_waktu' => $request->tenggat_waktu,
+            'tenggat_waktu' => $tenggat,
             'status' => $request->status,
             'tanggal_kembali' => $request->tanggal_kembali ?: null,
             'denda' => $request->denda ?: 0
@@ -106,7 +115,7 @@ class PinjamController extends Controller
             'id'      => (string) Str::uuid(),
             'user_id' => $request->user_id,
             'title'   => 'Peminjaman Berhasil',
-            'message' => 'Buku "' . ($newLoan->book_title ?? $request->book_id) . '" berhasil dipinjam. Batas pengembalian: ' . $request->tenggat_waktu . '.',
+            'message' => 'Buku "' . ($newLoan->book_title ?? $request->book_id) . '" berhasil dipinjam. Batas pengembalian: ' . $tenggat . '.',
             'type'    => 'success',
             'is_read' => false,
         ]);

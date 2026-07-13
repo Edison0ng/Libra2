@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id" class="dark">
 <head>
@@ -63,6 +64,10 @@
         <header class="bg-white border-b border-slate-200 dark:bg-slate-800 dark:border-slate-700 p-4 flex justify-between items-center z-10 sticky top-0 transition-colors duration-300 shadow-sm dark:shadow-none">
             <h2 id="header-title" class="text-lg md:text-xl font-semibold text-slate-800 dark:text-white">Dashboard</h2>
             <div class="flex items-center gap-4">
+                <button onclick="exportReportCSV()" class="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 px-3 py-2 rounded-xl transition-colors" title="Export laporan data yang sedang ditampilkan ke CSV/Excel">
+                    <i class="fa-solid fa-file-export"></i>
+                    <span class="hidden md:inline">Export</span>
+                </button>
                 <button onclick="printReport()" class="flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 px-3 py-2 rounded-xl transition-colors" title="Cetak laporan data yang sedang ditampilkan">
                     <i class="fa-solid fa-print"></i>
                     <span class="hidden md:inline">Cetak Laporan</span>
@@ -469,6 +474,18 @@
             complaint: ['id', 'complaint_id', 'id_pengaduan', 'id_complaint', 'uuid']
         };
 
+        // Kemungkinan nama kolom tanggal untuk tiap jenis data (dicoba berurutan), dipakai
+        // untuk merekap laporan "per bulan". Untuk data transaksi (peminjam/invoice) tanggal
+        // transaksi (tanggal_pinjam/borrow_date) diprioritaskan; untuk data master (buku/pengguna)
+        // dan pengaduan dipakai tanggal pencatatan (created_at) sesuai kolom timestamp bawaan database.
+        const DATE_KEYS = {
+            book: ['created_at', 'createdAt', 'tanggal_input', 'tanggal_dibuat'],
+            user: ['created_at', 'createdAt', 'tanggal_daftar', 'tanggal_registrasi'],
+            peminjam: ['tanggal_pinjam', 'borrow_date', 'created_at', 'createdAt'],
+            invoice: ['tanggal_pinjam', 'created_at', 'createdAt', 'tanggal_invoice'],
+            complaint: ['created_at', 'createdAt', 'tanggal', 'tanggal_pengaduan']
+        };
+
         // --- Core UI Functions ---
         function toggleTheme() {
             document.documentElement.classList.toggle('dark');
@@ -536,6 +553,18 @@
                 if (v !== undefined && v !== null && v !== '') return v;
             }
             return '';
+        }
+
+        // Helper: ambil tanggal valid pertama dari beberapa kemungkinan nama kolom (lihat DATE_KEYS).
+        // Dipakai untuk merekap laporan per bulan berdasarkan data ASLI dari database (bukan data dummy).
+        function pickDate(item, keys) {
+            for (const k of keys) {
+                const v = item?.[k];
+                if (!v) continue;
+                const d = new Date(v);
+                if (!isNaN(d.getTime())) return d;
+            }
+            return null;
         }
 
         // Helper: set nilai <select> dengan aman. Kalau value dari database TIDAK ADA
@@ -1228,18 +1257,83 @@ window.addEventListener('DOMContentLoaded', () => {
             `;
         }
 
+        // Rekap 5 metrik (Buku, Pengguna, Sirkulasi Peminjaman, Invoices, Pengaduan) per bulan,
+        // dihitung LANGSUNG dari dataState (data asli hasil fetch API/database), bukan data dummy.
+        // Default merekap 12 bulan terakhir supaya laporan mencakup satu tahun berjalan.
+        function getMonthlyRecap(monthsBack = 12) {
+            const monthNames = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+            const now = new Date();
+
+            const buckets = [];
+            for (let i = monthsBack - 1; i >= 0; i--) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                buckets.push({
+                    year: d.getFullYear(),
+                    month: d.getMonth(),
+                    label: `${monthNames[d.getMonth()]} ${d.getFullYear()}`,
+                    books: 0, users: 0, peminjams: 0, invoices: 0, complaints: 0
+                });
+            }
+
+            function fillBucket(list, dateKeys, field) {
+                (list || []).forEach(item => {
+                    const d = pickDate(item, dateKeys);
+                    if (!d) return;
+                    const bucket = buckets.find(b => b.year === d.getFullYear() && b.month === d.getMonth());
+                    if (bucket) bucket[field]++;
+                });
+            }
+
+            fillBucket(dataState.books, DATE_KEYS.book, 'books');
+            fillBucket(dataState.users, DATE_KEYS.user, 'users');
+            fillBucket(dataState.peminjams, DATE_KEYS.peminjam, 'peminjams');
+            fillBucket(dataState.invoices, DATE_KEYS.invoice, 'invoices');
+            fillBucket(dataState.complaints, DATE_KEYS.complaint, 'complaints');
+
+            return buckets;
+        }
+
         function buildDashboardSummaryHtml() {
+            const buckets = getMonthlyRecap(12);
+            const bodyRows = buckets.map(b => `
+                <tr>
+                    <td>${b.label}</td>
+                    <td>${b.books}</td>
+                    <td>${b.users}</td>
+                    <td>${b.peminjams}</td>
+                    <td>${b.invoices}</td>
+                    <td>${b.complaints}</td>
+                </tr>
+            `).join('');
+
             return `
                 <table>
-                    <thead><tr><th>Modul</th><th>Jumlah Data</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th>Bulan</th>
+                            <th>Total Buku</th>
+                            <th>Total Pengguna</th>
+                            <th>Total Sirkulasi Peminjaman</th>
+                            <th>Total Invoices</th>
+                            <th>Total Pengaduan</th>
+                        </tr>
+                    </thead>
                     <tbody>
-                        <tr><td>Total Buku</td><td>${dataState.books.length}</td></tr>
-                        <tr><td>Total Pengguna</td><td>${dataState.users.length}</td></tr>
-                        <tr><td>Total Sirkulasi Peminjaman</td><td>${dataState.peminjams.length}</td></tr>
-                        <tr><td>Total Invoices</td><td>${dataState.invoices.length}</td></tr>
-                        <tr><td>Total Pengaduan</td><td>${dataState.complaints.length}</td></tr>
+                        ${bodyRows}
+                        <tr style="font-weight:700; background:#f1f5f9;">
+                            <td>Total Keseluruhan (Saat Ini)</td>
+                            <td>${dataState.books.length}</td>
+                            <td>${dataState.users.length}</td>
+                            <td>${dataState.peminjams.length}</td>
+                            <td>${dataState.invoices.length}</td>
+                            <td>${dataState.complaints.length}</td>
+                        </tr>
                     </tbody>
                 </table>
+                <p class="report-count" style="text-align:left; font-weight:400; color:#64748b;">
+                    * Kolom bulanan dihitung dari tanggal pencatatan/transaksi tiap data (kolom created_at atau tanggal transaksi) yang tersedia di database.
+                    Baris "Total Keseluruhan" menampilkan jumlah data saat ini secara utuh, sebagai pembanding bila ada data lama yang belum memiliki tanggal pencatatan.
+                </p>
             `;
         }
 
@@ -1251,7 +1345,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
             let title, bodyHtml;
             if (tab === 'dashboard' || !REPORT_CONFIG[tab]) {
-                title = 'Laporan Ringkasan Sistem LIBRA';
+                title = 'Laporan Rekap Bulanan Sistem LIBRA';
                 bodyHtml = buildDashboardSummaryHtml();
             } else {
                 const config = REPORT_CONFIG[tab];
@@ -1309,6 +1403,58 @@ window.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 printWindow.print();
             }, 300);
+        }
+
+        // --- Export Laporan (CSV/Excel) ---
+        // Escape nilai sel supaya aman dibuka di Excel/Google Sheets (koma, kutip, baris baru, dll).
+        function toCSVValue(v) {
+            if (v === null || v === undefined) return '';
+            const s = String(v);
+            if (/[",\n;]/.test(s)) {
+                return `"${s.replace(/"/g, '""')}"`;
+            }
+            return s;
+        }
+
+        function downloadCSV(filename, rows) {
+            // Tambah BOM (\uFEFF) supaya karakter dibaca benar saat file dibuka di Excel.
+            const csvContent = rows.map(row => row.map(toCSVValue).join(',')).join('\r\n');
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Export laporan data yang sedang ditampilkan (sesuai tab aktif) ke file CSV, memakai data
+        // ASLI dari dataState (hasil fetch API/database) — sama seperti sumber data untuk Cetak Laporan.
+        function exportReportCSV() {
+            const tab = currentAdminTab;
+            const stamp = new Date().toISOString().slice(0, 10);
+
+            if (tab === 'dashboard' || !REPORT_CONFIG[tab]) {
+                const buckets = getMonthlyRecap(12);
+                const header = ['Bulan', 'Total Buku', 'Total Pengguna', 'Total Sirkulasi Peminjaman', 'Total Invoices', 'Total Pengaduan'];
+                const rows = [header, ...buckets.map(b => [b.label, b.books, b.users, b.peminjams, b.invoices, b.complaints])];
+                rows.push([]);
+                rows.push(['Total Keseluruhan (Saat Ini)', dataState.books.length, dataState.users.length, dataState.peminjams.length, dataState.invoices.length, dataState.complaints.length]);
+                downloadCSV(`laporan-rekap-bulanan-libra-${stamp}.csv`, rows);
+                triggerToast('Laporan rekap bulanan berhasil diexport ke CSV!', 'emerald');
+            } else {
+                const config = REPORT_CONFIG[tab];
+                const data = dataState[tab] || [];
+                if (!data.length) {
+                    triggerToast('Tidak ada data untuk diexport.', 'red');
+                    return;
+                }
+                const rows = [config.columns, ...config.rows(data)];
+                downloadCSV(`laporan-${tab}-libra-${stamp}.csv`, rows);
+                triggerToast('Data berhasil diexport ke CSV!', 'emerald');
+            }
         }
         
         // Reminder untuk desain Data Flow Diagram (DFD):
