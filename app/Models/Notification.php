@@ -37,6 +37,12 @@ class Notification extends Model
             if (empty($model->id)) {
                 $model->id = (string) Str::uuid();
             }
+
+            // created_at tidak otomatis terisi karena $timestamps = false,
+            // jadi kita isi manual supaya notifikasi bisa diurutkan & ditampilkan waktunya.
+            if (empty($model->created_at)) {
+                $model->created_at = now();
+            }
         });
     }
 }
