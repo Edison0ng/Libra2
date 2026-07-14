@@ -363,7 +363,7 @@
             <i class="fa-solid fa-triangle-exclamation text-base animate-pulse"></i>
             <div class="text-left font-sans">
                 <p class="text-[9px] font-bold uppercase tracking-wider opacity-80">Total Denda</p>
-                <p id="fine-amount-display" class="text-xs font-bold">Rp 10.000</p>
+                <p id="fine-amount-display" class="text-xs font-bold">Rp 0</p>
             </div>
         </div>
 
@@ -496,7 +496,7 @@
         }
         let activeTabId = getStoredTabId();
         let activeBookId = null;
-        let userFine = 10000;
+        let userFine = 0;
         let wishlistBooks = JSON.parse(localStorage.getItem('libra-wishlist') || '[]');
 
         // ============================================================
@@ -689,7 +689,15 @@
         }
 
         function timeAgo(dateStr) {
-            const diffMs = Date.now() - new Date(dateStr).getTime();
+            // Jaga-jaga kalau created_at kosong/null/tidak valid (misalnya data
+            // lama sebelum kolom created_at diisi otomatis) -- tanpa ini,
+            // new Date(null) dianggap 1 Jan 1970 dan menghasilkan angka
+            // "puluhan ribu hari lalu" yang tidak masuk akal.
+            if (!dateStr) return '-';
+            const parsed = new Date(dateStr).getTime();
+            if (isNaN(parsed)) return '-';
+
+            const diffMs = Date.now() - parsed;
             const mins = Math.floor(diffMs / 60000);
             if (mins < 1) return 'Baru saja';
             if (mins < 60) return mins + ' menit lalu';
