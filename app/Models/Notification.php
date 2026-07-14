@@ -27,6 +27,7 @@ class Notification extends Model
 
     protected $casts = [
         'is_read' => 'boolean',
+        'created_at' => 'datetime',
     ];
 
     protected static function boot()
