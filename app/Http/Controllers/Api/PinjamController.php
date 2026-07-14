@@ -81,7 +81,20 @@ class PinjamController extends Controller
             $query->where('l.user_id', $request->query('user_id'));
         }
 
-        $loans = $query->orderBy('l.tanggal_pinjam', 'desc')->get();
+        $loans = $query->orderBy('l.tanggal_pinjam', 'desc')->get()->map(function ($loan) {
+            // PENTING: hasil DB::table() tidak melalui Eloquent cast, sehingga
+            // created_at dikirim sebagai string mentah TANPA penanda zona waktu
+            // (mis. "2026-07-14 02:00:00"). Kalau dibiarkan begini, JavaScript
+            // di sisi client (new Date(...)) akan salah membacanya sebagai
+            // waktu LOKAL browser, bukan UTC -- menyebabkan perhitungan
+            // deadline booking (created_at + 2 jam) meleset 7-8 jam dan
+            // notifikasi "Batas Waktu Habis" muncul berkali-kali padahal
+            // booking belum benar-benar kadaluarsa di server.
+            if (!empty($loan->created_at)) {
+                $loan->created_at = \Carbon\Carbon::parse($loan->created_at, 'UTC')->toISOString();
+            }
+            return $loan;
+        });
 
         return response()->json($loans);
     }
@@ -99,6 +112,11 @@ class PinjamController extends Controller
             ->first();
 
         if (! $loan) return response()->json(['message' => 'Not Found'], 404);
+
+        if (!empty($loan->created_at)) {
+            $loan->created_at = \Carbon\Carbon::parse($loan->created_at, 'UTC')->toISOString();
+        }
+
         return response()->json($loan);
     }
 
