@@ -1131,11 +1131,17 @@
             });
         }
 
-        function removeFromWishlist(index, event) {
+        async function removeFromWishlist(index, event) {
             event.stopPropagation();
-            wishlistBooks.splice(index, 1);
-            localStorage.setItem('libra-wishlist', JSON.stringify(wishlistBooks));
-            renderWishlist();
+
+            const bookId = wishlistBooks[index];
+            const book = booksData.find(b => b.id === bookId);
+            const userId = getCurrentUserId();
+            if (!userId || !book) return;
+
+            // setWishlistState akan mendeteksi bookId sudah ada di wishlistBooks,
+            // sehingga otomatis melakukan DELETE ke server (bukan cuma di memori).
+            await setWishlistState(bookId, book.title, userId);
         }
 
         // ============================================================
