@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Notification;
+use App\Models\Wishlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -211,6 +212,26 @@ class PinjamController extends Controller
                 'type'    => !empty($loan->denda) && $loan->denda > 0 ? 'warning' : 'success',
                 'is_read' => false,
             ]);
+
+            // Beri tahu setiap user yang mewishlist buku ini bahwa buku
+            // sudah tersedia kembali. Wishlist tidak dihapus otomatis di
+            // sini supaya user tetap bisa lihat riwayat wishlist-nya;
+            // mereka bisa lepas sendiri dari sisi frontend.
+            $wishlisters = Wishlist::where('book_id', $loan->book_id)
+                ->where('user_id', '!=', $loan->user_id)
+                ->get();
+
+            foreach ($wishlisters as $wish) {
+                Notification::create([
+                    'id'      => (string) Str::uuid(),
+                    'user_id' => $wish->user_id,
+                    'title'   => 'Buku Tersedia Kembali',
+                    'message' => 'Buku "' . ($loan->book_title ?? $loan->book_id)
+                        . '" yang ada di wishlist kamu sudah tersedia kembali untuk dipinjam.',
+                    'type'    => 'success',
+                    'is_read' => false,
+                ]);
+            }
         }
 
         return response()->json($loan);

@@ -497,7 +497,37 @@
         let activeTabId = getStoredTabId();
         let activeBookId = null;
         let userFine = 0;
-        let wishlistBooks = JSON.parse(localStorage.getItem('libra-wishlist') || '[]');
+        // wishlistBooks adalah cache di memori, sumber kebenarannya tetap
+        // tabel `wishlists` di server (lihat loadWishlist()) supaya server
+        // tahu siapa saja yang perlu dinotifikasi saat buku tersedia lagi.
+        let wishlistBooks = [];
+
+        function getCurrentUserId() {
+            const userStr = localStorage.getItem('libra_user');
+            if (!userStr) return null;
+            try {
+                return JSON.parse(userStr).id;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function loadWishlist() {
+            const userId = getCurrentUserId();
+            if (!userId) return;
+
+            try {
+                const response = await fetch(`/api/wishlist?user_id=${userId}`);
+                if (!response.ok) throw new Error('Gagal mengambil wishlist');
+                const items = await response.json();
+                wishlistBooks = items.map(item => item.book_id);
+            } catch (e) {
+                console.error('Gagal memuat wishlist:', e);
+            }
+
+            renderWishlist();
+            syncWishlistUI();
+        }
 
         // ============================================================
         // AMBIL DATA BUKU DARI DOM
@@ -925,7 +955,7 @@
             return activeLoans.some(loan => loan.book_id === id && !loan.tanggal_kembali);
         }
 
-        function toggleWishlist() {
+        async function toggleWishlist() {
             const book = booksData.find(b => b.id === activeBookId);
             if(!book) return;
 
@@ -941,26 +971,52 @@
                 return;
             }
 
-            const idx = wishlistBooks.findIndex(id => id === activeBookId);
-            const isId = currentLang === 'id';
-            
-            if(idx > -1) {
-                wishlistBooks.splice(idx, 1);
-                showToast(isId ? "Dihapus dari Wishlist" : "Removed from Wishlist", 
-                        isId ? `Buku "${book.title}" berhasil dilepas.` : `Book "${book.title}" has been removed.`);
-            } else {
-                wishlistBooks.push(activeBookId);
-                showToast(isId ? "Ditambahkan ke Wishlist" : "Added to Wishlist", 
-                        isId ? `Buku "${book.title}" berhasil disimpan.` : `Book "${book.title}" has been added to your wishlist.`);
+            const userId = getCurrentUserId();
+            if (!userId) {
+                showToast(currentLang === 'id' ? 'Info' : 'Info',
+                    currentLang === 'id' ? 'Silakan login untuk memakai wishlist.' : 'Please log in to use wishlist.');
+                return;
             }
 
-            localStorage.setItem('libra-wishlist', JSON.stringify(wishlistBooks));
+            await setWishlistState(activeBookId, book.title, userId);
+        }
+
+        // Menambahkan/menghapus wishlist ke server, lalu update UI.
+        // Dipisah supaya dipakai bareng oleh modal & kartu buku.
+        async function setWishlistState(bookId, bookTitle, userId) {
+            const idx = wishlistBooks.findIndex(id => id === bookId);
+            const isId = currentLang === 'id';
+            const willRemove = idx > -1;
+
+            try {
+                if (willRemove) {
+                    await fetch(`/api/wishlist?user_id=${userId}&book_id=${bookId}`, { method: 'DELETE' });
+                    wishlistBooks.splice(idx, 1);
+                    showToast(isId ? "Dihapus dari Wishlist" : "Removed from Wishlist",
+                        isId ? `Buku "${bookTitle}" berhasil dilepas.` : `Book "${bookTitle}" has been removed.`);
+                } else {
+                    await fetch('/api/wishlist', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_id: userId, book_id: bookId })
+                    });
+                    wishlistBooks.push(bookId);
+                    showToast(isId ? "Ditambahkan ke Wishlist" : "Added to Wishlist",
+                        isId ? `Buku "${bookTitle}" berhasil disimpan.` : `Book "${bookTitle}" has been added to your wishlist.`);
+                }
+            } catch (e) {
+                console.error('Gagal mengubah wishlist:', e);
+                showToast(isId ? 'Gagal' : 'Failed',
+                    isId ? 'Terjadi kesalahan, coba lagi.' : 'Something went wrong, please try again.');
+                return;
+            }
+
             renderWishlist();
             syncWishlistUI();
         }
 
         // Toggle wishlist langsung dari kartu buku di halaman Pustaka (tanpa buka modal)
-        function toggleWishlistFromCard(id) {
+        async function toggleWishlistFromCard(id) {
             const card = document.querySelector(`.book-card[data-id="${id}"]`);
             if (!card) return;
 
@@ -978,22 +1034,14 @@
                 return;
             }
 
-            const title = card.dataset.title;
-            const idx = wishlistBooks.findIndex(bookId => bookId === id);
-
-            if (idx > -1) {
-                wishlistBooks.splice(idx, 1);
-                showToast(isId ? "Dihapus dari Wishlist" : "Removed from Wishlist",
-                    isId ? `Buku "${title}" berhasil dilepas.` : `Book "${title}" has been removed.`);
-            } else {
-                wishlistBooks.push(id);
-                showToast(isId ? "Ditambahkan ke Wishlist" : "Added to Wishlist",
-                    isId ? `Buku "${title}" berhasil disimpan.` : `Book "${title}" has been added to your wishlist.`);
+            const userId = getCurrentUserId();
+            if (!userId) {
+                showToast(isId ? 'Info' : 'Info',
+                    isId ? 'Silakan login untuk memakai wishlist.' : 'Please log in to use wishlist.');
+                return;
             }
 
-            localStorage.setItem('libra-wishlist', JSON.stringify(wishlistBooks));
-            renderWishlist();
-            syncWishlistUI();
+            await setWishlistState(id, card.dataset.title, userId);
         }
 
         // Sinkronkan tampilan ikon hati (kartu pustaka & tombol modal) dengan status buku & isi wishlist
@@ -1768,8 +1816,7 @@
             if (localStorage.getItem('libra-theme') === 'dark') document.documentElement.classList.add('dark');
             applyTranslations();
             switchTab(activeTabId);
-            renderWishlist();
-            syncWishlistUI();
+            loadWishlist();
             renderRecommendedBooks();
             loadUserLoans();
             loadNotifications();

@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\ComplaintController;
 use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\WishlistController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -48,6 +49,11 @@ Route::middleware('auth:sanctum')->group(function () {
 // Route spesifik harus didaftarkan sebelum resource route lain agar tidak bentrok.
 Route::get('/notifications', [NotificationController::class, 'index']);
 Route::patch('/notifications/read-all', [NotificationController::class, 'readAll']);
+
+// ===================== WISHLIST =====================
+Route::get('/wishlist', [WishlistController::class, 'index']);
+Route::post('/wishlist', [WishlistController::class, 'store']);
+Route::delete('/wishlist', [WishlistController::class, 'destroy']);
 
 // API Resources dari backend-pengguna-v2 & backend-admin-v2
 Route::apiResource('books', BookController::class);
