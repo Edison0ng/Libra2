@@ -1603,7 +1603,7 @@
             // activeLoans berisi SELURUH riwayat peminjaman user (termasuk yang
             // sudah dikembalikan), jadi wajib disaring dulu di sini berdasarkan
             // tanggal_kembali sebelum dirender ke tabel ini.
-            const stillActiveLoans = activeLoans.filter(loan => !loan.tanggal_kembali);
+            const stillActiveLoans = activeLoans.filter(loan => !loan.tanggal_kembali && loan.status !== 'Ditolak');
 
             if (stillActiveLoans.length === 0) {
                 tbody.innerHTML = `

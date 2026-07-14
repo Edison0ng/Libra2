@@ -215,6 +215,22 @@ class PinjamController extends Controller
             ->where('pinjam.id', $id)
             ->first();
 
+        // Buat notifikasi saat admin menolak booking.
+        // Booking yang ditolak TIDAK dihapus dari database (beda dengan
+        // destroy()/workaround lama) supaya tetap ada riwayat bahwa
+        // booking ini pernah ada dan berstatus "Ditolak".
+        if ($loan && isset($data['status']) && strtolower($data['status']) === 'ditolak') {
+            Notification::create([
+                'id'      => (string) Str::uuid(),
+                'user_id' => $loan->user_id,
+                'title'   => 'Booking Ditolak',
+                'message' => 'Mohon maaf, booking untuk buku "' . ($loan->book_title ?? $loan->book_id)
+                    . '" ditolak oleh admin. Silakan hubungi pihak perpustakaan untuk informasi lebih lanjut.',
+                'type'    => 'warning',
+                'is_read' => false,
+            ]);
+        }
+
         // Buat notifikasi saat buku selesai dikembalikan
         if ($loan && isset($data['status']) && strtolower($data['status']) === 'dikembalikan') {
             $pesan = 'Buku "' . ($loan->book_title ?? $loan->book_id) . '" telah berhasil dikembalikan.';
