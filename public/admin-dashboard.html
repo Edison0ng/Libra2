@@ -238,13 +238,11 @@
                         <table class="w-full text-left text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
                             <thead class="text-xs uppercase bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
                                 <tr>
-                                    <th class="px-4 py-3 min-w-[110px]">ID</th>
-                                    <th class="px-4 py-3 min-w-[160px]">Nama Lengkap</th>
-                                    <th class="px-4 py-3 min-w-[110px]">User ID</th>
-                                    <th class="px-4 py-3 min-w-[110px]">Book ID</th>
-                                    <th class="px-4 py-3 min-w-[160px]">Tgl Pinjam - Kembali</th>
-                                    <th class="px-4 py-3 min-w-[110px]">Status</th>
-                                    <th class="px-4 py-3 min-w-[110px] text-center sticky right-0 bg-slate-100 dark:bg-slate-700/50 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.15)]">Aksi</th>
+                                    <th class="px-4 py-3 min-w-[140px]">Nama Lengkap</th>
+                                    <th class="px-4 py-3 min-w-[180px]">Judul Buku</th>
+                                    <th class="px-4 py-3 min-w-[140px]">Tgl Pinjam - Kembali</th>
+                                    <th class="px-4 py-3 min-w-[100px]">Status</th>
+                                    <th class="px-4 py-3 min-w-[100px] text-center sticky right-0 bg-slate-100 dark:bg-slate-700/50 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.15)]">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="tbody-peminjams"></tbody>
@@ -467,6 +465,16 @@
         let dataState = {
             books: [], users: [], peminjams: [], invoices: [], complaints: []
         };
+        // Tab admin yang sedang aktif disimpan ke localStorage supaya saat
+        // halaman di-refresh, admin tetap berada di tab yang sama (tidak
+        // balik ke Dashboard). Sebelumnya switchTab() tidak pernah dipanggil
+        // ulang saat load, jadi tampilan selalu balik ke kondisi HTML statis
+        // (yaitu tab Dashboard) setiap kali refresh.
+        const VALID_ADMIN_TAB_IDS = ['dashboard', 'books', 'users', 'peminjams', 'invoices', 'complaints'];
+        function getStoredAdminTab() {
+            const stored = localStorage.getItem('libra-admin-active-tab');
+            return VALID_ADMIN_TAB_IDS.includes(stored) ? stored : 'dashboard';
+        }
         let currentAdminTab = 'dashboard';
 
         // Kemungkinan nama field primary key untuk tiap jenis data (dicoba berurutan).
@@ -500,6 +508,7 @@
 
         function switchTab(tab) {
             currentAdminTab = tab;
+            localStorage.setItem('libra-admin-active-tab', tab);
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             const activeTab = document.getElementById(`tab-${tab}`);
             if(activeTab) activeTab.classList.remove('hidden');
@@ -579,6 +588,14 @@
             if (userId === undefined || userId === null || userId === '') return '';
             const u = dataState.users.find(x => String(x?.id ?? x?.user_id ?? x?.id_user ?? '') === String(userId));
             return u?.nama_lengkap || '';
+        }
+
+        // Cari judul buku berdasarkan ISBN/book_id, supaya tabel sirkulasi bisa
+        // menampilkan judul buku (bukan cuma ISBN yang susah dibaca).
+        function getBookTitleById(bookId) {
+            if (bookId === undefined || bookId === null || bookId === '') return '';
+            const b = dataState.books.find(x => String(x?.ISBN ?? x?.isbn ?? x?.id ?? '') === String(bookId));
+            return b?.['Book-Title'] || '';
         }
 
         // Helper: set nilai <select> dengan aman. Kalau value dari database TIDAK ADA
@@ -956,16 +973,20 @@
         }
         function renderPeminjams(data) {
             const tbody = document.getElementById('tbody-peminjams');
-            if(!data || data.length === 0) return tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-4 text-center">Data Kosong</td></tr>`;
+            if(!data || data.length === 0) return tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-4 text-center">Data Kosong</td></tr>`;
             tbody.innerHTML = data.map(item => {
                 const key = pickId(item, ID_KEYS.peminjam);
                 const uid = item?.user_id ?? item?.id_user;
+                const bid = item?.book_id ?? item?.id_buku;
+                // ID sirkulasi, User ID, dan Book ID (UUID/ISBN mentah) tidak lagi
+                // ditampilkan sebagai kolom terpisah supaya tabel tidak terlalu
+                // lebar (dulu perlu zoom out untuk melihat semuanya). Nilainya
+                // masih bisa dilihat lewat tooltip (arahkan kursor ke baris/nama).
+                const rowTooltip = `ID: ${key || '-'} | User ID: ${uid || '-'} | Book ID: ${bid || '-'}`;
                 return `
-                <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 group">
-                    <td class="px-4 py-3 font-mono text-xs max-w-[110px] truncate" title="${escAttr(key)}">${escHtml(key) || '-'}</td>
-                    <td class="px-4 py-3">${escHtml(getUserNameById(uid)) || '-'}</td>
-                    <td class="px-4 py-3 max-w-[110px] truncate" title="${escAttr(uid)}">${escHtml(uid) || '-'}</td>
-                    <td class="px-4 py-3 max-w-[110px] truncate" title="${escAttr(item?.book_id ?? item?.id_buku)}">${escHtml(item?.book_id ?? item?.id_buku) || '-'}</td>
+                <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 group" title="${escAttr(rowTooltip)}">
+                    <td class="px-4 py-3 max-w-[140px] truncate">${escHtml(getUserNameById(uid)) || '-'}</td>
+                    <td class="px-4 py-3 font-medium text-slate-800 dark:text-white max-w-[180px] truncate">${escHtml(getBookTitleById(bid)) || '-'}</td>
                     <td class="px-4 py-3 text-xs">${escHtml(item?.borrow_date || item?.tanggal_pinjam) || '-'} / ${escHtml(item?.return_date || item?.tanggal_kembali) || '-'}</td>
                     <td class="px-4 py-3"><span class="px-2 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 rounded-lg text-xs">${escHtml(item?.status) || '-'}</span></td>
                     <td class="px-4 py-3 text-center sticky right-0 bg-white dark:bg-slate-800 group-hover:bg-slate-50 dark:group-hover:bg-slate-800/50 shadow-[-4px_0_6px_-2px_rgba(0,0,0,0.15)]">
@@ -1029,7 +1050,14 @@
         
         document.getElementById('search-peminjams').addEventListener('input', (e) => {
             const v = e.target.value.toLowerCase();
-            renderPeminjams(dataState.peminjams.filter(p => String(p?.user_id || p?.id_user || '').toLowerCase().includes(v) || String(p?.book_id || p?.id_buku || '').toLowerCase().includes(v)));
+            renderPeminjams(dataState.peminjams.filter(p => {
+                const bid = p?.book_id || p?.id_buku || '';
+                const uid = p?.user_id || p?.id_user || '';
+                return String(uid).toLowerCase().includes(v)
+                    || String(bid).toLowerCase().includes(v)
+                    || getBookTitleById(bid).toLowerCase().includes(v)
+                    || getUserNameById(uid).toLowerCase().includes(v);
+            }));
         });
 
         // --- Invoices ---
@@ -1234,6 +1262,7 @@ window.addEventListener('DOMContentLoaded', () => {
             fetchInvoices();
             fetchComplaints();
             setTimeout(initChart, 500);
+            switchTab(getStoredAdminTab());
         });
 
         // --- Cetak Laporan ---

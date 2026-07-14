@@ -451,7 +451,7 @@
                             <span>Ambil Sendiri</span>
                         </label>
                         <label class="flex items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300">
-                            <input type="radio" name="pickup-option" value="Menunggu Kurir" class="accent-blue-500">
+                            <input type="radio" name="pickup-option" value="Booking Dikonfirmasi Admin" class="accent-blue-500">
                             <span>Jasa Pengantaran</span>
                         </label>
                     </div>
@@ -487,7 +487,14 @@
         // DATA & KONFIGURASI
         // ============================================================
         let currentLang = localStorage.getItem('libra-lang') || 'id';
-        let activeTabId = 'beranda';
+        // Tab aktif disimpan di localStorage supaya saat halaman di-refresh,
+        // pengguna tetap berada di tab yang sama (tidak balik ke Beranda).
+        const VALID_TAB_IDS = ['beranda', 'buku', 'sirkulasi', 'profil'];
+        function getStoredTabId() {
+            const stored = localStorage.getItem('libra-active-tab');
+            return VALID_TAB_IDS.includes(stored) ? stored : 'beranda';
+        }
+        let activeTabId = getStoredTabId();
         let activeBookId = null;
         let userFine = 10000;
         let wishlistBooks = JSON.parse(localStorage.getItem('libra-wishlist') || '[]');
@@ -613,6 +620,7 @@
         // ============================================================
         function switchTab(tabId) {
             activeTabId = tabId;
+            localStorage.setItem('libra-active-tab', tabId);
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             const targetContent = document.getElementById(tabId);
             if(targetContent) targetContent.classList.add('active');
@@ -648,6 +656,35 @@
             }
             if (tabId === 'sirkulasi') {
                 loadUserLoans();
+                startSirkulasiAutoRefresh();
+            } else {
+                stopSirkulasiAutoRefresh();
+            }
+        }
+
+        // ============================================================
+        // AUTO-REFRESH TAB SIRKULASI
+        // Supaya kartu "Batas Pengambilan Resv." dan "Status Pengiriman Kurir"
+        // otomatis HILANG saat admin mengubah status peminjaman (mis. buku
+        // sudah diambil / sudah sampai ke pengguna), tanpa pengguna perlu
+        // reload halaman secara manual. Polling hanya berjalan selama tab
+        // "sirkulasi" sedang aktif, dan otomatis berhenti saat pindah tab.
+        // ============================================================
+        let sirkulasiAutoRefreshInterval = null;
+
+        function startSirkulasiAutoRefresh() {
+            stopSirkulasiAutoRefresh(); // Cegah interval dobel
+            sirkulasiAutoRefreshInterval = setInterval(() => {
+                if (activeTabId === 'sirkulasi') {
+                    loadUserLoans();
+                }
+            }, 30000); // 30 detik
+        }
+
+        function stopSirkulasiAutoRefresh() {
+            if (sirkulasiAutoRefreshInterval) {
+                clearInterval(sirkulasiAutoRefreshInterval);
+                sirkulasiAutoRefreshInterval = null;
             }
         }
 
@@ -1092,6 +1129,19 @@
                 const diffMs = deadlineDate.getTime() - Date.now();
                 if (diffMs <= 0) {
                     timerEl.textContent = '00:00:00';
+                    // Booking sudah kadaluarsa. Penghapusan sebenarnya terjadi
+                    // di backend (lihat PinjamController::cancelExpiredBookings,
+                    // dijalankan tiap kali data peminjaman di-fetch). Di sini
+                    // kita cukup beri tahu pengguna & minta data terbaru supaya
+                    // kartu ini hilang begitu backend selesai menghapusnya.
+                    if (!timerEl.dataset.expiredNotified) {
+                        timerEl.dataset.expiredNotified = '1';
+                        showToast(
+                            'Batas Waktu Habis',
+                            'Booking tidak diambil dalam waktu 2 jam dan telah dibatalkan otomatis.'
+                        );
+                        loadUserLoans();
+                    }
                     clearInterval(circCountdownIntervals[loanId]);
                     delete circCountdownIntervals[loanId];
                     return;
@@ -1487,7 +1537,13 @@
             const tbody = document.getElementById('active-loans-tbody');
             if (!tbody) return;
 
-            if (activeLoans.length === 0) {
+            // "Peminjaman Aktif" hanya untuk yang BELUM dikembalikan.
+            // activeLoans berisi SELURUH riwayat peminjaman user (termasuk yang
+            // sudah dikembalikan), jadi wajib disaring dulu di sini berdasarkan
+            // tanggal_kembali sebelum dirender ke tabel ini.
+            const stillActiveLoans = activeLoans.filter(loan => !loan.tanggal_kembali);
+
+            if (stillActiveLoans.length === 0) {
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="3" class="text-center py-8 text-slate-400 italic">
@@ -1498,7 +1554,7 @@
                 return;
             }
 
-            tbody.innerHTML = activeLoans.map(loan => {
+            tbody.innerHTML = stillActiveLoans.map(loan => {
                 const isOverdue = new Date(loan.tenggat_waktu) < new Date() && !loan.tanggal_kembali;
                 const dateClass = isOverdue ? 'text-rose-500 font-semibold' : 'text-slate-500 dark:text-slate-400';
                 const dateSuffix = isOverdue ? ' (Terlambat)' : '';

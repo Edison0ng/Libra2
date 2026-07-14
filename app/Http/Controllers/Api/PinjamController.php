@@ -11,6 +11,50 @@ use Illuminate\Support\Str;
 
 class PinjamController extends Controller
 {
+    /**
+     * Batalkan (hapus) otomatis booking "Ambil Sendiri" yang sudah lewat
+     * batas waktu pengambilan (2 jam sejak created_at) tapi belum diambil
+     * (status masih 'Booking'). Dipanggil setiap kali data peminjaman
+     * diambil (index()), supaya tidak perlu cron job terpisah -- cukup
+     * "numpang" di request yang memang sudah sering terjadi (polling
+     * otomatis tiap 30 detik di sisi mahasiswa & admin).
+     *
+     * PENTING: window 2 jam ini HARUS SAMA dengan pickupWindowMs di
+     * resources/views/libra.blade.php (buildDeadlineCard). Kalau salah
+     * satu diubah, ubah juga yang satunya supaya tidak ada selisih antara
+     * apa yang mahasiswa lihat dan kapan booking benar-benar dihapus.
+     */
+    private function cancelExpiredBookings(): void
+    {
+        $expired = DB::table('pinjam as l')
+            ->leftJoin('books', 'l.book_id', '=', 'books.ISBN')
+            ->select('l.id', 'l.user_id', DB::raw('books."Book-Title" as book_title'), 'l.book_id')
+            ->where('l.status', 'Booking')
+            ->whereNotNull('l.created_at')
+            ->where('l.created_at', '<', now()->subHours(2))
+            ->get();
+
+        if ($expired->isEmpty()) {
+            return;
+        }
+
+        foreach ($expired as $loan) {
+            Notification::create([
+                'id'      => (string) Str::uuid(),
+                'user_id' => $loan->user_id,
+                'title'   => 'Booking Dibatalkan Otomatis',
+                'message' => 'Booking untuk buku "' . ($loan->book_title ?? $loan->book_id)
+                    . '" dibatalkan otomatis karena tidak diambil dalam batas waktu 2 jam.',
+                'type'    => 'warning',
+                'is_read' => false,
+            ]);
+        }
+
+        DB::table('pinjam')
+            ->whereIn('id', $expired->pluck('id'))
+            ->delete();
+    }
+
     public function index(Request $request)
     {
         $table = 'pinjam'; 
@@ -18,6 +62,8 @@ class PinjamController extends Controller
         if (!Schema::hasTable($table)) {
             return response()->json(['message' => 'Table not found'], 404);
         }
+
+        $this->cancelExpiredBookings();
 
         $query = DB::table($table.' as l')
             ->leftJoin('users', DB::raw('l.user_id::text'), '=', DB::raw('users.id::text'))
@@ -97,7 +143,11 @@ class PinjamController extends Controller
             'tenggat_waktu' => $tenggat,
             'status' => $request->status,
             'tanggal_kembali' => $request->tanggal_kembali ?: null,
-            'denda' => $request->denda ?: 0
+            'denda' => $request->denda ?: 0,
+            // Dicatat sekali saat booking dibuat, dipakai sebagai basis
+            // perhitungan "Batas Pengambilan Resv." (2 jam) di sisi mahasiswa.
+            // TIDAK BOLEH berubah lagi setelah ini (bukan updated_at).
+            'created_at' => now(),
         ]);
 
         $newLoan = DB::table('pinjam as l')
