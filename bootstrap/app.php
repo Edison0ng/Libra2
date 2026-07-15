@@ -4,6 +4,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Illuminate\Foundation\PackageManifest;
+use Illuminate\Filesystem\Filesystem;
 
 $app = Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -65,13 +67,31 @@ if (env('VERCEL') || isset($_ENV['VERCEL']) || isset($_SERVER['VERCEL'])) {
         $storagePath . '/framework/cache',
         $storagePath . '/framework/cache/data',
         $storagePath . '/logs',
+        $storagePath . '/bootstrap',
+        $storagePath . '/bootstrap/cache',
     ];
     foreach ($directories as $dir) {
         if (!is_dir($dir)) {
             mkdir($dir, 0755, true);
         }
     }
+    
+    // Reroute Laravel storage path
     $app->useStoragePath($storagePath);
+
+    // Override PackageManifest to write to writeable /tmp/storage/bootstrap/cache/packages.php
+    $app->instance(PackageManifest::class, new PackageManifest(
+        new Filesystem, 
+        $app->basePath(), 
+        $storagePath . '/bootstrap/cache/packages.php'
+    ));
+
+    // Redirect other bootstrap cache paths
+    putenv('APP_SERVICES_CACHE=' . $storagePath . '/bootstrap/cache/services.php');
+    putenv('APP_CONFIG_CACHE=' . $storagePath . '/bootstrap/cache/config.php');
+    putenv('APP_ROUTES_CACHE=' . $storagePath . '/bootstrap/cache/routes.php');
+    putenv('APP_EVENTS_CACHE=' . $storagePath . '/bootstrap/cache/events.php');
+
     putenv('LOG_CHANNEL=stderr');
     putenv('APP_DEBUG=true');
     putenv('APP_ENV=local');
