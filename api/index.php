@@ -3,6 +3,10 @@
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
 
+// Force script name to index.php so Laravel doesn't think it runs in a subdirectory named '/api'
+$_SERVER['SCRIPT_NAME'] = '/index.php';
+$_SERVER['PHP_SELF'] = '/index.php';
+
 try {
     // Jalankan index.php asli dari folder public
     require __DIR__ . '/../public/index.php';
