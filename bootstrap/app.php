@@ -31,6 +31,16 @@ $app = Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
+        
+        $exceptions->report(function (\Throwable $e) {
+            if (env('VERCEL') || isset($_ENV['VERCEL']) || isset($_SERVER['VERCEL'])) {
+                echo "<h1>Original Exception Caught during reporting:</h1>";
+                echo "<p><strong>Message:</strong> " . htmlspecialchars($e->getMessage()) . "</p>";
+                echo "<p><strong>File:</strong> " . htmlspecialchars($e->getFile()) . " (Line " . $e->getLine() . ")</p>";
+                echo "<pre>" . htmlspecialchars($e->getTraceAsString()) . "</pre>";
+                exit(1);
+            }
+        });
     })->create();
 
 /*
