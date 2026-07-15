@@ -6,7 +6,8 @@ use App\Http\Controllers\Api\PinjamController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\ComplaintController;
-use App\Http\Controllers\Api\DonationController;
+use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\WishlistController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -44,6 +45,16 @@ Route::middleware('auth:sanctum')->group(function () {
 
 });
 
+// ===================== NOTIFIKASI =====================
+// Route spesifik harus didaftarkan sebelum resource route lain agar tidak bentrok.
+Route::get('/notifications', [NotificationController::class, 'index']);
+Route::patch('/notifications/read-all', [NotificationController::class, 'readAll']);
+
+// ===================== WISHLIST =====================
+Route::get('/wishlist', [WishlistController::class, 'index']);
+Route::post('/wishlist', [WishlistController::class, 'store']);
+Route::delete('/wishlist', [WishlistController::class, 'destroy']);
+
 // API Resources dari backend-pengguna-v2 & backend-admin-v2
 Route::apiResource('books', BookController::class);
 Route::apiResource('users', UserController::class);
@@ -51,4 +62,3 @@ Route::apiResource('pinjam', PinjamController::class);
 Route::apiResource('peminjams', PinjamController::class); // Alias untuk kompatibilitas admin-v2
 Route::apiResource('invoices', InvoiceController::class);
 Route::apiResource('complaints', ComplaintController::class);
-Route::apiResource('donations', DonationController::class);
