@@ -63,6 +63,8 @@ if (env('VERCEL') || isset($_ENV['VERCEL']) || isset($_SERVER['VERCEL'])) {
     }
     $app->useStoragePath($storagePath);
     putenv('LOG_CHANNEL=stderr');
+    putenv('APP_DEBUG=true');
+    putenv('APP_ENV=local');
 }
 
 return $app;
