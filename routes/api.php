@@ -1,3 +1,4 @@
+```php
 <?php
 
 use App\Http\Controllers\Api\AuthController;
@@ -8,6 +9,8 @@ use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\ComplaintController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\WishlistController;
+use App\Http\Controllers\Api\ProdukAtkController;
+use App\Http\Controllers\Api\PembelianAtkController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -61,6 +64,10 @@ Route::get('/wishlist', [WishlistController::class, 'index']);
 Route::post('/wishlist', [WishlistController::class, 'store']);
 Route::delete('/wishlist', [WishlistController::class, 'destroy']);
 
+// ===================== TOKO ATK =====================
+Route::apiResource('produk-atk', ProdukAtkController::class);
+Route::apiResource('pembelian-atk', PembelianAtkController::class);
+
 // API Resources dari backend-pengguna-v2 & backend-admin-v2
 Route::apiResource('books', BookController::class);
 Route::apiResource('users', UserController::class);
@@ -68,3 +75,4 @@ Route::apiResource('pinjam', PinjamController::class);
 Route::apiResource('peminjams', PinjamController::class); // Alias untuk kompatibilitas admin-v2
 Route::apiResource('invoices', InvoiceController::class);
 Route::apiResource('complaints', ComplaintController::class);
+```
