@@ -65,6 +65,7 @@ class PinjamController extends Controller
         }
 
         $this->cancelExpiredBookings();
+        Wishlist::sweepExpiredHolds();
 
         $query = DB::table($table.' as l')
             ->leftJoin('users', DB::raw('l.user_id::text'), '=', DB::raw('users.id::text'))
@@ -145,6 +146,25 @@ class PinjamController extends Controller
             'status' => ['required', 'string'],
         ]);
 
+        // Pastikan status hold antrian up-to-date dulu (kalau ada yg baru kadaluarsa).
+        Wishlist::sweepExpiredHolds();
+
+        // Kalau buku ini sedang "ditahan" (hold) utk org #1 di antrian, DAN
+        // yang mencoba booking sekarang BUKAN orang itu -> tolak. Ini
+        // pengecekan di level server (bukan cuma UI) supaya tidak bisa
+        // dilewati lewat panggilan API langsung.
+        $hold = Wishlist::activeHold($request->book_id);
+        if ($hold && $hold->user_id !== $request->user_id) {
+            return response()->json([
+                'success'    => false,
+                'locked'     => true,
+                'message'    => 'Buku ini sedang ditahan untuk antrian pertama hingga '
+                    . $hold->holdExpiresAt()?->format('d-m-Y H:i') . '. '
+                    . 'Silakan coba lagi setelah itu, atau daftar ke antrian.',
+                'expires_at' => $hold->holdExpiresAt()?->toIso8601String(),
+            ], 423);
+        }
+
         // Generate UUID untuk ID peminjaman jika belum ada
         $id = $request->input('id') ?: (string) Str::uuid();
 
@@ -168,6 +188,11 @@ class PinjamController extends Controller
             // TIDAK BOLEH berubah lagi setelah ini (bukan updated_at).
             'created_at' => now(),
         ]);
+
+        // Dia sudah dapat bukunya -- keluarkan dari antrian buku ini (kalau ada).
+        Wishlist::where('book_id', $request->book_id)
+            ->where('user_id', $request->user_id)
+            ->delete();
 
         $newLoan = DB::table('pinjam as l')
             ->leftJoin('books', 'l.book_id', '=', 'books.ISBN')
@@ -247,22 +272,32 @@ class PinjamController extends Controller
                 'is_read' => false,
             ]);
 
-            // Beri tahu setiap user yang mewishlist buku ini bahwa buku
-            // sudah tersedia kembali. Wishlist tidak dihapus otomatis di
-            // sini supaya user tetap bisa lihat riwayat wishlist-nya;
-            // mereka bisa lepas sendiri dari sisi frontend.
-            $wishlisters = Wishlist::where('book_id', $loan->book_id)
+            // Mulai hold 24 jam utk orang PALING DEPAN antrian buku ini (kalau
+            // ada yg mengantre). startHoldForBook() sendiri yang mengirim
+            // notifikasi "Giliranmu Tiba!" ke orang itu + mengunci buku ini
+            // khusus utk dia selama 24 jam (lihat PinjamController::store()).
+            $held = Wishlist::startHoldForBook($loan->book_id);
+
+            // Beri tahu SISA antrian (selain yg baru dapat hold) bahwa
+            // antrian bergerak maju, dengan posisi terbaru mereka.
+            $rest = Wishlist::where('book_id', $loan->book_id)
                 ->where('user_id', '!=', $loan->user_id)
+                ->when($held, fn ($q) => $q->where('id', '!=', $held->id))
+                ->orderBy('created_at', 'asc')
                 ->get();
 
-            foreach ($wishlisters as $wish) {
+            foreach ($rest as $index => $wish) {
+                // +2 kalau org #1 sudah dapat hold (posisi 1 sudah terisi dia),
+                // +1 kalau karena suatu hal tidak ada yg dapat hold.
+                $position = $index + ($held ? 2 : 1);
+
                 Notification::create([
                     'id'      => (string) Str::uuid(),
                     'user_id' => $wish->user_id,
-                    'title'   => 'Buku Tersedia Kembali',
+                    'title'   => 'Antrian Bergerak Maju',
                     'message' => 'Buku "' . ($loan->book_title ?? $loan->book_id)
-                        . '" yang ada di wishlist kamu sudah tersedia kembali untuk dipinjam.',
-                    'type'    => 'success',
+                        . '" baru saja dikembalikan. Posisi antrianmu sekarang: ke-' . $position . '.',
+                    'type'    => 'info',
                     'is_read' => false,
                 ]);
             }

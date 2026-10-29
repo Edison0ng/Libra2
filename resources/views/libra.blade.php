@@ -126,6 +126,11 @@
             </div>
             
             <div class="flex items-center gap-3">
+                <button onclick="toggleDarkMode()" id="dark-mode-toggle" title="Ganti tema gelap/terang" aria-label="Ganti tema gelap/terang" class="focus:outline-none relative p-2 w-10 h-10 flex items-center justify-center bg-slate-800 dark:bg-slate-900 rounded-xl hover:bg-slate-700 transition-colors">
+                    <i class="fa-regular fa-moon text-lg dark:hidden"></i>
+                    <i class="fa-regular fa-sun text-lg hidden dark:inline text-amber-300"></i>
+                </button>
+
                 <button onclick="toggleNotif(event)" class="focus:outline-none relative p-2 bg-slate-800 dark:bg-slate-900 rounded-xl hover:bg-slate-700 transition-colors">
                     <i class="fa-regular fa-bell text-lg"></i>
                     <span id="notif-badge" class="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
@@ -168,10 +173,22 @@
 
             <!-- TAB 2: PUSTAKA DIGITAL -->
             <div id="buku" class="tab-content max-w-5xl mx-auto space-y-6">
-                <!-- Search Bar -->
-                <div class="relative">
-                    <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                    <input type="text" id="search-input" oninput="liveSearch()" placeholder="Cari judul atau penulis buku secara live..." class="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 shadow-sm text-sm transition-colors text-slate-800 dark:text-white">
+                <!-- Search Bar + Filter Genre -->
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <div class="relative flex-1">
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="search-input" oninput="liveSearch()" placeholder="Cari judul atau penulis buku secara live..." class="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 shadow-sm text-sm transition-colors text-slate-800 dark:text-white">
+                    </div>
+                    <div class="relative sm:w-56">
+                        <i class="fa-solid fa-tags absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
+                        <select id="genre-filter" onchange="liveSearch()" class="w-full appearance-none pl-11 pr-8 py-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 focus:outline-none focus:border-blue-500 dark:focus:border-blue-500 shadow-sm text-sm transition-colors text-slate-800 dark:text-white">
+                            <option value="">Semua Genre</option>
+                            @foreach(($genres ?? collect()) as $genre)
+                            <option value="{{ $genre }}">{{ $genre }}</option>
+                            @endforeach
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                    </div>
                 </div>
 
                 <!-- Grid Buku dari Database (Supabase via Blade) -->
@@ -184,7 +201,7 @@
                         data-author="{{ $book->{'Book-Author'} }}"
                         data-cover="{{ $book->{'Image-URL-M'} }}"
                         data-status="Tersedia" 
-                        data-genre="Science"
+                        data-genre="{{ $book->genre ?? 'Umum' }}"
                         data-rating="4.5"
                         data-desc="Deskripsi buku tidak tersedia.">
 
@@ -202,7 +219,12 @@
                             <p class="book-author text-[11px] text-slate-400 mt-0.5">{{ $book->{'Book-Author'} }}</p>
                             <p class="text-[10px] text-slate-400">Tahun: {{ $book->{'Year-Of-Publication'} }}</p>
                             
-                            <span class="status-badge inline-block mt-2 px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[9px] font-semibold rounded-full">Tersedia</span>
+                            <div class="flex items-center gap-1.5 mt-2 flex-wrap">
+                                <span class="status-badge inline-block px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[9px] font-semibold rounded-full">Tersedia</span>
+                                @if($book->genre)
+                                <span class="inline-block px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-[9px] font-semibold rounded-full">{{ $book->genre }}</span>
+                                @endif
+                            </div>
                         </div>
                     </div>
                     @endforeach
@@ -224,34 +246,29 @@
                      supaya booking baru tidak menimpa tampilan status/countdown booking sebelumnya. -->
                 <div id="circ-status-container" class="space-y-4"></div>
 
-                <!-- TEMPLATE (disembunyikan, dipakai oleh JS untuk clone per booking) -->
-                <template id="circ-deadline-template">
-                    <div class="circ-deadline-card bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
-                        <div class="flex items-center gap-3">
-                            <div class="bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-400 p-2.5 rounded-xl">
-                                <i class="fa-regular fa-clock text-xl"></i>
+                <!-- TEMPLATE (disembunyikan, dipakai oleh JS untuk clone per booking/pesanan) -->
+                <!-- Satu template terpadu utk SEMUA jenis pesanan aktif (buku maupun Toko ATK,
+                     ambil sendiri maupun kurir): dirender ringkas (accordion) secara default supaya
+                     tab Sirkulasi tidak penuh sesak kalau ada banyak pesanan berjalan sekaligus;
+                     detail timeline/countdown lengkap baru muncul saat barisnya diklik. -->
+                <template id="circ-order-template">
+                    <div class="circ-order-card bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 overflow-hidden">
+                        <button type="button" class="circ-order-toggle-btn w-full flex items-center justify-between gap-3 p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="circ-order-icon-wrap w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0">
+                                    <i class="circ-order-icon-el text-base"></i>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="circ-order-title-el font-bold text-sm text-slate-800 dark:text-white truncate"></p>
+                                    <p class="circ-order-status-label-el text-xs text-slate-400 mt-0.5 truncate"></p>
+                                </div>
                             </div>
-                            <div>
-                                <h4 class="text-sm font-bold text-amber-800 dark:text-amber-300 circ-deadline-title-el" data-i18n="circ-deadline-title">Batas Pengambilan Resv.</h4>
-                                <p class="text-xs text-amber-600 dark:text-amber-400/80 circ-deadline-desc-el" data-i18n="circ-deadline-desc">Ambil buku langsung ke meja sirkulasi perpustakaan.</p>
-                                <p class="text-[11px] text-amber-500/80 dark:text-amber-500/70 mt-0.5 circ-deadline-book-el"></p>
+                            <div class="flex items-center gap-3 flex-shrink-0">
+                                <span class="circ-order-right-el font-mono text-xs font-bold text-slate-600 dark:text-slate-300"></span>
+                                <i class="fa-solid fa-chevron-down circ-order-chevron-el text-slate-400 text-xs transition-transform duration-200"></i>
                             </div>
-                        </div>
-                        <div class="bg-white dark:bg-slate-900 px-4 py-2 rounded-xl border border-amber-200 dark:border-amber-800 font-mono font-bold text-amber-600 dark:text-amber-400 text-sm w-max self-end sm:self-auto">
-                            <span data-i18n="circ-remaining-time">Sisa Waktu:</span> <span class="countdown-timer-el">--:--:--</span>
-                        </div>
-                    </div>
-                </template>
-
-                <template id="circ-courier-template">
-                    <div class="courier-status-card bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800">
-                        <h4 class="font-bold text-sm mb-1 text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2" data-i18n="circ-courier-status">
-                            <i class="fa-solid fa-truck text-blue-500"></i> Status Pengiriman Kurir
-                        </h4>
-                        <p class="text-[11px] text-slate-400 mb-4 circ-courier-book-el"></p>
-                        <div class="relative ml-2 courier-steps-container">
-                            <!-- Diisi otomatis oleh JS (buildCourierCard) sesuai status ASLI dari database -->
-                        </div>
+                        </button>
+                        <div class="circ-order-detail-el hidden border-t border-slate-100 dark:border-slate-800 p-4"></div>
                     </div>
                 </template>
 
@@ -292,31 +309,21 @@
                     </div>
                     <h3 class="font-bold text-lg">{{ $userData->name ?? 'Ahmad Fauzi' }}</h3>
                     <p class="text-xs text-slate-400">NIM: {{ $userData->nim ?? '220194850' }}</p>
-                    <p class="text-xs text-slate-400">Username: {{ $userData->username ?? 'username' }}</p>
                     <span class="inline-block bg-white/10 text-[10px] font-medium px-3 py-1 rounded-full mt-3 border border-white/10">{{ $userData->fakultas ?? 'Fakultas Ilmu Komputer' }}</span>
                 </div>
 
                 <!-- Pengaturan & Fitur -->
                 <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 overflow-hidden text-sm">
-                    <div class="flex justify-between items-center p-4 border-b border-slate-100 dark:border-slate-800">
-                        <div class="flex items-center gap-3 font-medium text-slate-700 dark:text-slate-300">
-                            <i class="fa-regular fa-moon text-lg text-indigo-500"></i> <span data-i18n="dark-mode">Tema Gelap</span>
-                        </div>
-                        <button onclick="toggleDarkMode()" id="dark-mode-toggle" class="w-11 h-6 bg-slate-200 dark:bg-blue-600 rounded-full relative p-1 transition-colors duration-200">
-                            <div class="w-4 h-4 bg-white rounded-full absolute top-1 left-1 dark:left-6 transition-all duration-200 shadow-sm"></div>
-                        </button>
-                    </div>
-                    
                     <div class="flex justify-between items-center p-4 border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
                         <div class="flex items-center gap-3 font-medium text-slate-700 dark:text-slate-300">
                             <i class="fa-solid fa-globe text-lg text-emerald-500"></i> <span data-i18n="language">Bahasa</span>
                         </div>
-                        <div class="flex items-center gap-1">
-                            <select id="language-select" onchange="changeLanguage(this.value)" class="text-xs bg-transparent text-slate-500 dark:text-slate-400 font-semibold focus:outline-none cursor-pointer border-none outline-none text-right appearance-none pr-1">
+                        <div class="relative flex items-center">
+                            <select id="language-select" onchange="changeLanguage(this.value)" class="text-xs bg-transparent text-slate-500 dark:text-slate-400 font-semibold focus:outline-none cursor-pointer border-none outline-none text-right appearance-none pr-5">
                                 <option value="id" class="bg-white dark:bg-slate-900 text-slate-800 dark:text-white">Indonesia (ID)</option>
                                 <option value="en" class="bg-white dark:bg-slate-900 text-slate-800 dark:text-white">English (EN)</option>
                             </select>
-                            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 pointer-events-none"></i>
+                            <i class="fa-solid fa-chevron-down absolute right-0 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none"></i>
                         </div>
                     </div>
                     
@@ -356,7 +363,7 @@
                     </div>
 
                     <button onclick="logoutSesi()" class="w-full p-4 text-center font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors" data-i18n="logout">
-                        Keluar Sesi
+                        Logout
                     </button>
                 </div>
             </div>
@@ -500,6 +507,11 @@
                 </button>
             </div>
 
+            <!-- Kartu Antrian: muncul kalau buku sedang dipinjam orang lain -->
+            <div id="modal-queue-card" class="hidden mt-3">
+                <!-- Diisi secara dinamis oleh loadQueueInfoForModal() -->
+            </div>
+
             <!-- Form Peminjaman Buku (Hidden by default) -->
             <div id="booking-form-section" class="hidden mt-6 border-t border-slate-100 dark:border-slate-800 pt-4 space-y-4 text-xs">
                 <h5 class="font-bold text-xs text-slate-700 dark:text-slate-300 uppercase tracking-wider">Formulir Peminjaman Buku</h5>
@@ -551,6 +563,26 @@
             <div id="cart-items-list" class="flex-1 overflow-y-auto p-5 space-y-3 hide-scrollbar">
                 <div class="text-center py-8 text-slate-400 italic text-sm">Keranjang masih kosong.</div>
             </div>
+
+            <!-- Pilihan metode pengiriman: sama persis konsepnya dengan booking buku -->
+            <div class="px-5 pt-1 flex-shrink-0">
+                <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">Metode Pengiriman</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="flex items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300 text-sm">
+                        <input type="radio" name="atk-delivery-option" value="ambil_sendiri" checked class="accent-slate-800" onchange="toggleAtkAlamatField()">
+                        <span>Ambil Sendiri</span>
+                    </label>
+                    <label class="flex items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300 text-sm">
+                        <input type="radio" name="atk-delivery-option" value="antar" class="accent-slate-800" onchange="toggleAtkAlamatField()">
+                        <span>Diantar ke Rumah</span>
+                    </label>
+                </div>
+                <div id="atk-alamat-wrap" class="hidden mt-3">
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">Alamat Pengiriman</label>
+                    <textarea id="atk-alamat-input" rows="2" placeholder="Tulis alamat lengkap tujuan pengiriman..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-slate-500 text-sm text-slate-800 dark:text-white resize-none"></textarea>
+                </div>
+            </div>
+
             <div class="p-5 border-t border-slate-100 dark:border-slate-800 space-y-3 flex-shrink-0">
                 <div class="flex justify-between items-center text-sm font-semibold text-slate-700 dark:text-slate-300">
                     <span>Total Pembayaran</span>
@@ -645,6 +677,7 @@
         // tabel `wishlists` di server (lihat loadWishlist()) supaya server
         // tahu siapa saja yang perlu dinotifikasi saat buku tersedia lagi.
         let wishlistBooks = [];
+        let wishlistItems = []; // detail lengkap tiap entri wishlist/antrian (termasuk posisi & estimasi tanggal)
 
         function getCurrentUserId() {
             const userStr = localStorage.getItem('libra_user');
@@ -664,6 +697,7 @@
                 const response = await fetch(`/api/wishlist?user_id=${userId}`);
                 if (!response.ok) throw new Error('Gagal mengambil wishlist');
                 const items = await response.json();
+                wishlistItems = items;
                 wishlistBooks = items.map(item => item.book_id);
             } catch (e) {
                 console.error('Gagal memuat wishlist:', e);
@@ -702,7 +736,7 @@
                 'nav-beranda': 'Beranda', 'nav-pustaka': 'Pustaka', 'nav-sirkulasi': 'Sirkulasi', 'nav-profil': 'Profil',
                 'my-wishlist': 'Wishlist Saya', 'recommended': 'Direkomendasikan Untukmu',
                 'dark-mode': 'Tema Gelap', 'language': 'Bahasa', 'fine-status': 'Status Informasi Denda', 
-                'logout': 'Keluar Sesi', 'show-action': 'Tampilkan',
+                'logout': 'Logout', 'show-action': 'Tampilkan',
                 'wishlist-empty': 'Belum ada buku di wishlist kamu.',
 
                 'feedback-title': 'Kirim Masukan / Feedback', 
@@ -1004,14 +1038,18 @@
         // ============================================================
         function liveSearch() {
             const query = document.getElementById('search-input').value.toLowerCase().trim();
+            const genreFilterEl = document.getElementById('genre-filter');
+            const selectedGenre = genreFilterEl ? genreFilterEl.value : '';
             const container = document.getElementById('live-library-container');
             const cards = container.querySelectorAll('.book-card');
             
             cards.forEach((card) => {
                 const title = (card.dataset.title || '').toLowerCase();
                 const author = (card.dataset.author || '').toLowerCase();
-                const isMatch = title.includes(query) || author.includes(query);
-                card.style.display = isMatch ? '' : 'none';
+                const genre = card.dataset.genre || '';
+                const matchesQuery = title.includes(query) || author.includes(query);
+                const matchesGenre = !selectedGenre || genre === selectedGenre;
+                card.style.display = (matchesQuery && matchesGenre) ? '' : 'none';
             });
         }
 
@@ -1054,17 +1092,17 @@
                 badge.className = 'inline-block px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 text-[10px] font-semibold rounded-full';
             }
 
-            // Booking button
-            const bookingBtn = document.querySelector('#booking-default-btn-container button');
+            // Booking button: statusnya SELALU dicek ke server (loadQueueInfoForModal),
+            // bukan cuma dari field `status` buku -- karena buku yang kelihatan
+            // "Tersedia" pun bisa sedang DITAHAN (hold) khusus utk antrian #1.
             if (status === 'Dipinjam') {
+                const bookingBtn = document.querySelector('#booking-default-btn-container button');
                 bookingBtn.disabled = true;
                 bookingBtn.className = 'w-full bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-sm font-semibold py-3 rounded-xl shadow-md cursor-not-allowed opacity-60';
                 bookingBtn.innerHTML = `<i class="fa-solid fa-ban mr-2"></i> ${currentLang === 'id' ? 'Buku Sedang Dipinjam' : 'Book Currently Borrowed'}`;
-            } else {
-                bookingBtn.disabled = false;
-                bookingBtn.className = 'w-full bg-slate-900 dark:bg-blue-600 text-white text-sm font-semibold py-3 rounded-xl shadow-md hover:bg-slate-800 dark:hover:bg-blue-700 active:scale-[0.98] transition-all';
-                bookingBtn.innerHTML = `<i class="fa-solid fa-book-open mr-2"></i> ${currentLang === 'id' ? 'Booking & Antar ke Rumah' : 'Book & Delivery to Home'}`;
             }
+            // Baik status Tersedia maupun Dipinjam, selalu cek ke server utk hold/antrian.
+            loadQueueInfoForModal(id);
 
             // Rekomendasi buku
             renderRecommendations(id);
@@ -1075,6 +1113,199 @@
             // Tampilkan modal
             document.getElementById('detail-modal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
+        }
+
+        // ===================== ANTRIAN BUKU (QUEUE) =====================
+
+        /**
+         * Ambil info antrian/hold terbaru dari server lalu atur TOMBOL BOOKING
+         * UTAMA + kartu antrian di bawahnya sesuai salah satu dari 4 kondisi:
+         *
+         * 1. Buku tersedia & tidak ada hold         -> tombol booking aktif normal
+         * 2. Buku tersedia & SEDANG giliranmu (hold) -> tombol booking aktif +
+         *    catatan batas waktu sebelum hangus
+         * 3. Buku tersedia tapi DITAHAN utk org lain -> tombol booking TERKUNCI
+         *    + penjelasan sampai kapan
+         * 4. Buku masih dipinjam org lain            -> tombol booking disabled
+         *    (sudah diatur di openBookDetail) + kartu join/leave antrian
+         */
+        // Nonaktifkan tombol "Masuk Antrian" untuk user yang sedang meminjam buku ini.
+        function disableJoinQueueButton(card) {
+            const btn = card.querySelector('button[onclick^="joinQueue"]');
+            if (!btn) return;
+            btn.disabled = true;
+            btn.removeAttribute('onclick');
+            btn.className = 'mt-3 w-full text-xs font-semibold text-slate-400 bg-slate-200 dark:bg-slate-700 dark:text-slate-500 rounded-lg py-2.5 cursor-not-allowed opacity-70';
+            btn.innerHTML = '<i class="fa-solid fa-ban mr-1"></i> Kamu sedang meminjam buku ini';
+        }
+
+        async function loadQueueInfoForModal(bookId) {
+            const card = document.getElementById('modal-queue-card');
+            const bookingBtn = document.querySelector('#booking-default-btn-container button');
+            if (!card || !bookingBtn) return;
+
+            const userId = getCurrentUserId();
+
+            try {
+                const url = userId
+                    ? `/api/wishlist/queue-info?book_id=${bookId}&user_id=${userId}`
+                    : `/api/wishlist/queue-info?book_id=${bookId}`;
+                const res = await fetch(url);
+                if (!res.ok) throw new Error('Gagal memuat info antrian');
+                const info = await res.json();
+
+                const estText = info.your_estimated_date
+                    ? new Date(info.your_estimated_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+                    : 'Belum bisa diperkirakan';
+
+                // ===== Kondisi 3: buku tersedia tapi terkunci utk antrian org lain =====
+                if (info.book_available && info.locked_for_you) {
+                    const expiresText = info.hold_expires_at
+                        ? new Date(info.hold_expires_at).toLocaleString('id-ID', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
+                        : '-';
+
+                    bookingBtn.disabled = true;
+                    bookingBtn.className = 'w-full bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 text-sm font-semibold py-3 rounded-xl shadow-md cursor-not-allowed opacity-60';
+                    bookingBtn.innerHTML = `<i class="fa-solid fa-lock mr-2"></i> Ditahan untuk Antrian Lain`;
+
+                    card.innerHTML = `
+                        <div class="bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl p-4 text-sm">
+                            <p class="font-bold text-slate-600 dark:text-slate-300">
+                                <i class="fa-solid fa-clock mr-1.5"></i> Buku ini sedang ditahan untuk orang pertama di antrian
+                            </p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                Kalau sampai <span class="font-semibold">${expiresText}</span> dia tidak booking, giliran otomatis pindah ke antrian berikutnya.
+                            </p>
+                            ${info.already_in_queue
+                                ? `<p class="text-xs text-blue-600 dark:text-blue-400 mt-2 font-semibold">Kamu ada di antrian ke-${info.your_position} dari ${info.total_in_queue}.</p>`
+                                : `<button onclick="joinQueue('${bookId}')" class="mt-3 w-full text-xs font-semibold text-white bg-amber-500 hover:bg-amber-600 rounded-lg py-2.5 transition-all">
+                                        <i class="fa-solid fa-bell mr-1"></i> Masuk Antrian (jadi ke-${info.your_position})
+                                   </button>`
+                            }
+                        </div>`;
+                    if (info.already_borrowing) disableJoinQueueButton(card);
+                    card.classList.remove('hidden');
+                    return;
+                }
+
+                // ===== Kondisi 2: buku tersedia & SEDANG giliranmu =====
+                if (info.book_available && info.is_your_turn) {
+                    const expiresText = info.hold_expires_at
+                        ? new Date(info.hold_expires_at).toLocaleString('id-ID', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
+                        : '-';
+
+                    bookingBtn.disabled = false;
+                    bookingBtn.className = 'w-full bg-slate-900 dark:bg-blue-600 text-white text-sm font-semibold py-3 rounded-xl shadow-md hover:bg-slate-800 dark:hover:bg-blue-700 active:scale-[0.98] transition-all';
+                    bookingBtn.innerHTML = `<i class="fa-solid fa-book-open mr-2"></i> Booking & Antar ke Rumah`;
+
+                    card.innerHTML = `
+                        <div class="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 rounded-xl p-3 text-xs">
+                            <p class="font-bold text-emerald-700 dark:text-emerald-400">
+                                <i class="fa-solid fa-circle-check mr-1.5"></i> Ini giliranmu!
+                            </p>
+                            <p class="text-slate-500 dark:text-slate-400 mt-1">Booking sebelum <span class="font-semibold">${expiresText}</span>, atau giliranmu akan hangus.</p>
+                        </div>`;
+                    card.classList.remove('hidden');
+                    return;
+                }
+
+                // ===== Kondisi 1: buku tersedia bebas, tidak ada hold sama sekali =====
+                if (info.book_available) {
+                    bookingBtn.disabled = false;
+                    bookingBtn.className = 'w-full bg-slate-900 dark:bg-blue-600 text-white text-sm font-semibold py-3 rounded-xl shadow-md hover:bg-slate-800 dark:hover:bg-blue-700 active:scale-[0.98] transition-all';
+                    bookingBtn.innerHTML = `<i class="fa-solid fa-book-open mr-2"></i> Booking & Antar ke Rumah`;
+                    card.classList.add('hidden');
+                    return;
+                }
+
+                // ===== Kondisi 4: buku masih dipinjam org lain -- tampilkan join/leave antrian =====
+                if (info.already_in_queue) {
+                    card.innerHTML = `
+                        <div class="bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 rounded-xl p-4 text-sm">
+                            <p class="font-bold text-blue-700 dark:text-blue-400">
+                                <i class="fa-solid fa-list-ol mr-1.5"></i> Kamu antrian ke-${info.your_position} dari ${info.total_in_queue}
+                            </p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Perkiraan giliranmu: <span class="font-semibold">${estText}</span></p>
+                            <button onclick="leaveQueue('${bookId}')" class="mt-3 w-full text-xs font-semibold text-rose-500 border border-rose-200 dark:border-rose-900/50 rounded-lg py-2 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all">
+                                Batalkan Antrian
+                            </button>
+                        </div>`;
+                } else {
+                    card.innerHTML = `
+                        <div class="bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/40 rounded-xl p-4 text-sm">
+                            <p class="font-bold text-amber-700 dark:text-amber-500">
+                                <i class="fa-solid fa-users mr-1.5"></i> ${info.total_in_queue} orang sedang mengantre
+                            </p>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                Kalau kamu antre sekarang, kamu jadi antrian ke-${info.your_position}.
+                                Perkiraan giliranmu: <span class="font-semibold">${estText}</span>
+                            </p>
+                            <button onclick="joinQueue('${bookId}')" class="mt-3 w-full text-xs font-semibold text-white bg-amber-500 hover:bg-amber-600 rounded-lg py-2.5 transition-all">
+                                <i class="fa-solid fa-bell mr-1"></i> Masuk Antrian
+                            </button>
+                        </div>`;
+                }
+                if (info.already_borrowing) disableJoinQueueButton(card);
+                card.classList.remove('hidden');
+            } catch (err) {
+                console.error('Gagal memuat info antrian:', err);
+                card.classList.add('hidden');
+            }
+        }
+
+        async function joinQueue(bookId) {
+            const userId = getCurrentUserId();
+            if (!userId) {
+                showToast('Info', 'Silakan login untuk ikut antrian.');
+                return;
+            }
+
+            const book = booksData.find(b => b.id === bookId);
+
+            try {
+                const res = await fetch('/api/wishlist', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, book_id: bookId })
+                });
+                const data = await res.json();
+
+                if (!res.ok) {
+                    showToast('Tidak Bisa Masuk Antrian', data.message || 'Terjadi kesalahan, coba lagi.');
+                    return;
+                }
+
+                if (!wishlistBooks.includes(bookId)) wishlistBooks.push(bookId);
+
+                showToast('Berhasil Masuk Antrian', `Kamu telah masuk antrian untuk buku "${book ? book.title : ''}". Kami akan memberi tahu kamu saat giliranmu tiba.`);
+
+                loadQueueInfoForModal(bookId);
+                renderWishlist();
+                syncWishlistUI();
+            } catch (err) {
+                console.error('Gagal masuk antrian:', err);
+                showToast('Gagal', 'Terjadi kesalahan, coba lagi.');
+            }
+        }
+
+        async function leaveQueue(bookId) {
+            const userId = getCurrentUserId();
+            if (!userId) return;
+
+            try {
+                await fetch(`/api/wishlist?user_id=${userId}&book_id=${bookId}`, { method: 'DELETE' });
+                const idx = wishlistBooks.findIndex(id => id === bookId);
+                if (idx > -1) wishlistBooks.splice(idx, 1);
+
+                showToast('Antrian Dibatalkan', 'Kamu telah keluar dari antrian buku ini.');
+
+                loadQueueInfoForModal(bookId);
+                renderWishlist();
+                syncWishlistUI();
+            } catch (err) {
+                console.error('Gagal membatalkan antrian:', err);
+                showToast('Gagal', 'Terjadi kesalahan, coba lagi.');
+            }
         }
 
         function closeDetailModal() {
@@ -1264,9 +1495,25 @@
 
             wishlistBooks.forEach((id, index) => {
                 const book = booksData.find(b => b.id === id);
+                const queueDetail = wishlistItems.find(item => item.book_id === id);
+
+                let queueBadge = '';
+                let queueInfoLine = '';
+                if (queueDetail && queueDetail.queue_position) {
+                    queueBadge = `
+                        <span class="absolute top-2 left-2 bg-amber-500 text-white text-[9px] font-bold px-2 py-1 rounded-full shadow-sm">
+                            Antrian ke-${queueDetail.queue_position}
+                        </span>`;
+                    const estText = queueDetail.estimated_date
+                        ? new Date(queueDetail.estimated_date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+                        : 'Belum ada perkiraan';
+                    queueInfoLine = `<p class="text-[9px] text-amber-600 dark:text-amber-500 mt-1 font-semibold"><i class="fa-regular fa-clock"></i> Perkiraan: ${estText}</p>`;
+                }
+
                 if(book) {
                     container.insertAdjacentHTML('beforeend', `
                         <div onclick="openBookDetail(${book.id})" class="wishlist-card-item bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 overflow-hidden pb-3 relative cursor-pointer">
+                            ${queueBadge}
                             <button onclick="removeFromWishlist(${index}, event)" class="absolute top-2 right-2 bg-white/80 backdrop-blur-sm dark:bg-slate-900/80 w-6 h-6 rounded-full text-rose-500 flex items-center justify-center shadow-sm text-xs hover:bg-rose-50 transition-colors">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
@@ -1274,6 +1521,7 @@
                             <div class="p-3">
                                 <h4 class="font-bold text-xs line-clamp-1 text-slate-800 dark:text-white">${book.title}</h4>
                                 <p class="text-[10px] text-slate-400 mt-0.5">${book.author}</p>
+                                ${queueInfoLine}
                             </div>
                         </div>
                     `);
@@ -1626,6 +1874,23 @@
             }
         }
 
+        let atkOrders = []; // Pesanan Toko ATK milik user yang sedang login (dimuat bareng peminjaman buku)
+
+        async function loadAtkOrders() {
+            const userStr = localStorage.getItem('libra_user');
+            if (!userStr) return;
+            const user = JSON.parse(userStr);
+
+            try {
+                const response = await fetch(`/api/pembelian-atk?user_id=${user.id}`);
+                if (!response.ok) throw new Error('Gagal mengambil data pesanan ATK');
+                atkOrders = await response.json();
+            } catch (err) {
+                console.error('Error loading ATK orders:', err);
+                atkOrders = [];
+            }
+        }
+
         async function loadUserLoans() {
             const userStr = localStorage.getItem('libra_user');
             if (!userStr) return;
@@ -1635,6 +1900,11 @@
                 const response = await fetch(`/api/pinjam?user_id=${user.id}`);
                 if (!response.ok) throw new Error('Gagal mengambil data peminjaman');
                 activeLoans = await response.json();
+
+                // Pesanan ATK dimuat bersamaan supaya kartu status di Sirkulasi
+                // (buku + ATK) selalu dirender dari data yang sinkron.
+                await loadAtkOrders();
+
                 renderActiveLoans();
                 calculateFines();
                 updateCourierStatusVisibility();
@@ -1845,115 +2115,158 @@
 
         function updateCourierStatusVisibility() {
             const container = document.getElementById('circ-status-container');
-            const deadlineTpl = document.getElementById('circ-deadline-template');
-            const courierTpl = document.getElementById('circ-courier-template');
-            if (!container || !deadlineTpl || !courierTpl) return;
+            const orderTpl = document.getElementById('circ-order-template');
+            if (!container || !orderTpl) return;
 
             // Bersihkan semua kartu & interval lama sebelum render ulang,
             // supaya tidak ada kartu/interval "bekas" yang menumpuk.
             clearAllCircCountdowns();
             container.innerHTML = '';
 
-            // Booking yang belum selesai (belum dikembalikan) & masih butuh perhatian:
-            // - status 'Booking' -> mahasiswa memilih ambil sendiri ke meja sirkulasi.
-            // - salah satu status resmi di COURIER_FLOW_STEPS -> booking kurir yang
-            //   sedang diproses admin (nilainya SELALU berasal dari database, bukan teks tetap).
+            // --- Peminjaman buku yang masih perlu perhatian (belum dikembalikan) ---
             const pendingLoans = activeLoans.filter(l =>
                 !l.tanggal_kembali && (l.status === 'Booking' || isCourierTrackedStatus(l.status))
             );
-
             pendingLoans.forEach(loan => {
-                if (loan.status === 'Booking') {
-                    container.appendChild(buildDeadlineCard(loan, deadlineTpl));
-                } else if (isCourierTrackedStatus(loan.status)) {
-                    container.appendChild(buildCourierCard(loan, courierTpl));
-                }
+                container.appendChild(buildOrderCard({
+                    uid: 'buku-' + loan.id,
+                    title: loan.book_title || 'Buku',
+                    status: loan.status,
+                    createdAt: loan.created_at,
+                    type: 'buku',
+                }, orderTpl));
+            });
+
+            // --- Pesanan Toko ATK yang masih berjalan (belum selesai/dibatalkan) ---
+            const pendingAtkOrders = (atkOrders || []).filter(o => !['Selesai', 'Dibatalkan'].includes(o.status));
+            pendingAtkOrders.forEach(order => {
+                const judul = (order.items || []).map(i => i.nama).join(', ') || 'Pesanan ATK';
+                container.appendChild(buildOrderCard({
+                    uid: 'atk-' + order.id,
+                    title: judul,
+                    status: order.status,
+                    createdAt: order.created_at,
+                    type: 'atk',
+                }, orderTpl));
             });
 
             // Terapkan bahasa aktif ke kartu-kartu yang baru saja di-clone.
             if (typeof applyTranslations === 'function') applyTranslations();
         }
 
-        function buildDeadlineCard(loan, template) {
+        /**
+         * Bangun SATU baris accordion pesanan (dipakai utk peminjaman buku
+         * MAUPUN pesanan Toko ATK -- keduanya pakai kosakata status yang sama).
+         * data: { uid, title, status, createdAt, type: 'buku'|'atk' }
+         */
+        function buildOrderCard(data, template) {
             const node = template.content.firstElementChild.cloneNode(true);
 
-            const bookEl = node.querySelector('.circ-deadline-book-el');
-            if (bookEl) bookEl.textContent = loan.book_title || '';
+            const iconWrap = node.querySelector('.circ-order-icon-wrap');
+            const iconEl = node.querySelector('.circ-order-icon-el');
+            const titleEl = node.querySelector('.circ-order-title-el');
+            const statusLabelEl = node.querySelector('.circ-order-status-label-el');
+            const rightEl = node.querySelector('.circ-order-right-el');
+            const detailEl = node.querySelector('.circ-order-detail-el');
+            const toggleBtn = node.querySelector('.circ-order-toggle-btn');
+            const chevronEl = node.querySelector('.circ-order-chevron-el');
 
-            // Belum ada kolom "batas pengambilan" tersendiri di database, jadi
-            // deadline diambil dari waktu booking dibuat + jendela pengambilan 2 jam.
-            // Dasarnya adalah created_at milik booking INI SAJA, sehingga tiap
-            // booking punya deadline sendiri-sendiri dan tidak saling menimpa.
-            const createdAt = loan.created_at ? new Date(loan.created_at) : new Date();
-            const pickupWindowMs = 2 * 60 * 60 * 1000;
-            const deadlineDate = new Date(createdAt.getTime() + pickupWindowMs);
+            titleEl.textContent = data.title;
 
-            const timerEl = node.querySelector('.countdown-timer-el');
-            if (timerEl) {
-                startCountdownForCard(loan.id, timerEl, deadlineDate);
+            const isPickup = data.status === 'Booking';
+            const isCourier = !isPickup && isCourierTrackedStatus(data.status);
+
+            if (isPickup) {
+                // --- Menunggu diambil sendiri: badge kuning + countdown 2 jam ---
+                iconWrap.className = 'circ-order-icon-wrap w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-400';
+                iconEl.className = 'circ-order-icon-el text-base fa-regular fa-clock';
+                statusLabelEl.textContent = data.type === 'atk' ? 'Pesanan ATK \u2014 ambil sendiri' : 'Menunggu diambil sendiri';
+
+                const createdAt = data.createdAt ? new Date(data.createdAt) : new Date();
+                const deadlineDate = new Date(createdAt.getTime() + 2 * 60 * 60 * 1000);
+                // Countdown tetap berjalan walau kartunya collapsed -- elemennya
+                // tetap ada di DOM, cuma kontainer detailnya yang disembunyikan.
+                startCountdownForCard(data.uid, rightEl, deadlineDate);
+
+                detailEl.innerHTML = `
+                    <p class="text-xs text-slate-500 dark:text-slate-400">
+                        ${data.type === 'atk' ? 'Ambil pesananmu' : 'Ambil buku'} langsung di meja sirkulasi perpustakaan sebelum batas waktu di atas habis.
+                    </p>`;
+            } else if (isCourier) {
+                // --- Sedang dalam proses pengiriman kurir: badge biru + nama tahap saat ini ---
+                iconWrap.className = 'circ-order-icon-wrap w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-400';
+                iconEl.className = 'circ-order-icon-el text-base fa-solid fa-truck';
+
+                const isId = currentLang === 'id';
+                const statusKey = resolveCourierStatusKey(data.status);
+                const stepInfo = COURIER_FLOW_STEPS.find(step => step.key === statusKey);
+                statusLabelEl.textContent = stepInfo ? (isId ? stepInfo.titleId : stepInfo.titleEn) : data.status;
+                rightEl.remove(); // tidak ada countdown numerik utk kurir, cukup label status di atas
+
+                detailEl.innerHTML = buildCourierTimelineHtml(data.status);
+            } else {
+                // Status tak dikenali -- tampilkan apa adanya supaya tidak hilang diam-diam.
+                iconWrap.className = 'circ-order-icon-wrap w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-slate-100 dark:bg-slate-800 text-slate-500';
+                iconEl.className = 'circ-order-icon-el text-base fa-solid fa-circle-question';
+                statusLabelEl.textContent = data.status || '-';
+                rightEl.remove();
             }
+
+            toggleBtn.addEventListener('click', () => {
+                const willOpen = detailEl.classList.contains('hidden');
+                detailEl.classList.toggle('hidden', !willOpen);
+                chevronEl.style.transform = willOpen ? 'rotate(180deg)' : '';
+            });
 
             return node;
         }
 
-        function buildCourierCard(loan, template) {
-            const node = template.content.firstElementChild.cloneNode(true);
+        /** Bangun HTML timeline 4-langkah kurir (dipakai buku maupun pesanan ATK). */
+        function buildCourierTimelineHtml(rawStatus) {
+            const isId = currentLang === 'id';
+            const statusKey = resolveCourierStatusKey(rawStatus);
+            const currentIndex = COURIER_FLOW_STEPS.findIndex(step => step.key === statusKey);
 
-            const bookEl = node.querySelector('.circ-courier-book-el');
-            if (bookEl) bookEl.textContent = loan.book_title || '';
+            const stepsHtml = COURIER_FLOW_STEPS.map((step, idx) => {
+                // done   : tahap sudah dilewati (lebih awal dari status saat ini)
+                // active : tahap yang SEDANG berlangsung sekarang (sesuai status di database)
+                // idle   : tahap yang belum tercapai
+                const isDone = currentIndex > idx;
+                const isActive = currentIndex === idx;
+                const isLast = idx === COURIER_FLOW_STEPS.length - 1;
 
-            const stepsContainer = node.querySelector('.courier-steps-container');
-            if (stepsContainer) {
-                const isId = currentLang === 'id';
-                const statusKey = resolveCourierStatusKey(loan.status);
-                const currentIndex = COURIER_FLOW_STEPS.findIndex(step => step.key === statusKey);
+                const dotClass = isDone
+                    ? 'bg-emerald-500'
+                    : (isActive ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-700');
 
-                stepsContainer.innerHTML = COURIER_FLOW_STEPS.map((step, idx) => {
-                    // done   : tahap sudah dilewati (lebih awal dari status saat ini)
-                    // active : tahap yang SEDANG berlangsung sekarang (sesuai status di database)
-                    // idle   : tahap yang belum tercapai
-                    const isDone = currentIndex > idx;
-                    const isActive = currentIndex === idx;
-                    const isLast = idx === COURIER_FLOW_STEPS.length - 1;
+                const dotInner = isDone
+                    ? '<i class="fa-solid fa-check text-[8px] text-white"></i>'
+                    : (isActive ? '<span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>' : '');
 
-                    const dotClass = isDone
-                        ? 'bg-emerald-500'
-                        : (isActive ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-700');
+                const titleClass = isActive
+                    ? 'text-sm font-bold text-blue-600 dark:text-blue-400'
+                    : (isDone
+                        ? 'text-sm font-semibold text-slate-600 dark:text-slate-400'
+                        : 'text-sm font-semibold text-slate-400 dark:text-slate-600');
 
-                    const dotInner = isDone
-                        ? '<i class="fa-solid fa-check text-[8px] text-white"></i>'
-                        : (isActive ? '<span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>' : '');
+                const title = isId ? step.titleId : step.titleEn;
+                const desc = isId ? step.descId : step.descEn;
+                const marginClass = isLast ? '' : 'mb-6';
 
-                    const titleClass = isActive
-                        ? 'text-sm font-bold text-blue-600 dark:text-blue-400'
-                        : (isDone
-                            ? 'text-sm font-semibold text-slate-600 dark:text-slate-400'
-                            : 'text-sm font-semibold text-slate-400 dark:text-slate-600');
-
-                    const title = isId ? step.titleId : step.titleEn;
-                    const desc = isId ? step.descId : step.descEn;
-                    const marginClass = isLast ? '' : 'mb-6';
-
-                    return `
-                        <div class="relative flex items-start gap-4 ${marginClass}">
-                            <div class="z-10 w-5 h-5 rounded-full ${dotClass} flex items-center justify-center border-4 border-white dark:border-slate-900 flex-shrink-0">
-                                ${dotInner}
-                            </div>
-                            <div>
-                                <h5 class="${titleClass}">${title}</h5>
-                                <p class="text-xs text-slate-400 mt-0.5">${desc}</p>
-                            </div>
+                return `
+                    <div class="relative flex items-start gap-4 ${marginClass}">
+                        <div class="z-10 w-5 h-5 rounded-full ${dotClass} flex items-center justify-center border-4 border-white dark:border-slate-900 flex-shrink-0">
+                            ${dotInner}
                         </div>
-                    `;
-                }).join('');
+                        <div>
+                            <h5 class="${titleClass}">${title}</h5>
+                            <p class="text-xs text-slate-400 mt-0.5">${desc}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
 
-                // Garis vertikal timeline (dibuat ulang tiap render karena innerHTML di-reset)
-                const line = document.createElement('div');
-                line.className = 'absolute left-2.5 top-2 bottom-4 w-0.5 bg-slate-200 dark:bg-slate-800';
-                stepsContainer.prepend(line);
-            }
-
-            return node;
+            return `<div class="relative ml-2"><div class="absolute left-2.5 top-2 bottom-4 w-0.5 bg-slate-200 dark:bg-slate-800"></div>${stepsHtml}</div>`;
         }
 
         // ============================================================
@@ -1993,6 +2306,14 @@
 
         function formatRupiah(angka) {
             return 'Rp ' + Number(angka).toLocaleString('id-ID');
+        }
+
+        // Tampilkan/sembunyikan input alamat sesuai metode pengiriman yang dipilih di keranjang
+        function toggleAtkAlamatField() {
+            const selected = document.querySelector('input[name="atk-delivery-option"]:checked');
+            const wrap = document.getElementById('atk-alamat-wrap');
+            if (!wrap) return;
+            wrap.classList.toggle('hidden', !selected || selected.value !== 'antar');
         }
 
         // Ambil data produk dari API (endpoint /api/produk-atk atau fallback dummy)
@@ -2277,58 +2598,68 @@
                 window.location.href = '/login';
                 return;
             }
+
+            const metodeEl = document.querySelector('input[name="atk-delivery-option"]:checked');
+            const metodePengiriman = metodeEl ? metodeEl.value : 'ambil_sendiri';
+            const alamatKirim = metodePengiriman === 'antar'
+                ? (document.getElementById('atk-alamat-input')?.value || '').trim()
+                : null;
+
             const totalHarga = keranjang.reduce((s, k) => s + k.harga * k.qty, 0);
 
             const checkoutBtn = document.getElementById('checkout-btn');
+            const originalBtnText = checkoutBtn ? checkoutBtn.innerHTML : '';
             if (checkoutBtn) { checkoutBtn.disabled = true; checkoutBtn.textContent = 'Memproses...'; }
 
             const payload = {
                 user_id: userId,
                 items: keranjang.map(k => ({ produk_id: k.id, kode: k.kode, nama: k.nama, harga: k.harga, qty: k.qty })),
                 total: totalHarga,
-                tanggal: new Date().toISOString().slice(0, 10)
+                metode_pengiriman: metodePengiriman,
+                alamat_kirim: alamatKirim || null,
+                // Status awal SAMA kosakatanya dgn booking buku, supaya langsung
+                // kebaca oleh kartu accordion Sirkulasi yang sudah ada.
+                status: metodePengiriman === 'antar' ? 'Booking Dikonfirmasi Admin' : 'Booking',
             };
 
-            let apiSukses = false;
             try {
                 const res = await fetch('/api/pembelian-atk', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content || '' },
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                     body: JSON.stringify(payload)
                 });
+                const data = await res.json().catch(() => ({}));
 
-                if (res.ok) {
-                    apiSukses = true;
-                    showToastToko('Pembelian berhasil! Terima kasih 🎉', 'emerald');
-                } else {
-                    // Jika endpoint belum ada, tetap tampilkan pesan sukses sebagai simulasi
-                    showToastToko('Pesanan diterima! Silakan lunasi di kasir perpustakaan.', 'emerald');
+                if (!res.ok || data.success === false) {
+                    showToastToko(data.message || 'Gagal memproses pesanan. Coba lagi.', 'red');
+                    if (checkoutBtn) { checkoutBtn.disabled = false; checkoutBtn.innerHTML = originalBtnText; }
+                    return;
                 }
+
+                showToastToko(
+                    metodePengiriman === 'antar'
+                        ? 'Pesanan diterima! Akan diantar ke alamatmu, pantau statusnya di tab Sirkulasi.'
+                        : 'Pesanan diterima! Ambil di meja sirkulasi dalam 2 jam.',
+                    'emerald'
+                );
+
+                keranjang = [];
+                updateCartBadge();
+                document.getElementById('cart-modal').classList.add('hidden');
+                // Reset pilihan form keranjang utk pesanan berikutnya
+                document.querySelector('input[name="atk-delivery-option"][value="ambil_sendiri"]').checked = true;
+                toggleAtkAlamatField();
+                if (document.getElementById('atk-alamat-input')) document.getElementById('atk-alamat-input').value = '';
+
+                loadRiwayatPembelian();
+                loadProdukToko(); // Refresh stok
+                loadUserLoans();  // Refresh kartu status Sirkulasi (ikut tampilkan pesanan ATK baru)
             } catch (e) {
-                showToastToko('Pesanan diterima! Silakan lunasi di kasir perpustakaan.', 'emerald');
+                console.error('Gagal checkout ATK:', e);
+                showToastToko('Tidak bisa terhubung ke server. Coba lagi.', 'red');
+            } finally {
+                if (checkoutBtn) { checkoutBtn.disabled = false; checkoutBtn.innerHTML = originalBtnText; }
             }
-
-            // Kalau API belum tersedia (fallback dummy), kurangi stok lokal
-            // supaya stok yang tampil benar-benar berkurang, bukan reset tiap kali di-refresh.
-            if (!apiSukses) {
-                try {
-                    const savedStock = JSON.parse(localStorage.getItem('libra-dummy-stok-atk') || '{}');
-                    keranjang.forEach(item => {
-                        if (savedStock[item.id] !== undefined) {
-                            savedStock[item.id] = Math.max(0, savedStock[item.id] - item.qty);
-                        }
-                    });
-                    localStorage.setItem('libra-dummy-stok-atk', JSON.stringify(savedStock));
-                } catch (e) { /* abaikan */ }
-            }
-
-            // Simpan riwayat ke localStorage sebagai fallback
-            simpanRiwayatLokal(payload);
-            keranjang = [];
-            updateCartBadge();
-            document.getElementById('cart-modal').classList.add('hidden');
-            loadRiwayatPembelian();
-            loadProdukToko(); // Refresh stok
         }
 
         function getRiwayatAtkKey() {

@@ -8,6 +8,8 @@ use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\ComplaintController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\WishlistController;
+use App\Http\Controllers\Api\ProdukAtkController;
+use App\Http\Controllers\Api\PembelianAtkController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -56,7 +58,13 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::get('/notifications', [NotificationController::class, 'index']);
 Route::patch('/notifications/read-all', [NotificationController::class, 'readAll']);
 
-// ===================== WISHLIST =====================
+// ===================== WISHLIST / ANTRIAN BUKU =====================
+// Route spesifik harus didaftarkan SEBELUM '/wishlist' biasa, supaya tidak
+// ketimpa/ambigu.
+Route::get('/wishlist/queue-info', [WishlistController::class, 'queueInfo']);
+// KHUSUS ADMIN -- lihat catatan di WishlistController::forceRelease() & activeHolds()
+Route::get('/wishlist/active-holds', [WishlistController::class, 'activeHolds']);
+Route::post('/wishlist/force-release', [WishlistController::class, 'forceRelease']);
 Route::get('/wishlist', [WishlistController::class, 'index']);
 Route::post('/wishlist', [WishlistController::class, 'store']);
 Route::delete('/wishlist', [WishlistController::class, 'destroy']);
@@ -68,3 +76,7 @@ Route::apiResource('pinjam', PinjamController::class);
 Route::apiResource('peminjams', PinjamController::class); // Alias untuk kompatibilitas admin-v2
 Route::apiResource('invoices', InvoiceController::class);
 Route::apiResource('complaints', ComplaintController::class);
+
+// ===================== TOKO ATK =====================
+Route::apiResource('produk-atk', ProdukAtkController::class);
+Route::apiResource('pembelian-atk', PembelianAtkController::class);

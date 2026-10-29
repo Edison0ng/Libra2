@@ -30,23 +30,23 @@
 <style>
   /* ===================== ROOT DESIGN TOKENS (Proto 4 LIBRA) ===================== */
   :root{
-    --bg: #0A0E17;
-    --panel-solid: #10172A;
-    --panel-2: #151D34;
-    --line: #222B42;
-    --text: #E7EAF2;
-    --muted: #8A92A6;
-    --muted-2: #737F9C; /* kontras ditingkatkan dari #5C657B utk aksesibilitas */
+    --bg: #FFFFFF;
+    --panel-solid: #FFFFFF;
+    --panel-2: #F4F6FA;
+    --line: #E3E7F0;
+    --text: #1A2033;
+    --muted: #6B7280;
+    --muted-2: #8A92A6; /* kontras ditingkatkan dari #AEB4C2 utk aksesibilitas di atas putih */
     --accent: #3D6BFF;
-    --accent-2: #7C9CFF;
-    --danger: #FF5470;
+    --accent-2: #2F56E0;
+    --danger: #E0264F;
     --radius: 14px;
 
     /* turunan warna untuk badge/status, supaya konsisten dgn tema */
-    --success: #3DDC97;
-    --success-bg: rgba(61, 220, 151, 0.12);
-    --danger-bg: rgba(255, 84, 112, 0.12);
-    --accent-bg: rgba(61, 107, 255, 0.12);
+    --success: #18A869;
+    --success-bg: rgba(24, 168, 105, 0.10);
+    --danger-bg: rgba(224, 38, 79, 0.08);
+    --accent-bg: rgba(61, 107, 255, 0.10);
   }
 
   *{ margin:0; padding:0; box-sizing:border-box; }
@@ -66,14 +66,14 @@
   .auth-shell{
     min-height: 100vh;
     display: grid;
-    grid-template-columns: 1.1fr 1fr; /* kiri sedikit lebih lebar utk konten info */
+    grid-template-columns: 1fr; /* panel info di kiri dihapus, tinggal form login */
   }
 
   /* Background sedikit gradasi supaya tidak flat datar */
   .auth-shell{
     background:
-      radial-gradient(900px 500px at 0% 0%, rgba(61,107,255,0.08), transparent 60%),
-      radial-gradient(700px 500px at 100% 100%, rgba(124,156,255,0.06), transparent 60%),
+      radial-gradient(900px 500px at 0% 0%, rgba(61,107,255,0.04), transparent 60%),
+      radial-gradient(700px 500px at 100% 100%, rgba(61,107,255,0.03), transparent 60%),
       var(--bg);
   }
 
@@ -82,6 +82,7 @@
     padding: 56px 64px;
     display:flex;
     flex-direction: column;
+    background: #FAFBFD;
     border-right: 1px solid var(--line);
   }
 
@@ -135,6 +136,7 @@
     background: var(--panel-solid);
     border: 1px solid var(--line);
     border-radius: var(--radius);
+    box-shadow: 0 1px 3px rgba(16, 24, 40, 0.04);
     overflow: hidden;
     display:flex;
     flex-direction: column;
@@ -158,28 +160,6 @@
     letter-spacing: 0.08em;
   }
 
-  .ledger-header .live-dot{
-    display:flex;
-    align-items:center;
-    gap:6px;
-    font-size: 11px;
-    color: var(--success);
-  }
-
-  .live-dot span.dot{
-    width:7px; height:7px;
-    border-radius:50%;
-    background: var(--success);
-    box-shadow: 0 0 0 0 rgba(61,220,151,0.6);
-    animation: pulse 1.8s infinite;
-  }
-
-  @keyframes pulse{
-    0%{ box-shadow: 0 0 0 0 rgba(61,220,151,0.5); }
-    70%{ box-shadow: 0 0 0 6px rgba(61,220,151,0); }
-    100%{ box-shadow: 0 0 0 0 rgba(61,220,151,0); }
-  }
-
   /* ledger-row: satu baris informasi/log */
 .ledger-row{
   display:flex;
@@ -192,7 +172,7 @@
 .ledger-row:last-child{ border-bottom: none; }
 
 .ledger-row:hover{
-  background: rgba(255,255,255,0.015);
+  background: rgba(16,24,40,0.02);
 }
 
 .badge{
@@ -256,6 +236,7 @@
     background: var(--panel-solid);
     border: 1px solid var(--line);
     border-radius: var(--radius);
+    box-shadow: 0 4px 24px rgba(16, 24, 40, 0.06);
     padding: 40px 36px;
   }
 
@@ -465,62 +446,6 @@
 
 <div class="auth-shell">
 
-  <!-- ===================== KOLOM KIRI: PANEL INFO & SIRKULASI BUKU ===================== -->
-  <section class="info-panel">
-    <div class="brand-row">
-      <div class="logo-mark">L</div>
-      <div class="brand-name">LIBRA</div>
-    </div>
-
-    <!-- h2: konten pendukung, bukan judul utama dokumen -->
-    <h2>Informasi Buku Perpustakaan</h2>
-    <p class="subtitle">Status Koleksi Perpustakaan Kampus.</p>
-
-    <div class="ledger">
-      <div class="ledger-header">
-        <span class="label">Informasi</span>
-        <div class="live-dot"><span class="dot"></span>Live Update</div>
-      </div>
-
-      <!-- Baris 1: Buku Baru -->
-      <div class="ledger-row">
-        <span class="badge new">BUKU BARU</span>
-        <div class="row-content">
-          <p>"Artificial Intelligence: A Modern Approach (Edisi 4)" kini tersedia di Rak Utama.</p>
-          <span class="row-time">2 menit yang lalu</span>
-        </div>
-      </div>
-
-      <!-- Baris 2: Stok Kosong -->
-      <div class="ledger-row">
-        <span class="badge empty">STOK KOSONG</span>
-        <div class="row-content">
-          <p>"Sistem Operasi (Silberschatz)" saat ini kosong karena sedang dipinjam seluruhnya.</p>
-          <span class="row-time">17 menit yang lalu</span>
-        </div>
-      </div>
-
-      <!-- Baris 3: Buku Baru -->
-      <div class="ledger-row">
-        <span class="badge new">BUKU BARU</span>
-        <div class="row-content">
-          <p>"Dasar Pemrograman Python untuk Pemula" telah ditambahkan ke katalog digital.</p>
-          <span class="row-time">1 jam yang lalu</span>
-        </div>
-      </div>
-
-      <!-- Baris 4: Update pengembalian -->
-      <div class="ledger-row">
-        <span class="badge update">DIKEMBALIKAN</span>
-        <div class="row-content">
-          <p>"Database System Concepts (Silberschatz)" baru dikembalikan dan siap dipinjam kembali.</p>
-          <span class="row-time">3 jam yang lalu</span>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
   <!-- ===================== KOLOM KANAN: CARD LOGIN TERPADU ===================== -->
   <section class="form-panel">
     <div class="login-card">
@@ -583,7 +508,7 @@
         </div>
 
         <!-- Tombol submit -->
-        <button type="submit" class="btn-primary">Masuk ke Sistem</button>
+        <button type="submit" class="btn-primary">Login</button>
       </form>
 
       <p class="signup-footer">

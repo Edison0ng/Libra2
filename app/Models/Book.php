@@ -23,6 +23,7 @@ class Book extends Model
         'Book-Author',
         'Year-Of-Publication',
         'Publisher',
+        'genre',
         'Image-URL-S',
         'Image-URL-M',
         'Image-URL-L'

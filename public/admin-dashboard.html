@@ -265,6 +265,7 @@
                                     <th class="px-4 py-3 min-w-[180px]">Penulis</th>
                                     <th class="px-4 py-3 min-w-[200px]">Penerbit</th>
                                     <th class="px-4 py-3 min-w-[100px]">Tahun</th>
+                                    <th class="px-4 py-3 min-w-[120px]">Genre</th>
                                     <th class="px-4 py-3 min-w-[120px] text-center">Aksi</th>
                                 </tr>
                             </thead>
@@ -338,7 +339,7 @@
                         <p class="text-sm text-slate-500 dark:text-slate-400">Kelola peminjaman dan pengembalian.</p>
                     </div>
                     <div class="flex gap-2 w-full md:w-auto">
-                        <button onclick="fetchPeminjams()"
+                        <button onclick="fetchPeminjams(); fetchActiveHolds();"
                             class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-white py-2 px-4 rounded-xl font-medium transition shadow-sm"><i
                                 class="fa-solid fa-rotate-right"></i></button>
                         <button onclick="openModalForm('modal-peminjam')"
@@ -371,6 +372,31 @@
                                 </tr>
                             </thead>
                             <tbody id="tbody-peminjams"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Antrian yang sedang ditahan (hold) utk org pertama -->
+                <div class="mt-6 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex justify-between items-center gap-3">
+                        <div>
+                            <h4 class="font-bold text-slate-800 dark:text-white text-sm">Antrian Sedang Ditahan (Hold Aktif)</h4>
+                            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Buku yang sudah tersedia tapi sedang ditahan 24 jam khusus utk orang pertama di antrian.</p>
+                        </div>
+                        <button onclick="fetchActiveHolds()" class="bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-800 dark:text-white py-2 px-4 rounded-xl font-medium transition shadow-sm shrink-0"><i class="fa-solid fa-rotate-right"></i></button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                            <thead class="text-xs uppercase bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
+                                <tr>
+                                    <th class="px-4 py-3">Buku</th>
+                                    <th class="px-4 py-3">Ditahan Untuk (User ID)</th>
+                                    <th class="px-4 py-3">Mulai Hold</th>
+                                    <th class="px-4 py-3">Kadaluarsa</th>
+                                    <th class="px-4 py-3">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-active-holds"></tbody>
                         </table>
                     </div>
                 </div>
@@ -573,9 +599,11 @@
                             <select id="filter-store-status"
                                 class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm rounded-lg p-2.5 md:w-48">
                                 <option value="">Semua Status</option>
-                                <option value="Menunggu">Menunggu</option>
-                                <option value="Diproses">Diproses</option>
-                                <option value="Dikirim">Dikirim</option>
+                                <option value="Booking">Booking (Ambil Sendiri)</option>
+                                <option value="Booking Dikonfirmasi Admin">Booking Dikonfirmasi Admin</option>
+                                <option value="Sedang Dikemas">Sedang Dikemas</option>
+                                <option value="Menunggu Kurir">Menunggu Kurir</option>
+                                <option value="Sedang Diantar Kurir">Sedang Diantar Kurir</option>
                                 <option value="Selesai">Selesai</option>
                                 <option value="Dibatalkan">Dibatalkan</option>
                             </select>
@@ -590,10 +618,10 @@
                                 <thead
                                     class="text-xs uppercase bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
                                     <tr>
-                                        <th class="px-4 py-3">No. Pesanan</th>
                                         <th class="px-4 py-3">Pelanggan</th>
                                         <th class="px-4 py-3">Item</th>
                                         <th class="px-4 py-3">Total</th>
+                                        <th class="px-4 py-3">Metode</th>
                                         <th class="px-4 py-3">Status</th>
                                         <th class="px-4 py-3">Tanggal</th>
                                         <th class="px-4 py-3 text-center">Aksi</th>
@@ -688,48 +716,62 @@
             </div>
             <form id="form-store-order" class="p-4 space-y-4 overflow-y-auto" style="max-height:70vh;">
                 <input type="hidden" id="store-order-id">
-                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nama Pelanggan
-                        *</label>
-                    <input id="store-order-customer" required placeholder="Nama mahasiswa/pelanggan"
-                        class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200">
+
+                <!-- Catatan pesanan dari checkout mahasiswa: item & metode TIDAK bisa diubah lewat form ini,
+                     cuma ditampilkan sbg info. Admin hanya mengubah statusnya. -->
+                <div id="store-order-readonly-info" class="hidden p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs space-y-1">
+                    <p><span class="text-slate-400">Pelanggan:</span> <strong id="store-order-info-customer" class="text-slate-700 dark:text-slate-300"></strong></p>
+                    <p><span class="text-slate-400">Item:</span> <strong id="store-order-info-items" class="text-slate-700 dark:text-slate-300"></strong></p>
+                    <p><span class="text-slate-400">Metode:</span> <strong id="store-order-info-metode" class="text-slate-700 dark:text-slate-300"></strong></p>
+                    <p id="store-order-info-alamat-wrap" class="hidden"><span class="text-slate-400">Alamat:</span> <strong id="store-order-info-alamat" class="text-slate-700 dark:text-slate-300"></strong></p>
+                    <p><span class="text-slate-400">Total:</span> <strong id="store-order-info-total" class="text-slate-700 dark:text-slate-300"></strong></p>
                 </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Produk
-                            *</label>
-                        <select id="store-order-product" required
+
+                <!-- Form input ini HANYA dipakai saat bikin pesanan manual baru (mis. pembeli walk-in/telepon) -->
+                <div id="store-order-create-fields" class="space-y-4">
+                    <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Pelanggan *</label>
+                        <select id="store-order-user" required
                             class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></select>
                     </div>
-                    <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Jumlah
-                            *</label>
-                        <input id="store-order-qty" type="number" min="1" required value="1"
-                            class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Produk *</label>
+                            <select id="store-order-product" required
+                                class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></select>
+                        </div>
+                        <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Jumlah *</label>
+                            <input id="store-order-qty" type="number" min="1" required value="1"
+                                class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200">
+                        </div>
                     </div>
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status</label>
-                        <select id="store-order-status"
+                    <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Metode Pengiriman</label>
+                        <select id="store-order-metode"
                             class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200">
-                            <option>Menunggu</option>
-                            <option>Diproses</option>
-                            <option>Dikirim</option>
-                            <option>Selesai</option>
-                            <option>Dibatalkan</option>
+                            <option value="ambil_sendiri">Ambil Sendiri</option>
+                            <option value="antar">Diantar ke Rumah</option>
                         </select>
                     </div>
-                    <div><label
-                            class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tanggal</label>
-                        <input id="store-order-date" type="date" required
-                            class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200">
+                    <div
+                        class="p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/40">
+                        <div class="flex justify-between text-sm"><span class="text-slate-500 dark:text-slate-400">Harga
+                                satuan</span><strong id="store-order-unit-price"
+                                class="text-slate-800 dark:text-white">Rp0</strong></div>
+                        <div class="flex justify-between mt-1"><span
+                                class="font-semibold text-slate-700 dark:text-slate-300">Total</span><strong
+                                id="store-order-total" class="text-blue-600 dark:text-blue-400">Rp0</strong></div>
                     </div>
                 </div>
-                <div
-                    class="p-3 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/40">
-                    <div class="flex justify-between text-sm"><span class="text-slate-500 dark:text-slate-400">Harga
-                            satuan</span><strong id="store-order-unit-price"
-                            class="text-slate-800 dark:text-white">Rp0</strong></div>
-                    <div class="flex justify-between mt-1"><span
-                            class="font-semibold text-slate-700 dark:text-slate-300">Total</span><strong
-                            id="store-order-total" class="text-blue-600 dark:text-blue-400">Rp0</strong></div>
+
+                <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Status</label>
+                    <select id="store-order-status"
+                        class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200">
+                        <option value="Booking">Booking (Ambil Sendiri)</option>
+                        <option value="Booking Dikonfirmasi Admin">Booking Dikonfirmasi Admin</option>
+                        <option value="Sedang Dikemas">Sedang Dikemas</option>
+                        <option value="Menunggu Kurir">Menunggu Kurir</option>
+                        <option value="Sedang Diantar Kurir">Sedang Diantar Kurir</option>
+                        <option value="Selesai">Selesai</option>
+                        <option value="Dibatalkan">Dibatalkan</option>
+                    </select>
                 </div>
             </form>
             <div
@@ -784,6 +826,11 @@
                 <div><label
                         class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Tahun</label><input
                         type="number" id="book-year"
+                        class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200">
+                </div>
+                <div><label
+                        class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Genre</label><input
+                        type="text" id="book-genre" placeholder="Misal: Fiction, Self-Help, Science"
                         class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200">
                 </div>
             </form>
@@ -1124,6 +1171,7 @@
                         document.getElementById('book-author').value = item?.['Book-Author'] || '';
                         document.getElementById('book-publisher').value = item?.['Publisher'] || '';
                         document.getElementById('book-year').value = item?.['Year-Of-Publication'] || '';
+                        document.getElementById('book-genre').value = item?.genre || '';
                     } else if (type === 'user') {
                         document.getElementById('user-nama').value = item?.nama_lengkap || '';
                         document.getElementById('user-nim').value = item?.nim || '';
@@ -1310,7 +1358,7 @@
             const countSpan = document.getElementById('book-count');
 
             if (!data || data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-slate-400">📚 Belum ada data buku. Tambahkan buku baru!</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-slate-400">📚 Belum ada data buku. Tambahkan buku baru!</td></tr>`;
                 if (totalSpan) totalSpan.innerText = '0';
                 if (countSpan) countSpan.innerText = '0';
                 return;
@@ -1325,6 +1373,7 @@
                     <td class="px-4 py-3">${escHtml(item?.['Book-Author']) || '-'}</td>
                     <td class="px-4 py-3">${escHtml(item?.['Publisher']) || '-'}</td>
                     <td class="px-4 py-3">${item?.['Year-Of-Publication'] || '-'}</td>
+                    <td class="px-4 py-3">${escHtml(item?.genre) || '-'}</td>
                     <td class="px-4 py-3 text-center whitespace-nowrap">
                         <button onclick="openModalForm('modal-book', '${escAttr(key)}')" class="text-blue-500 hover:text-blue-700 mr-3 transition" title="Edit">
                             <i class="fa-solid fa-pen"></i>
@@ -1351,7 +1400,8 @@
                 "Book-Title": document.getElementById('book-title').value.trim(),
                 "Book-Author": document.getElementById('book-author').value.trim(),
                 "Publisher": document.getElementById('book-publisher').value.trim(),
-                "Year-Of-Publication": yearVal ? parseInt(yearVal, 10) : null
+                "Year-Of-Publication": yearVal ? parseInt(yearVal, 10) : null,
+                "genre": document.getElementById('book-genre').value.trim() || null
             };
 
             setFormLoading('book', true);
@@ -1445,7 +1495,7 @@
 
         // --- Peminjams ---
         async function fetchPeminjams() {
-            const data = await fetchAPI('peminjams') || [];
+            const data = await fetchAPI('pinjam') || [];
             dataState.peminjams = data;
             document.getElementById('stat-peminjams').innerText = dataState.peminjams.length;
             renderPeminjams(dataState.peminjams);
@@ -1464,10 +1514,57 @@
                     <td class="px-4 py-3"><span class="px-2 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 rounded-lg text-xs">${escHtml(item?.status) || '-'}</span></td>
                     <td class="px-4 py-3">
                         <button onclick="openModalForm('modal-peminjam', '${escAttr(key)}')" class="text-blue-500 mr-3"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deleteAPI('peminjams', '${escAttr(key)}', fetchPeminjams)" class="text-red-500"><i class="fa-solid fa-trash"></i></button>
+                        <button onclick="deleteAPI('pinjam', '${escAttr(key)}', fetchPeminjams)" class="text-red-500"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 </tr>`;
             }).join('');
+        }
+
+        // --- Antrian / Hold Aktif ---
+        async function fetchActiveHolds() {
+            const data = await fetchAPI('wishlist/active-holds') || [];
+            renderActiveHolds(data);
+        }
+        function renderActiveHolds(data) {
+            const tbody = document.getElementById('tbody-active-holds');
+            if (!tbody) return;
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-4 text-center">Tidak ada hold yang sedang berjalan.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = data.map(item => `
+                <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <td class="px-4 py-3">${escHtml(item?.book_title) || escHtml(item?.book_id) || '-'}</td>
+                    <td class="px-4 py-3 font-mono text-xs">${escHtml(item?.user_id) || '-'}</td>
+                    <td class="px-4 py-3 text-xs">${escHtml(item?.hold_started_at) || '-'}</td>
+                    <td class="px-4 py-3 text-xs">${escHtml(item?.expires_at) || '-'}</td>
+                    <td class="px-4 py-3">
+                        <button onclick="releaseHold('${escAttr(item?.book_id)}')" class="bg-rose-500 hover:bg-rose-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+                            <i class="fa-solid fa-lock-open mr-1"></i> Lepas Hold
+                        </button>
+                    </td>
+                </tr>`).join('');
+        }
+
+        async function releaseHold(bookId) {
+            if (!confirm('Lepas hold buku ini sekarang? Orang yang sedang kebagian giliran akan dikeluarkan dari antrian, lalu giliran dilempar ke antrian berikutnya (jika ada).')) return;
+            try {
+                const res = await fetch(`${API}/wishlist/force-release`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ book_id: bookId })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok || !data.success) {
+                    triggerToast(data.message || 'Gagal melepas hold.', 'red');
+                    return;
+                }
+                triggerToast('Hold berhasil dilepas.', 'emerald');
+                fetchActiveHolds();
+            } catch (err) {
+                console.error('Gagal melepas hold:', err);
+                triggerToast('Tidak dapat terhubung ke server.', 'red');
+            }
         }
 
         document.getElementById('form-peminjam').addEventListener('submit', async (e) => {
@@ -1485,7 +1582,7 @@
 
             setFormLoading('peminjam', true);
             try {
-                const result = await saveAPI('peminjams', payload, id);
+                const result = await saveAPI('pinjam', payload, id);
                 if (result.success) {
                     closeModal('modal-peminjam');
                     triggerToast('Data Sirkulasi disimpan!', 'emerald');
@@ -1665,6 +1762,7 @@
             fetchBooks();
             fetchUsers();
             fetchPeminjams();
+            fetchActiveHolds();
             fetchInvoices();
             fetchComplaints();
             setTimeout(initChart, 200);
@@ -1673,43 +1771,27 @@
 
         // ============================================================
         // Toko ATK: Katalog Produk & Pesanan
-        // Fitur ini sengaja memakai localStorage sebagai penyimpanan lokal
-        // agar halaman tetap bisa digunakan walau endpoint toko belum dibuat.
+        // Tersambung ke backend asli (/api/produk-atk, /api/pembelian-atk) --
+        // SEBELUMNYA fitur ini murni localStorage, dan datanya tidak
+        // terhubung sama sekali dengan yang dilihat mahasiswa.
         // ============================================================
-        const STORE_PRODUCTS_KEY = 'libra_atk_products';
-        const STORE_ORDERS_KEY = 'libra_atk_orders';
         let storeProducts = [];
         let storeOrders = [];
-
-        const storeSeedProducts = [
-            { id: 'ATK-001', code: 'ATK-001', name: 'Pulpen Gel', category: 'Alat Tulis', price: 5000, stock: 50 },
-            { id: 'ATK-002', code: 'ATK-002', name: 'Buku Tulis A5', category: 'Buku', price: 12000, stock: 35 },
-            { id: 'ATK-003', code: 'ATK-003', name: 'Pensil 2B', category: 'Alat Tulis', price: 3000, stock: 60 },
-            { id: 'ATK-004', code: 'ATK-004', name: 'Map Plastik', category: 'Perlengkapan', price: 4000, stock: 40 }
-        ];
 
         function rupiah(value) {
             return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(Number(value) || 0);
         }
-        function storeLoad() {
-            try {
-                const p = JSON.parse(localStorage.getItem(STORE_PRODUCTS_KEY) || 'null');
-                const o = JSON.parse(localStorage.getItem(STORE_ORDERS_KEY) || 'null');
-                storeProducts = Array.isArray(p) ? p : JSON.parse(JSON.stringify(storeSeedProducts));
-                storeOrders = Array.isArray(o) ? o : [];
-            } catch (_) {
-                storeProducts = JSON.parse(JSON.stringify(storeSeedProducts));
-                storeOrders = [];
-            }
-            storeSave();
+
+        async function fetchStoreProducts() {
+            storeProducts = await fetchAPI('produk-atk') || [];
         }
-        function storeSave() {
-            localStorage.setItem(STORE_PRODUCTS_KEY, JSON.stringify(storeProducts));
-            localStorage.setItem(STORE_ORDERS_KEY, JSON.stringify(storeOrders));
+        async function fetchStoreOrders() {
+            storeOrders = await fetchAPI('pembelian-atk') || [];
         }
+
         function updateStoreStats() {
             document.getElementById('store-stat-products').innerText = storeProducts.length;
-            document.getElementById('store-stat-stock').innerText = storeProducts.reduce((s, p) => s + (Number(p.stock) || 0), 0);
+            document.getElementById('store-stat-stock').innerText = storeProducts.reduce((s, p) => s + (Number(p.stok) || 0), 0);
             document.getElementById('store-stat-orders').innerText = storeOrders.length;
             const revenue = storeOrders.filter(o => o.status !== 'Dibatalkan').reduce((s, o) => s + (Number(o.total) || 0), 0);
             document.getElementById('store-stat-revenue').innerText = rupiah(revenue);
@@ -1717,17 +1799,26 @@
         function updateStoreCategoryFilter() {
             const el = document.getElementById('filter-store-category');
             const current = el.value;
-            const cats = [...new Set(storeProducts.map(p => p.category).filter(Boolean))].sort();
+            const cats = [...new Set(storeProducts.map(p => p.kategori).filter(Boolean))].sort();
             el.innerHTML = '<option value="">Semua Kategori</option>' + cats.map(c => `<option value="${escAttr(c)}">${escHtml(c)}</option>`).join('');
             el.value = cats.includes(current) ? current : '';
         }
         function updateStoreOrderProducts(selected = '') {
             const el = document.getElementById('store-order-product');
+            if (!el) return;
             el.innerHTML = storeProducts.length
-                ? storeProducts.map(p => `<option value="${escAttr(p.id)}">${escHtml(p.name)} — ${rupiah(p.price)} (stok ${Number(p.stock) || 0})</option>`).join('')
+                ? storeProducts.map(p => `<option value="${escAttr(p.id)}">${escHtml(p.nama)} — ${rupiah(p.harga)} (stok ${Number(p.stok) || 0})</option>`).join('')
                 : '<option value="">Belum ada produk</option>';
             if (selected && storeProducts.some(p => String(p.id) === String(selected))) el.value = selected;
             updateStoreOrderTotal();
+        }
+        function updateStoreOrderUsers() {
+            const el = document.getElementById('store-order-user');
+            if (!el) return;
+            const users = dataState.users || [];
+            el.innerHTML = users.length
+                ? users.map(u => `<option value="${escAttr(pickId(u, ID_KEYS.user))}">${escHtml(u.nama_lengkap)} (${escHtml(u.nim)})</option>`).join('')
+                : '<option value="">Belum ada data mahasiswa</option>';
         }
         function renderStoreProducts(data = storeProducts) {
             const tbody = document.getElementById('tbody-store-products');
@@ -1737,17 +1828,30 @@
             }
             tbody.innerHTML = data.map(p => `
                 <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                    <td class="px-4 py-3 font-mono text-xs">${escHtml(p.code || p.id)}</td>
-                    <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">${escHtml(p.name)}</td>
-                    <td class="px-4 py-3">${escHtml(p.category)}</td>
-                    <td class="px-4 py-3">${rupiah(p.price)}</td>
-                    <td class="px-4 py-3"><span class="px-2 py-1 rounded-lg text-xs ${Number(p.stock) <= 5 ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'}">${Number(p.stock) || 0}</span></td>
+                    <td class="px-4 py-3 font-mono text-xs">${escHtml(p.kode)}</td>
+                    <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">${escHtml(p.nama)}</td>
+                    <td class="px-4 py-3">${escHtml(p.kategori)}</td>
+                    <td class="px-4 py-3">${rupiah(p.harga)}</td>
+                    <td class="px-4 py-3"><span class="px-2 py-1 rounded-lg text-xs ${Number(p.stok) <= 5 ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'}">${Number(p.stok) || 0}</span></td>
                     <td class="px-4 py-3 text-center whitespace-nowrap">
                         <button onclick="openStoreModal('product','${escAttr(p.id)}')" class="text-blue-500 hover:text-blue-700 mr-3" title="Edit"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deleteStoreProduct('${escAttr(p.id)}')" class="text-red-500 hover:text-red-700" title="Hapus"><i class="fa-solid fa-trash"></i></button>
+                        <button onclick="deleteAPI('produk-atk', '${escAttr(p.id)}', refreshStore)" class="text-red-500 hover:text-red-700" title="Hapus"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 </tr>`).join('');
         }
+        function getStoreCustomerName(userId) {
+            const u = (dataState.users || []).find(x => String(pickId(x, ID_KEYS.user)) === String(userId));
+            return u?.nama_lengkap || userId || '-';
+        }
+        const STORE_ORDER_STATUS_CLASS = {
+            'Booking': 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+            'Booking Dikonfirmasi Admin': 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+            'Sedang Dikemas': 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+            'Menunggu Kurir': 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
+            'Sedang Diantar Kurir': 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
+            'Selesai': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+            'Dibatalkan': 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
+        };
         function renderStoreOrders(data = storeOrders) {
             const tbody = document.getElementById('tbody-store-orders');
             if (!data.length) {
@@ -1755,23 +1859,20 @@
                 return;
             }
             tbody.innerHTML = data.map(o => {
-                const statusClass = {
-                    'Menunggu': 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
-                    'Diproses': 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
-                    'Dikirim': 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
-                    'Selesai': 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
-                    'Dibatalkan': 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300'
-                }[o.status] || 'bg-slate-100 text-slate-700';
+                const statusClass = STORE_ORDER_STATUS_CLASS[o.status] || 'bg-slate-100 text-slate-700';
+                const itemsText = (o.items || []).map(i => `${i.nama} ×${i.qty}`).join(', ') || '-';
+                const metode = o.metode_pengiriman === 'antar' ? 'Diantar' : 'Ambil Sendiri';
+                const tgl = o.created_at ? new Date(o.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
                 return `<tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                    <td class="px-4 py-3 font-mono text-xs">${escHtml(o.orderNo)}</td>
-                    <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">${escHtml(o.customer)}</td>
-                    <td class="px-4 py-3">${escHtml(o.productName)} × ${Number(o.qty) || 0}</td>
+                    <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">${escHtml(getStoreCustomerName(o.user_id))}</td>
+                    <td class="px-4 py-3 max-w-[220px] truncate" title="${escAttr(itemsText)}">${escHtml(itemsText)}</td>
                     <td class="px-4 py-3 font-medium">${rupiah(o.total)}</td>
+                    <td class="px-4 py-3 text-xs">${metode}</td>
                     <td class="px-4 py-3"><span class="px-2 py-1 rounded-lg text-xs ${statusClass}">${escHtml(o.status)}</span></td>
-                    <td class="px-4 py-3 text-xs">${escHtml(o.date)}</td>
+                    <td class="px-4 py-3 text-xs">${tgl}</td>
                     <td class="px-4 py-3 text-center whitespace-nowrap">
-                        <button onclick="openStoreModal('order','${escAttr(o.id)}')" class="text-blue-500 hover:text-blue-700 mr-3" title="Edit"><i class="fa-solid fa-pen"></i></button>
-                        <button onclick="deleteStoreOrder('${escAttr(o.id)}')" class="text-red-500 hover:text-red-700" title="Hapus"><i class="fa-solid fa-trash"></i></button>
+                        <button onclick="openStoreModal('order','${escAttr(o.id)}')" class="text-blue-500 hover:text-blue-700 mr-3" title="Ubah Status"><i class="fa-solid fa-pen"></i></button>
+                        <button onclick="deleteAPI('pembelian-atk', '${escAttr(o.id)}', refreshStore)" class="text-red-500 hover:text-red-700" title="Hapus"><i class="fa-solid fa-trash"></i></button>
                     </td>
                 </tr>`;
             }).join('');
@@ -1793,7 +1894,6 @@
             const form = document.getElementById(type === 'product' ? 'form-store-product' : 'form-store-order');
             form.reset();
             modal.classList.remove('hidden');
-            const today = new Date().toISOString().slice(0, 10);
             if (type === 'product') {
                 document.getElementById('store-product-id').value = '';
                 document.getElementById('store-product-stock').value = 0;
@@ -1802,111 +1902,128 @@
                     const p = storeProducts.find(x => String(x.id) === String(rawId));
                     if (p) {
                         document.getElementById('store-product-id').value = p.id;
-                        document.getElementById('store-product-code').value = p.code || p.id;
-                        document.getElementById('store-product-name').value = p.name;
-                        document.getElementById('store-product-category').value = p.category;
-                        document.getElementById('store-product-stock').value = p.stock;
-                        document.getElementById('store-product-price').value = p.price;
+                        document.getElementById('store-product-code').value = p.kode;
+                        document.getElementById('store-product-name').value = p.nama;
+                        document.getElementById('store-product-category').value = p.kategori;
+                        document.getElementById('store-product-stock').value = p.stok;
+                        document.getElementById('store-product-price').value = p.harga;
                     }
                 }
             } else {
+                const createFields = document.getElementById('store-order-create-fields');
+                const readonlyInfo = document.getElementById('store-order-readonly-info');
                 document.getElementById('store-order-id').value = '';
-                document.getElementById('store-order-date').value = today;
-                document.getElementById('store-order-qty').value = 1;
-                updateStoreOrderProducts();
+
                 if (rawId) {
+                    // --- MODE EDIT: pesanan ini sudah pernah di-checkout mahasiswa (atau
+                    // dibuat manual sebelumnya) -- item/metode/pelanggan TIDAK bisa diubah
+                    // lagi di sini, admin cuma boleh mengubah statusnya. ---
                     const o = storeOrders.find(x => String(x.id) === String(rawId));
-                    if (o) {
-                        document.getElementById('store-order-id').value = o.id;
-                        document.getElementById('store-order-customer').value = o.customer;
-                        updateStoreOrderProducts(o.productId);
-                        document.getElementById('store-order-qty').value = o.qty;
-                        document.getElementById('store-order-status').value = o.status;
-                        document.getElementById('store-order-date').value = o.date;
+                    if (!o) return;
+
+                    createFields.classList.add('hidden');
+                    readonlyInfo.classList.remove('hidden');
+
+                    document.getElementById('store-order-id').value = o.id;
+                    document.getElementById('store-order-info-customer').textContent = getStoreCustomerName(o.user_id);
+                    document.getElementById('store-order-info-items').textContent = (o.items || []).map(i => `${i.nama} ×${i.qty}`).join(', ') || '-';
+                    document.getElementById('store-order-info-metode').textContent = o.metode_pengiriman === 'antar' ? 'Diantar ke Rumah' : 'Ambil Sendiri';
+                    document.getElementById('store-order-info-total').textContent = rupiah(o.total);
+                    const alamatWrap = document.getElementById('store-order-info-alamat-wrap');
+                    if (o.metode_pengiriman === 'antar' && o.alamat_kirim) {
+                        document.getElementById('store-order-info-alamat').textContent = o.alamat_kirim;
+                        alamatWrap.classList.remove('hidden');
+                    } else {
+                        alamatWrap.classList.add('hidden');
                     }
+                    document.getElementById('store-order-status').value = o.status;
+                } else {
+                    // --- MODE BUAT BARU: utk pesanan manual (mis. pembeli walk-in/telepon) ---
+                    createFields.classList.remove('hidden');
+                    readonlyInfo.classList.add('hidden');
+
+                    updateStoreOrderUsers();
+                    updateStoreOrderProducts();
+                    document.getElementById('store-order-qty').value = 1;
+                    document.getElementById('store-order-metode').value = 'ambil_sendiri';
+                    document.getElementById('store-order-status').value = 'Booking';
+                    updateStoreOrderTotal();
                 }
-                updateStoreOrderTotal();
             }
         }
         function updateStoreOrderTotal() {
             const p = storeProducts.find(x => String(x.id) === String(document.getElementById('store-order-product')?.value));
             const qty = Number(document.getElementById('store-order-qty')?.value) || 0;
-            const price = Number(p?.price) || 0;
-            document.getElementById('store-order-unit-price').innerText = rupiah(price);
-            document.getElementById('store-order-total').innerText = rupiah(price * qty);
+            const harga = Number(p?.harga) || 0;
+            document.getElementById('store-order-unit-price').innerText = rupiah(harga);
+            document.getElementById('store-order-total').innerText = rupiah(harga * qty);
         }
-        function deleteStoreProduct(id) {
-            if (!confirm('Yakin ingin menghapus produk ini?')) return;
-            if (storeOrders.some(o => String(o.productId) === String(id) && o.status !== 'Dibatalkan')) {
-                triggerToast('Produk masih dipakai pada pesanan aktif.', 'red'); return;
-            }
-            storeProducts = storeProducts.filter(p => String(p.id) !== String(id));
-            storeSave(); refreshStore(); triggerToast('Produk berhasil dihapus', 'emerald');
-        }
-        function deleteStoreOrder(id) {
-            if (!confirm('Yakin ingin menghapus pesanan ini?')) return;
-            storeOrders = storeOrders.filter(o => String(o.id) !== String(id));
-            storeSave(); refreshStore(); triggerToast('Pesanan berhasil dihapus', 'emerald');
-        }
-        function refreshStore() {
-            storeLoad();
+        async function refreshStore() {
+            await Promise.all([fetchStoreProducts(), fetchStoreOrders()]);
             updateStoreStats();
             updateStoreCategoryFilter();
-            updateStoreOrderProducts(document.getElementById('store-order-product')?.value || '');
             renderStoreProducts();
             renderStoreOrders();
         }
-        document.getElementById('form-store-product').addEventListener('submit', e => {
+        document.getElementById('form-store-product').addEventListener('submit', async e => {
             e.preventDefault();
-            const id = document.getElementById('store-product-id').value || crypto.randomUUID();
-            const product = {
-                id,
-                code: document.getElementById('store-product-code').value.trim(),
-                name: document.getElementById('store-product-name').value.trim(),
-                category: document.getElementById('store-product-category').value.trim(),
-                price: Number(document.getElementById('store-product-price').value) || 0,
-                stock: Number(document.getElementById('store-product-stock').value) || 0
+            const id = document.getElementById('store-product-id').value || null;
+            const payload = {
+                kode: document.getElementById('store-product-code').value.trim(),
+                nama: document.getElementById('store-product-name').value.trim(),
+                kategori: document.getElementById('store-product-category').value.trim(),
+                harga: Number(document.getElementById('store-product-price').value) || 0,
+                stok: Number(document.getElementById('store-product-stock').value) || 0
             };
-            const idx = storeProducts.findIndex(p => String(p.id) === String(id));
-            if (idx >= 0) storeProducts[idx] = product; else storeProducts.push(product);
-            storeSave(); closeModal('modal-store-product'); refreshStore();
-            triggerToast(idx >= 0 ? 'Produk berhasil diperbarui!' : 'Produk berhasil ditambahkan!', 'emerald');
+            setFormLoading('store-product', true);
+            const result = await saveAPI('produk-atk', payload, id);
+            setFormLoading('store-product', false);
+            if (!result.success) { triggerToast(result.message, 'red'); return; }
+            closeModal('modal-store-product');
+            await refreshStore();
+            triggerToast(id ? 'Produk berhasil diperbarui!' : 'Produk berhasil ditambahkan!', 'emerald');
         });
-        document.getElementById('form-store-order').addEventListener('submit', e => {
+        document.getElementById('form-store-order').addEventListener('submit', async e => {
             e.preventDefault();
-            const id = document.getElementById('store-order-id').value || crypto.randomUUID();
-            const productId = document.getElementById('store-order-product').value;
-            const p = storeProducts.find(x => String(x.id) === String(productId));
-            const qty = Number(document.getElementById('store-order-qty').value) || 0;
-            const old = storeOrders.find(o => String(o.id) === String(id));
-            if (!p || qty < 1) { triggerToast('Pilih produk dan jumlah yang valid.', 'red'); return; }
-            if (!old && qty > Number(p.stock)) { triggerToast(`Stok ${p.name} tidak mencukupi.`, 'red'); return; }
-            if (old && String(old.productId) !== String(productId)) {
-                const oldP = storeProducts.find(x => String(x.id) === String(old.productId));
-                if (oldP) oldP.stock += Number(old.qty) || 0;
-                if (qty > Number(p.stock)) { if (oldP) oldP.stock -= Number(old.qty) || 0; triggerToast(`Stok ${p.name} tidak mencukupi.`, 'red'); return; }
-                p.stock -= qty;
-            } else if (!old) {
-                p.stock -= qty;
+            const id = document.getElementById('store-order-id').value || null;
+            const status = document.getElementById('store-order-status').value;
+
+            let payload;
+            if (id) {
+                // Mode edit: pesanan sudah ada, admin cuma boleh ubah status.
+                payload = { status };
             } else {
-                const diff = qty - (Number(old.qty) || 0);
-                if (diff > Number(p.stock)) { triggerToast(`Stok ${p.name} tidak mencukupi.`, 'red'); return; }
-                p.stock -= diff;
+                // Mode buat baru (pesanan manual, mis. walk-in/telepon).
+                const userId = document.getElementById('store-order-user').value;
+                const productId = document.getElementById('store-order-product').value;
+                const qty = Number(document.getElementById('store-order-qty').value) || 0;
+                const metode = document.getElementById('store-order-metode').value;
+                const p = storeProducts.find(x => String(x.id) === String(productId));
+
+                if (!userId || !p || qty < 1) {
+                    triggerToast('Pilih pelanggan, produk, dan jumlah yang valid.', 'red');
+                    return;
+                }
+                if (qty > Number(p.stok)) {
+                    triggerToast(`Stok ${p.nama} tidak mencukupi (tersisa ${p.stok}).`, 'red');
+                    return;
+                }
+
+                payload = {
+                    user_id: userId,
+                    items: [{ produk_id: productId, qty }],
+                    metode_pengiriman: metode,
+                    status,
+                };
             }
-            const order = {
-                id, orderNo: old?.orderNo || `ORD-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`,
-                customer: document.getElementById('store-order-customer').value.trim(),
-                productId, productName: p.name, qty, unitPrice: Number(p.price) || 0,
-                total: qty * (Number(p.price) || 0),
-                status: document.getElementById('store-order-status').value,
-                date: document.getElementById('store-order-date').value
-            };
-            if (old) {
-                const idx = storeOrders.findIndex(o => String(o.id) === String(id));
-                storeOrders[idx] = order;
-            } else storeOrders.push(order);
-            storeSave(); closeModal('modal-store-order'); refreshStore();
-            triggerToast(old ? 'Pesanan berhasil diperbarui!' : 'Pesanan berhasil dibuat!', 'emerald');
+
+            setFormLoading('store-order', true);
+            const result = await saveAPI('pembelian-atk', payload, id);
+            setFormLoading('store-order', false);
+            if (!result.success) { triggerToast(result.message, 'red'); return; }
+            closeModal('modal-store-order');
+            await refreshStore();
+            triggerToast(id ? 'Status pesanan berhasil diperbarui!' : 'Pesanan berhasil dibuat!', 'emerald');
         });
         document.getElementById('store-order-product').addEventListener('change', updateStoreOrderTotal);
         document.getElementById('store-order-qty').addEventListener('input', updateStoreOrderTotal);
@@ -1917,17 +2034,17 @@
         function filterStoreProducts() {
             const q = document.getElementById('search-store-products').value.toLowerCase();
             const cat = document.getElementById('filter-store-category').value;
-            renderStoreProducts(storeProducts.filter(p => !cat || p.category === cat).filter(p =>
-                [p.code, p.name, p.category].some(v => String(v || '').toLowerCase().includes(q))));
+            renderStoreProducts(storeProducts.filter(p => !cat || p.kategori === cat).filter(p =>
+                [p.kode, p.nama, p.kategori].some(v => String(v || '').toLowerCase().includes(q))));
         }
         function filterStoreOrders() {
             const q = document.getElementById('search-store-orders').value.toLowerCase();
             const status = document.getElementById('filter-store-status').value;
             renderStoreOrders(storeOrders.filter(o => (!status || o.status === status) &&
-                [o.orderNo, o.customer, o.productName].some(v => String(v || '').toLowerCase().includes(q))));
+                [getStoreCustomerName(o.user_id), ...(o.items || []).map(i => i.nama)].some(v => String(v || '').toLowerCase().includes(q))));
         }
-        // Pastikan data toko tersedia sejak halaman dibuka.
-        storeLoad();
+        // Pastikan data toko tersedia sejak halaman dibuka (users sudah dimuat lebih
+        // dulu lewat fetchUsers() di DOMContentLoaded, dipakai dropdown pelanggan).
         refreshStore();
         // Reminder untuk desain Data Flow Diagram (DFD):
         // Pastikan penamaan data flow yang melibatkan fitur ini murni menggunakan KATA BENDA.

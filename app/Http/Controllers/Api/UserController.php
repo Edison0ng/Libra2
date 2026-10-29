@@ -40,9 +40,13 @@ class UserController extends Controller
 
         $books = DB::table('books')->get();
 
+        // Daftar genre unik (buang yg kosong/null), diurutkan abjad, utk dropdown filter.
+        $genres = $books->pluck('genre')->filter()->unique()->sort()->values();
+
         return view('libra', [
             'userData' => $user,
-            'books' => $books
+            'books'    => $books,
+            'genres'   => $genres,
         ]);
     }
 
