@@ -1844,7 +1844,10 @@
                 <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
                     <td class="px-4 py-3 font-mono text-xs">${escHtml(p.kode)}</td>
                     <td class="px-4 py-3">${p.gambar
-                        ? `<img src="${escAttr(p.gambar)}" alt="${escAttr(p.nama)}" class="w-12 h-9 object-cover rounded-md border border-slate-200 dark:border-slate-700">`
+                        ? `<div class="w-12 h-9 rounded-md overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-700 relative">
+                               <img src="${escAttr(p.gambar)}" alt="${escAttr(p.nama)}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
+                               <div class="hidden absolute inset-0 flex items-center justify-center text-slate-400"><i class="fa-solid fa-image text-xs"></i></div>
+                           </div>`
                         : '<div class="w-12 h-9 rounded-md bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-400"><i class="fa-solid fa-image text-xs"></i></div>'}</td>
                     <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">${escHtml(p.nama)}</td>
                     <td class="px-4 py-3">${escHtml(p.kategori)}</td>

@@ -2369,14 +2369,16 @@
                 // (bukan langsung dari array statis) supaya kalau ada pembelian,
                 // stoknya benar-benar berkurang dan tidak "reset" tiap loadProdukToko() dipanggil ulang.
                 const DUMMY_PRODUK_DEFAULT = [
-                    { id: 1, kode: 'ATK-001', nama: 'Pulpen Gel', kategori: 'Alat Tulis', harga: 5000, stok: 50 },
-                    { id: 2, kode: 'ATK-002', nama: 'Buku Tulis A5', kategori: 'Buku', harga: 12000, stok: 85 },
-                    { id: 3, kode: 'ATK-003', nama: 'Pensil 2B', kategori: 'Alat Tulis', harga: 3000, stok: 80 },
-                    { id: 4, kode: 'ATK-004', nama: 'Map Plastik', kategori: 'Perlengkapan', harga: 4000, stok: 100 },
-                    { id: 5, kode: 'ATK-005', nama: 'Penggaris 30cm', kategori: 'Alat Tulis', harga: 6000, stok: 40 },
-                    { id: 6, kode: 'ATK-006', nama: 'Stabilo', kategori: 'Alat Tulis', harga: 8000, stok: 30 },
-                    { id: 7, kode: 'ATK-007', nama: 'Kertas HVS A4', kategori: 'Perlengkapan', harga: 50000, stok: 20 },
-                    { id: 8, kode: 'ATK-008', nama: 'Buku Tulis 58 lbr', kategori: 'Buku', harga: 9000, stok: 60 },
+                    { id: 'ATK-001', kode: 'ATK-001', nama: 'Pulpen Hitam', kategori: 'Alat Tulis', harga: 3000, stok: 100, gambar: 'https://fntkcqdqbarffqyqtqdo.supabase.co/storage/v1/object/public/produk-atk/images%20%289%29.jpg' },
+                    { id: 'ATK-002', kode: 'ATK-002', nama: 'Pulpen Biru', kategori: 'Alat Tulis', harga: 3000, stok: 100, gambar: 'https://fntkcqdqbarffqyqtqdo.supabase.co/storage/v1/object/public/produk-atk/images%20%288%29.jpg' },
+                    { id: 'ATK-003', kode: 'ATK-003', nama: 'Pensil 2B', kategori: 'Alat Tulis', harga: 2500, stok: 80, gambar: 'https://fntkcqdqbarffqyqtqdo.supabase.co/storage/v1/object/public/produk-atk/images%20%287%29.jpg' },
+                    { id: 'ATK-004', kode: 'ATK-004', nama: 'Penghapus', kategori: 'Alat Tulis', harga: 2000, stok: 60, gambar: 'https://fntkcqdqbarffqyqtqdo.supabase.co/storage/v1/object/public/produk-atk/images%20%286%29.jpg' },
+                    { id: 'ATK-005', kode: 'ATK-005', nama: 'Penggaris 30 cm', kategori: 'Alat Tulis', harga: 4000, stok: 50, gambar: 'https://fntkcqdqbarffqyqtqdo.supabase.co/storage/v1/object/public/produk-atk/images%20%285%29.jpg' },
+                    { id: 'ATK-006', kode: 'ATK-006', nama: 'Buku Tulis 38 Lembar', kategori: 'Kertas', harga: 5000, stok: 120, gambar: 'https://fntkcqdqbarffqyqtqdo.supabase.co/storage/v1/object/public/produk-atk/images%20%281%29.jpg' },
+                    { id: 'ATK-007', kode: 'ATK-007', nama: 'Kertas HVS A4 (rim)', kategori: 'Kertas', harga: 55000, stok: 30, gambar: 'https://fntkcqdqbarffqyqtqdo.supabase.co/storage/v1/object/public/produk-atk/images%20%283%29.jpg' },
+                    { id: 'ATK-008', kode: 'ATK-008', nama: 'Map Plastik', kategori: 'Perlengkapan', harga: 3500, stok: 70, gambar: 'https://fntkcqdqbarffqyqtqdo.supabase.co/storage/v1/object/public/produk-atk/images%20%284%29.jpg' },
+                    { id: 'ATK-009', kode: 'ATK-009', nama: 'Stapler Kecil', kategori: 'Perlengkapan', harga: 15000, stok: 25, gambar: 'https://fntkcqdqbarffqyqtqdo.supabase.co/storage/v1/object/public/produk-atk/images%20%2810%29.jpg' },
+                    { id: 'ATK-010', kode: 'ATK-010', nama: 'Highlighter', kategori: 'Alat Tulis', harga: 6000, stok: 40, gambar: 'https://fntkcqdqbarffqyqtqdo.supabase.co/storage/v1/object/public/produk-atk/images%20%282%29.jpg' },
                 ];
 
                 let savedStock = {};
@@ -2444,8 +2446,11 @@
                 return `
                 <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-md hover:-translate-y-0.5">
                     ${p.gambar
-                        ? `<div class="aspect-[4/3] bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                               <img src="${p.gambar}" alt="${p.nama}" loading="lazy" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105">
+                        ? `<div class="aspect-[4/3] bg-slate-100 dark:bg-slate-800 overflow-hidden relative">
+                               <img src="${p.gambar}" alt="${p.nama}" loading="lazy" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
+                               <div class="hidden absolute inset-0 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800/40 dark:to-slate-900/30 p-4 flex items-center justify-center">
+                                   <i class="fa-solid ${icon} text-3xl text-slate-500 dark:text-slate-400"></i>
+                               </div>
                            </div>`
                         : `<div class="bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800/40 dark:to-slate-900/30 p-4 flex items-center justify-center aspect-[4/3]">
                                <i class="fa-solid ${icon} text-3xl text-slate-500 dark:text-slate-400"></i>
