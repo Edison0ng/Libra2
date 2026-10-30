@@ -679,7 +679,21 @@
         let wishlistBooks = [];
         let wishlistItems = []; // detail lengkap tiap entri wishlist/antrian (termasuk posisi & estimasi tanggal)
 
+        // Data user yang dikirimkan oleh server saat membuka halaman profil (mis. /{username} atau /{nim})
+        const SERVER_USER = @json($userData ?? null);
+
+        // Jika halaman dibuka dgn konteks profil mahasiswa tertentu,
+        // pastikan sesi libra_user langsung disinkronkan ke user tersebut.
+        if (SERVER_USER && SERVER_USER.id) {
+            try {
+                localStorage.setItem('libra_user', JSON.stringify(SERVER_USER));
+            } catch (e) {}
+        }
+
         function getCurrentUserId() {
+            if (SERVER_USER && SERVER_USER.id) {
+                return SERVER_USER.id;
+            }
             const userStr = localStorage.getItem('libra_user');
             if (!userStr) return null;
             try {

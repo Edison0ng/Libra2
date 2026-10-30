@@ -68,7 +68,17 @@ class PembelianAtkController extends Controller
             $query->where('user_id', $request->user_id);
         }
 
-        return response()->json($query->get());
+        $orders = $query->get();
+
+        $userIds = $orders->pluck('user_id')->unique()->filter();
+        $users = DB::table('users')->whereIn('id', $userIds)->pluck('nama_lengkap', 'id');
+
+        $orders->transform(function ($order) use ($users) {
+            $order->customer_name = $users[$order->user_id] ?? null;
+            return $order;
+        });
+
+        return response()->json($orders);
     }
 
     /**

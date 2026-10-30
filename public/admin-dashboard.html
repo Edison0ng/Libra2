@@ -728,7 +728,7 @@
                 <button onclick="closeModal('modal-store-order')" class="text-slate-400 hover:text-red-500"><i
                         class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            <form id="form-store-order" class="p-4 space-y-4 overflow-y-auto" style="max-height:70vh;">
+            <form id="form-store-order" class="p-4 space-y-4 overflow-y-auto" style="max-height:70vh;" novalidate>
                 <input type="hidden" id="store-order-id">
 
                 <!-- Catatan pesanan dari checkout mahasiswa: item & metode TIDAK bisa diubah lewat form ini,
@@ -744,16 +744,16 @@
                 <!-- Form input ini HANYA dipakai saat bikin pesanan manual baru (mis. pembeli walk-in/telepon) -->
                 <div id="store-order-create-fields" class="space-y-4">
                     <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Pelanggan *</label>
-                        <select id="store-order-user" required
+                        <select id="store-order-user"
                             class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></select>
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                         <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Produk *</label>
-                            <select id="store-order-product" required
+                            <select id="store-order-product"
                                 class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200"></select>
                         </div>
                         <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Jumlah *</label>
-                            <input id="store-order-qty" type="number" min="1" required value="1"
+                            <input id="store-order-qty" type="number" min="1" value="1"
                                 class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200">
                         </div>
                     </div>
@@ -1859,7 +1859,8 @@
                     </td>
                 </tr>`).join('');
         }
-        function getStoreCustomerName(userId) {
+        function getStoreCustomerName(userId, order = null) {
+            if (order && order.customer_name) return order.customer_name;
             const u = (dataState.users || []).find(x => String(pickId(x, ID_KEYS.user)) === String(userId));
             return u?.nama_lengkap || userId || '-';
         }
@@ -1884,7 +1885,7 @@
                 const metode = o.metode_pengiriman === 'antar' ? 'Diantar' : 'Ambil Sendiri';
                 const tgl = o.created_at ? new Date(o.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
                 return `<tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                    <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">${escHtml(getStoreCustomerName(o.user_id))}</td>
+                    <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">${escHtml(getStoreCustomerName(o.user_id, o))}</td>
                     <td class="px-4 py-3 max-w-[220px] truncate" title="${escAttr(itemsText)}">${escHtml(itemsText)}</td>
                     <td class="px-4 py-3 font-medium">${rupiah(o.total)}</td>
                     <td class="px-4 py-3 text-xs">${metode}</td>
@@ -1945,9 +1946,12 @@
 
                     createFields.classList.add('hidden');
                     readonlyInfo.classList.remove('hidden');
+                    document.getElementById('store-order-user').disabled = true;
+                    document.getElementById('store-order-product').disabled = true;
+                    document.getElementById('store-order-qty').disabled = true;
 
                     document.getElementById('store-order-id').value = o.id;
-                    document.getElementById('store-order-info-customer').textContent = getStoreCustomerName(o.user_id);
+                    document.getElementById('store-order-info-customer').textContent = getStoreCustomerName(o.user_id, o);
                     document.getElementById('store-order-info-items').textContent = (o.items || []).map(i => `${i.nama} ×${i.qty}`).join(', ') || '-';
                     document.getElementById('store-order-info-metode').textContent = o.metode_pengiriman === 'antar' ? 'Diantar ke Rumah' : 'Ambil Sendiri';
                     document.getElementById('store-order-info-total').textContent = rupiah(o.total);
@@ -1963,6 +1967,9 @@
                     // --- MODE BUAT BARU: utk pesanan manual (mis. pembeli walk-in/telepon) ---
                     createFields.classList.remove('hidden');
                     readonlyInfo.classList.add('hidden');
+                    document.getElementById('store-order-user').disabled = false;
+                    document.getElementById('store-order-product').disabled = false;
+                    document.getElementById('store-order-qty').disabled = false;
 
                     updateStoreOrderUsers();
                     updateStoreOrderProducts();
@@ -2133,7 +2140,7 @@
             const q = document.getElementById('search-store-orders').value.toLowerCase();
             const status = document.getElementById('filter-store-status').value;
             renderStoreOrders(storeOrders.filter(o => (!status || o.status === status) &&
-                [getStoreCustomerName(o.user_id), ...(o.items || []).map(i => i.nama)].some(v => String(v || '').toLowerCase().includes(q))));
+                [getStoreCustomerName(o.user_id, o), ...(o.items || []).map(i => i.nama)].some(v => String(v || '').toLowerCase().includes(q))));
         }
         // Pastikan data toko tersedia sejak halaman dibuka (users sudah dimuat lebih
         // dulu lewat fetchUsers() di DOMContentLoaded, dipakai dropdown pelanggan).
