@@ -416,16 +416,23 @@
 
                 <!-- Riwayat Pembelian -->
                 <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-                    <div class="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800">
+                    <div class="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800 flex-wrap gap-2">
                         <h4 class="font-bold text-sm text-slate-800 dark:text-white flex items-center gap-2">
                             <i class="fa-solid fa-receipt text-slate-500 dark:text-slate-400"></i> Riwayat Pembelian Saya
                         </h4>
-                        <button onclick="loadRiwayatPembelian()" class="text-xs text-slate-800 dark:text-slate-200 font-semibold hover:underline">
-                            <i class="fa-solid fa-rotate-right mr-1"></i>Refresh
-                        </button>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <div class="inline-flex p-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[11px] font-medium text-slate-600 dark:text-slate-300">
+                                <button type="button" onclick="setRiwayatFilter('semua')" id="btn-riwayat-semua" class="px-2.5 py-1 rounded-md bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white font-semibold transition">Semua</button>
+                                <button type="button" onclick="setRiwayatFilter('proses')" id="btn-riwayat-proses" class="px-2.5 py-1 rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">Sedang Dipesan</button>
+                                <button type="button" onclick="setRiwayatFilter('selesai')" id="btn-riwayat-selesai" class="px-2.5 py-1 rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">Selesai</button>
+                            </div>
+                            <button onclick="loadRiwayatPembelian()" class="text-xs text-slate-800 dark:text-slate-200 font-semibold hover:underline ml-1">
+                                <i class="fa-solid fa-rotate-right mr-1"></i>Refresh
+                            </button>
+                        </div>
                     </div>
-                    <div id="riwayat-pembelian-list" class="divide-y divide-slate-100 dark:divide-slate-800 max-h-64 overflow-y-auto hide-scrollbar">
-                        <div class="text-center py-8 text-slate-400 text-xs italic">Belum ada riwayat pembelian.</div>
+                    <div id="riwayat-pembelian-list" class="divide-y divide-slate-100 dark:divide-slate-800 max-h-96 overflow-y-auto hide-scrollbar">
+                        <div class="text-center py-8 text-slate-400 text-xs italic">Memuat riwayat...</div>
                     </div>
                 </div>
             </div>
@@ -2730,6 +2737,156 @@
             } catch (e) { /* ignore */ }
         }
 
+        function escapeHtmlAtk(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function formatWaktuAtk(dateStr) {
+            if (!dateStr) return '-';
+            try {
+                const d = new Date(dateStr);
+                if (isNaN(d.getTime())) return dateStr;
+                return d.toLocaleDateString('id-ID', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }).replace('.', ':') + ' WIB';
+            } catch (e) {
+                return dateStr;
+            }
+        }
+
+        function isOrderSelesai(status) {
+            return String(status || '').toLowerCase() === 'selesai';
+        }
+
+        function isOrderProses(status) {
+            const s = String(status || '').toLowerCase();
+            return s !== 'selesai' && s !== 'dibatalkan';
+        }
+
+        let riwayatAtkData = [];
+        let riwayatAtkFilter = 'semua'; // 'semua' | 'proses' | 'selesai'
+
+        function setRiwayatFilter(filter) {
+            riwayatAtkFilter = filter;
+            const btnSemua = document.getElementById('btn-riwayat-semua');
+            const btnProses = document.getElementById('btn-riwayat-proses');
+            const btnSelesai = document.getElementById('btn-riwayat-selesai');
+
+            const activeClass = 'px-2.5 py-1 rounded-md bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white font-semibold transition';
+            const inactiveClass = 'px-2.5 py-1 rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition';
+
+            if (btnSemua) btnSemua.className = filter === 'semua' ? activeClass : inactiveClass;
+            if (btnProses) btnProses.className = filter === 'proses' ? activeClass : inactiveClass;
+            if (btnSelesai) btnSelesai.className = filter === 'selesai' ? activeClass : inactiveClass;
+
+            renderRiwayatPembelianList();
+        }
+
+        function renderRiwayatPembelianList() {
+            const container = document.getElementById('riwayat-pembelian-list');
+            if (!container) return;
+
+            let filtered = riwayatAtkData;
+            if (riwayatAtkFilter === 'proses') {
+                filtered = riwayatAtkData.filter(r => isOrderProses(r.status));
+            } else if (riwayatAtkFilter === 'selesai') {
+                filtered = riwayatAtkData.filter(r => isOrderSelesai(r.status));
+            }
+
+            if (!filtered || filtered.length === 0) {
+                let emptyMsg = 'Belum ada riwayat pembelian.';
+                if (riwayatAtkFilter === 'proses') emptyMsg = 'Tidak ada pesanan yang sedang diproses saat ini.';
+                if (riwayatAtkFilter === 'selesai') emptyMsg = 'Belum ada pesanan yang telah selesai.';
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs italic">${emptyMsg}</div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(r => {
+                const status = r.status || 'Booking';
+                const isSelesai = isOrderSelesai(status);
+                const isBatal = String(status).toLowerCase() === 'dibatalkan';
+                const waktuPesan = formatWaktuAtk(r.created_at);
+                const waktuSelesai = r.tanggal_selesai ? formatWaktuAtk(r.tanggal_selesai) : null;
+                const items = r.items || [];
+                const metode = r.metode_pengiriman === 'antar' ? 'Diantar ke Rumah' : 'Ambil Sendiri di Sirkulasi';
+
+                // Status Badge
+                let statusBadge = '';
+                if (isSelesai) {
+                    statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                        <i class="fa-solid fa-circle-check"></i> Selesai
+                    </span>`;
+                } else if (isBatal) {
+                    statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300">
+                        <i class="fa-solid fa-circle-xmark"></i> Dibatalkan
+                    </span>`;
+                } else {
+                    statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span> ${escapeHtmlAtk(status)}
+                    </span>`;
+                }
+
+                return `
+                <div class="p-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors flex flex-col gap-2.5">
+                    <div class="flex items-center justify-between gap-2 flex-wrap">
+                        <div class="flex items-center gap-2">
+                            ${statusBadge}
+                            <span class="text-[10px] font-mono text-slate-400">#${String(r.id || '').slice(0, 8)}</span>
+                        </div>
+                        <span class="text-[11px] text-slate-400 flex items-center gap-1">
+                            <i class="fa-regular fa-clock text-[10px]"></i> Dipesan: ${waktuPesan}
+                        </span>
+                    </div>
+
+                    <div class="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-3 border border-slate-100 dark:border-slate-800 space-y-1.5">
+                        ${items.map(item => `
+                            <div class="flex items-center justify-between text-xs">
+                                <span class="font-medium text-slate-700 dark:text-slate-200">
+                                    ${escapeHtmlAtk(item.nama)} <span class="text-slate-400 font-normal">× ${item.qty}</span>
+                                </span>
+                                <span class="font-semibold text-slate-600 dark:text-slate-300">
+                                    ${formatRupiah((item.harga || 0) * (item.qty || 1))}
+                                </span>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="flex items-center justify-between gap-3 pt-1 flex-wrap text-xs">
+                        <div class="flex flex-col gap-0.5">
+                            <span class="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                                <i class="fa-solid ${r.metode_pengiriman === 'antar' ? 'fa-truck-fast' : 'fa-store'} text-[10px]"></i>
+                                ${metode}${r.alamat_kirim ? ` (${escapeHtmlAtk(r.alamat_kirim)})` : ''}
+                            </span>
+                            ${isSelesai && waktuSelesai ? `
+                                <span class="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                    <i class="fa-solid fa-check-double text-[10px]"></i> Selesai pada: ${waktuSelesai}
+                                </span>
+                            ` : ''}
+                            ${!isSelesai && !isBatal && r.metode_pengiriman === 'ambil_sendiri' ? `
+                                <span class="text-[10px] text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                                    <i class="fa-solid fa-hourglass-half text-[10px]"></i> Batas ambil: 2 jam sejak pesanan dibuat
+                                </span>
+                            ` : ''}
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[10px] text-slate-400 block">Total</span>
+                            <span class="text-sm font-bold text-slate-900 dark:text-white">${formatRupiah(r.total || 0)}</span>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
         // Muat riwayat pembelian
         async function loadRiwayatPembelian() {
             const container = document.getElementById('riwayat-pembelian-list');
@@ -2740,41 +2897,28 @@
             // Coba dari API dulu
             try {
                 const userId = getCurrentUserId();
-                const res = await fetch(`/api/pembelian-atk?user_id=${userId || ''}`);
-                if (res.ok) {
-                    const data = await res.json();
-                    riwayat = Array.isArray(data) ? data : (data.data || []);
+                if (userId) {
+                    const res = await fetch(`/api/pembelian-atk?user_id=${encodeURIComponent(userId)}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        riwayat = Array.isArray(data) ? data : (data.data || []);
+                    }
                 }
-            } catch (e) { /* fallback */ }
-
-            // Fallback ke localStorage (khusus milik user yang sedang login)
-            if (riwayat.length === 0) {
-                try { riwayat = JSON.parse(localStorage.getItem(getRiwayatAtkKey()) || '[]'); } catch (e) { riwayat = []; }
+            } catch (e) {
+                console.error('Gagal mengambil riwayat ATK via API:', e);
             }
 
+            // Fallback ke localStorage jika API kosong atau gagal
             if (riwayat.length === 0) {
-                container.innerHTML = '<div class="text-center py-8 text-slate-400 text-xs italic">Belum ada riwayat pembelian.</div>';
-                return;
+                try {
+                    riwayat = JSON.parse(localStorage.getItem(getRiwayatAtkKey()) || '[]');
+                } catch (e) {
+                    riwayat = [];
+                }
             }
 
-            container.innerHTML = riwayat.map(r => {
-                const tgl = r.created_at ? new Date(r.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
-                const items = r.items || [];
-                const itemText = items.length > 0
-                    ? items.map(i => `${i.nama} x${i.qty}`).join(', ')
-                    : '-';
-                return `
-                <div class="flex items-start gap-3 p-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                    <div class="w-8 h-8 bg-slate-200 dark:bg-slate-800/40 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <i class="fa-solid fa-receipt text-slate-500 dark:text-slate-400 text-xs"></i>
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-xs font-semibold text-slate-800 dark:text-white truncate">${itemText}</p>
-                        <p class="text-[10px] text-slate-400 mt-0.5">${tgl}</p>
-                    </div>
-                    <div class="text-xs font-bold text-slate-800 dark:text-slate-200 whitespace-nowrap">${formatRupiah(r.total || 0)}</div>
-                </div>`;
-            }).join('');
+            riwayatAtkData = riwayat;
+            renderRiwayatPembelianList();
         }
 
         // Toast khusus toko (reuse success-toast yang sudah ada)
