@@ -165,6 +165,24 @@ class PinjamController extends Controller
             ], 423);
         }
 
+        // Cegah booking ganda: kalau buku ini masih punya peminjaman aktif
+        // (belum dikembalikan) -- baik oleh user yang sama (klik berkali-kali)
+        // maupun user lain -- tolak.
+        $existingLoan = DB::table('pinjam')
+            ->where('book_id', $request->book_id)
+            ->whereNull('tanggal_kembali')
+            ->whereRaw("LOWER(status) <> 'ditolak'")
+            ->first();
+        if ($existingLoan) {
+            $isSameUser = $existingLoan->user_id === $request->user_id;
+            return response()->json([
+                'success' => false,
+                'message' => $isSameUser
+                    ? 'Kamu sudah membooking buku ini. Cek tab Sirkulasi.'
+                    : 'Buku ini sedang dipinjam orang lain. Silakan masuk antrian.',
+            ], 409);
+        }
+
         // Generate UUID untuk ID peminjaman jika belum ada
         $id = $request->input('id') ?: (string) Str::uuid();
 

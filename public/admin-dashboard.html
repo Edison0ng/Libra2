@@ -115,9 +115,6 @@
                 class="nav-desktop w-full flex items-center gap-3 text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-white p-3 rounded-xl font-medium transition-all">
                 <i class="fa-solid fa-envelope w-5"></i> Pengaduan
             </button>
-            <button onclick="switchTab('store')"
-                class="flex flex-col items-center gap-1 p-2 text-slate-500 hover:text-slate-800 dark:text-slate-400"
-                title="Toko ATK"><i class="fa-solid fa-store text-lg"></i></button>
         </nav>
         <div class="p-4 border-t border-slate-200 dark:border-slate-700">
             <button
@@ -572,6 +569,7 @@
                                     class="text-xs uppercase bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400">
                                     <tr>
                                         <th class="px-4 py-3">Kode</th>
+                                        <th class="px-4 py-3">Gambar</th>
                                         <th class="px-4 py-3">Produk</th>
                                         <th class="px-4 py-3">Kategori</th>
                                         <th class="px-4 py-3">Harga</th>
@@ -691,6 +689,22 @@
                 <div><label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Harga *</label>
                     <input id="store-product-price" type="number" min="0" step="1" required value="0"
                         class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Gambar Produk</label>
+                    <div class="flex gap-3 items-start">
+                        <div id="store-product-image-preview"
+                            class="w-28 aspect-[4/3] flex-shrink-0 rounded-lg border border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 flex items-center justify-center overflow-hidden text-slate-400">
+                            <i class="fa-solid fa-image text-2xl"></i>
+                        </div>
+                        <div class="flex-1 space-y-2">
+                            <input id="store-product-image" type="file" accept="image/jpeg,image/png,image/webp"
+                                class="block w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-900/40 dark:file:text-blue-300">
+                            <p class="text-[11px] text-slate-400 leading-snug">Disarankan 800 x 600 px (rasio 4:3). JPG/PNG/WEBP, maks 2 MB &amp; maks 1920 px.</p>
+                            <button type="button" id="store-product-image-remove" onclick="removeStoreProductImage()"
+                                class="hidden text-xs text-red-500 hover:text-red-700"><i class="fa-solid fa-trash mr-1"></i>Hapus gambar</button>
+                        </div>
+                    </div>
                 </div>
             </form>
             <div
@@ -1823,12 +1837,15 @@
         function renderStoreProducts(data = storeProducts) {
             const tbody = document.getElementById('tbody-store-products');
             if (!data.length) {
-                tbody.innerHTML = '<tr><td colspan="6" class="px-4 py-8 text-center text-slate-400">Belum ada produk yang cocok.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="px-4 py-8 text-center text-slate-400">Belum ada produk yang cocok.</td></tr>';
                 return;
             }
             tbody.innerHTML = data.map(p => `
                 <tr class="border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50">
                     <td class="px-4 py-3 font-mono text-xs">${escHtml(p.kode)}</td>
+                    <td class="px-4 py-3">${p.gambar
+                        ? `<img src="${escAttr(p.gambar)}" alt="${escAttr(p.nama)}" class="w-12 h-9 object-cover rounded-md border border-slate-200 dark:border-slate-700">`
+                        : '<div class="w-12 h-9 rounded-md bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-400"><i class="fa-solid fa-image text-xs"></i></div>'}</td>
                     <td class="px-4 py-3 font-medium text-slate-800 dark:text-white">${escHtml(p.nama)}</td>
                     <td class="px-4 py-3">${escHtml(p.kategori)}</td>
                     <td class="px-4 py-3">${rupiah(p.harga)}</td>
@@ -1898,6 +1915,7 @@
                 document.getElementById('store-product-id').value = '';
                 document.getElementById('store-product-stock').value = 0;
                 document.getElementById('store-product-price').value = 0;
+                setStoreProductPreview(null);
                 if (rawId) {
                     const p = storeProducts.find(x => String(x.id) === String(rawId));
                     if (p) {
@@ -1907,6 +1925,7 @@
                         document.getElementById('store-product-category').value = p.kategori;
                         document.getElementById('store-product-stock').value = p.stok;
                         document.getElementById('store-product-price').value = p.harga;
+                        setStoreProductPreview(p.gambar || null, !!p.gambar);
                     }
                 }
             } else {
@@ -1965,9 +1984,73 @@
             renderStoreProducts();
             renderStoreOrders();
         }
+        // ===== Gambar produk ATK (khusus admin) =====
+        const STORE_IMG_MAX_BYTES = 2 * 1024 * 1024;
+        const STORE_IMG_MAX_PX = 1920;
+        function setStoreProductPreview(src, isSaved = false) {
+            const box = document.getElementById('store-product-image-preview');
+            box.innerHTML = src
+                ? `<img src="${escAttr(src)}" class="w-full h-full object-cover">`
+                : '<i class="fa-solid fa-image text-2xl"></i>';
+            document.getElementById('store-product-image-remove').classList.toggle('hidden', !isSaved);
+        }
+        function readImageSize(file) {
+            return new Promise(resolve => {
+                const url = URL.createObjectURL(file);
+                const img = new Image();
+                img.onload = () => { resolve({ w: img.naturalWidth, h: img.naturalHeight, url }); };
+                img.onerror = () => resolve(null);
+                img.src = url;
+            });
+        }
+        document.getElementById('store-product-image').addEventListener('change', async e => {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+                triggerToast('Format gambar harus JPG, PNG, atau WEBP.', 'red'); e.target.value = ''; return;
+            }
+            if (file.size > STORE_IMG_MAX_BYTES) {
+                triggerToast('Ukuran gambar maksimal 2 MB.', 'red'); e.target.value = ''; return;
+            }
+            const info = await readImageSize(file);
+            if (!info) { triggerToast('File gambar tidak valid.', 'red'); e.target.value = ''; return; }
+            if (info.w > STORE_IMG_MAX_PX || info.h > STORE_IMG_MAX_PX) {
+                triggerToast(`Resolusi maksimal ${STORE_IMG_MAX_PX} px (gambar ini ${info.w}x${info.h}).`, 'red'); e.target.value = ''; return;
+            }
+            setStoreProductPreview(info.url, false);
+        });
+        async function uploadStoreProductImage(productId, file) {
+            const fd = new FormData();
+            fd.append('gambar', file);
+            try {
+                const res = await fetch(`${API}/produk-atk/${encodeURIComponent(productId)}/gambar`, {
+                    method: 'POST', headers: { 'Accept': 'application/json' }, body: fd
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) {
+                    const firstErr = data.errors ? Object.values(data.errors)[0]?.[0] : null;
+                    return { success: false, message: firstErr || data.message || 'Gagal upload gambar.' };
+                }
+                return { success: true, data };
+            } catch (_) {
+                return { success: false, message: 'Gagal upload gambar (koneksi).' };
+            }
+        }
+        async function removeStoreProductImage() {
+            const id = document.getElementById('store-product-id').value;
+            if (!id || !confirm('Hapus gambar produk ini?')) return;
+            const res = await fetch(`${API}/produk-atk/${encodeURIComponent(id)}/gambar`, { method: 'DELETE', headers: { 'Accept': 'application/json' } });
+            if (!res.ok) { triggerToast('Gagal menghapus gambar.', 'red'); return; }
+            document.getElementById('store-product-image').value = '';
+            setStoreProductPreview(null);
+            await refreshStore();
+            triggerToast('Gambar produk dihapus.', 'emerald');
+        }
+
         document.getElementById('form-store-product').addEventListener('submit', async e => {
             e.preventDefault();
             const id = document.getElementById('store-product-id').value || null;
+            const imageFile = document.getElementById('store-product-image').files[0] || null;
             const payload = {
                 kode: document.getElementById('store-product-code').value.trim(),
                 nama: document.getElementById('store-product-name').value.trim(),
@@ -1977,10 +2060,16 @@
             };
             setFormLoading('store-product', true);
             const result = await saveAPI('produk-atk', payload, id);
+            let imgResult = { success: true };
+            if (result.success && imageFile) {
+                const productId = id || result.data?.id;
+                imgResult = productId ? await uploadStoreProductImage(productId, imageFile) : { success: false, message: 'ID produk tidak ditemukan untuk upload gambar.' };
+            }
             setFormLoading('store-product', false);
             if (!result.success) { triggerToast(result.message, 'red'); return; }
             closeModal('modal-store-product');
             await refreshStore();
+            if (!imgResult.success) { triggerToast('Produk tersimpan, tapi gambar gagal diupload: ' + imgResult.message, 'red'); return; }
             triggerToast(id ? 'Produk berhasil diperbarui!' : 'Produk berhasil ditambahkan!', 'emerald');
         });
         document.getElementById('form-store-order').addEventListener('submit', async e => {

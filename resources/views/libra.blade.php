@@ -1253,12 +1253,21 @@
             }
         }
 
+        let joinQueueInFlight = false;
         async function joinQueue(bookId) {
             const userId = getCurrentUserId();
             if (!userId) {
                 showToast('Info', 'Silakan login untuk ikut antrian.');
                 return;
             }
+            if (joinQueueInFlight) return;
+            if (wishlistBooks.includes(bookId)) {
+                showToast('Info', 'Kamu sudah ada di antrian buku ini.');
+                return;
+            }
+            joinQueueInFlight = true;
+            const qBtn = document.querySelector('#modal-queue-card button[onclick^="joinQueue"]');
+            if (qBtn) { qBtn.disabled = true; qBtn.classList.add('opacity-60', 'cursor-not-allowed'); }
 
             const book = booksData.find(b => b.id === bookId);
 
@@ -1285,6 +1294,9 @@
             } catch (err) {
                 console.error('Gagal masuk antrian:', err);
                 showToast('Gagal', 'Terjadi kesalahan, coba lagi.');
+            } finally {
+                joinQueueInFlight = false;
+                if (qBtn && document.body.contains(qBtn)) { qBtn.disabled = false; qBtn.classList.remove('opacity-60', 'cursor-not-allowed'); }
             }
         }
 
@@ -1317,7 +1329,17 @@
             const container = document.getElementById('modal-rekomendasi-container');
             if (!container) return;
             
-            const recommendations = booksData.filter(b => b.id !== currentId).slice(0, 3);
+            const current = booksData.find(b => b.id === currentId);
+            const currentGenre = (current?.genre || '').trim().toLowerCase();
+            const recommendations = booksData
+                .filter(b => b.id !== currentId && (b.genre || '').trim().toLowerCase() === currentGenre)
+                .slice(0, 3);
+
+            if (recommendations.length === 0) {
+                container.innerHTML = `<p class="text-[11px] text-slate-400">Belum ada buku lain dengan genre yang sama.</p>`;
+                return;
+            }
+
             container.innerHTML = recommendations.map(book => `
                 <div class="w-16 flex-shrink-0 text-center cursor-pointer" onclick="openBookDetail('${book.id}')">
                     <img src="${book.cover}" class="w-full aspect-[3/4] object-cover rounded-lg">
@@ -1799,7 +1821,9 @@
             document.getElementById('booking-form-section').classList.add('hidden');
         }
 
+        let bookingInFlight = false;
         async function submitBookingForm() {
+            if (bookingInFlight) return;
             const userStr = localStorage.getItem('libra_user');
             if (!userStr) {
                 alert('Sesi habis. Silakan login kembali.');
@@ -1828,6 +1852,12 @@
                 return;
             }
 
+            if (isBookBorrowedByMe(activeBookId)) {
+                alert('Kamu sudah membooking buku ini. Cek tab Sirkulasi.');
+                return;
+            }
+
+            bookingInFlight = true;
             const confirmBtn = document.querySelector('#booking-form-section button[onclick="submitBookingForm()"]');
             const originalText = confirmBtn.textContent;
             confirmBtn.disabled = true;
@@ -1869,6 +1899,7 @@
                 alert(err.message);
                 console.error(err);
             } finally {
+                bookingInFlight = false;
                 confirmBtn.disabled = false;
                 confirmBtn.textContent = originalText;
             }
@@ -2412,9 +2443,13 @@
                 const harga = formatRupiah(p.harga);
                 return `
                 <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-md hover:-translate-y-0.5">
-                    <div class="bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800/40 dark:to-slate-900/30 p-4 flex items-center justify-center h-24">
-                        <i class="fa-solid ${icon} text-3xl text-slate-500 dark:text-slate-400"></i>
-                    </div>
+                    ${p.gambar
+                        ? `<div class="aspect-[4/3] bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                               <img src="${p.gambar}" alt="${p.nama}" loading="lazy" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105">
+                           </div>`
+                        : `<div class="bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800/40 dark:to-slate-900/30 p-4 flex items-center justify-center aspect-[4/3]">
+                               <i class="fa-solid ${icon} text-3xl text-slate-500 dark:text-slate-400"></i>
+                           </div>`}
                     <div class="p-3 flex flex-col gap-1.5 flex-1">
                         <span class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">${p.kategori || '-'}</span>
                         <p class="text-xs font-bold text-slate-800 dark:text-white leading-tight line-clamp-2">${p.nama}</p>

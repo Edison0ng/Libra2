@@ -20,6 +20,7 @@ class ProdukAtk extends Model
         'kategori',
         'harga',
         'stok',
+        'gambar',
     ];
 
     protected $casts = [

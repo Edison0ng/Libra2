@@ -78,5 +78,7 @@ Route::apiResource('invoices', InvoiceController::class);
 Route::apiResource('complaints', ComplaintController::class);
 
 // ===================== TOKO ATK =====================
+Route::post('/produk-atk/{id}/gambar', [ProdukAtkController::class, 'uploadGambar']);
+Route::delete('/produk-atk/{id}/gambar', [ProdukAtkController::class, 'hapusGambar']);
 Route::apiResource('produk-atk', ProdukAtkController::class);
 Route::apiResource('pembelian-atk', PembelianAtkController::class);
