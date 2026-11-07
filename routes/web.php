@@ -38,6 +38,11 @@ Route::get('/reset-password/{token}', function (string $token) {
 })->name('reset-password.view');
 
 // Route untuk halaman libra (menampilkan daftar buku)
+// Route untuk entitas Kurir
+Route::get('/kurir', function () {
+    return view('kurir');
+})->name('kurir');
+
 Route::get('/libra', [BookController::class, 'index']);
 
 // Route untuk user profile dengan username/NIM

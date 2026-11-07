@@ -44,7 +44,6 @@ class UserController extends Controller
         $genres = $books->pluck('genre')->filter()->unique()->sort()->values();
 
         return view('libra', [
-            'userData' => $user,
             'books'    => $books,
             'genres'   => $genres,
         ]);

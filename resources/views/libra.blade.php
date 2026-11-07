@@ -1,8 +1,14 @@
 <!DOCTYPE html>
 <html lang="id" class="">
 <head>
+    <script src="/js/auth-fetch.js"></script>
+<script>
+  /* Ingat Saya: kalau tidak dicentang saat login, sesi hanya berlaku selama browser/tab dibuka */
+  (function(){try{if(localStorage.getItem('libra_remember')!=='1'&&sessionStorage.getItem('libra_active')!=='1'){localStorage.removeItem('libra_token');localStorage.removeItem('libra_user');}}catch(e){}})();
+</script>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Sistem Libra</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -56,6 +62,18 @@
             50% { transform: scale(1.05); opacity: 1; }
             100% { transform: scale(0.95); opacity: 0.7; }
         }
+        /* Tinggi layar mobile: 100vh di browser HP termasuk area address bar, sehingga
+           navigasi bawah (absolute bottom-0) tertutup di luar layar. Pakai tinggi
+           viewport yang benar-benar terlihat (dvh / --app-height dari JS). */
+        body {
+            height: 100vh;
+            height: 100dvh;
+            height: var(--app-height, 100dvh);
+        }
+        #mobile-bottom-nav {
+            height: calc(4rem + env(safe-area-inset-bottom, 0px));
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
         #detail-modal {
                 z-index: 9999 !important;
         }
@@ -84,6 +102,17 @@
             to { opacity: 1; transform: translateY(0) scale(1); }
         }
     </style>
+    <script>
+        // Simpan tinggi viewport yang terlihat (aman untuk browser HP lama yang belum mengenal dvh)
+        (function () {
+            function setAppHeight() {
+                document.documentElement.style.setProperty('--app-height', window.innerHeight + 'px');
+            }
+            setAppHeight();
+            window.addEventListener('resize', setAppHeight);
+            window.addEventListener('orientationchange', function () { setTimeout(setAppHeight, 200); });
+        })();
+    </script>
 </head>
 <body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex h-screen overflow-hidden transition-colors duration-200">
 
@@ -230,14 +259,8 @@
                     @endforeach
                 </div>
 
-                <!-- Pagination -->
-                <div class="flex justify-center gap-2 pt-4">
-                    <button class="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Sebelumnya</button>
-                    <button class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold">1</button>
-                    <button class="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">2</button>
-                    <button class="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">3</button>
-                    <button class="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">Selanjutnya</button>
-                </div>
+                <!-- Pagination (dibangun oleh renderBookPagination) -->
+                <div id="book-pagination" class="flex flex-wrap justify-center gap-2 pt-4"></div>
             </div>
 
             <!-- TAB 3: SIRKULASI -->
@@ -298,6 +321,12 @@
                         <!-- Akan diisi secara dinamis -->
                     </div>
                 </div>
+
+                <div id="unpaid-fines-card" class="hidden bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800">
+                    <h4 class="font-bold text-sm mb-1 text-slate-700 dark:text-slate-300 uppercase tracking-wider">Tagihan Denda</h4>
+                    <p class="text-[11px] text-slate-400 mb-4">Denda dari buku yang sudah dikembalikan. Lunasi untuk bisa meminjam lagi.</p>
+                    <div id="unpaid-fines-list" class="space-y-3"></div>
+                </div>
             </div>
 
             <!-- TAB 4: PROFIL -->
@@ -305,11 +334,11 @@
                 <!-- Profil Mahasiswa -->
                 <div class="bg-gradient-to-br from-slate-800 to-slate-950 dark:from-slate-900 dark:to-black p-6 rounded-3xl text-center text-white shadow-md relative overflow-hidden">
                     <div class="w-20 h-20 bg-slate-700 rounded-full mx-auto mb-3 border-4 border-slate-600 overflow-hidden">
-                        <img src="{{ $userData->avatar_url ?? 'https://api.dicebear.com/7.x/avataaars/svg?seed='.($userData->username ?? $userData->name ?? 'Ahmad') }}" class="w-full h-full object-cover">
+                        <img id="profile-card-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=libra" class="w-full h-full object-cover">
                     </div>
-                    <h3 class="font-bold text-lg">{{ $userData->name ?? 'Ahmad Fauzi' }}</h3>
-                    <p class="text-xs text-slate-400">NIM: {{ $userData->nim ?? '220194850' }}</p>
-                    <span class="inline-block bg-white/10 text-[10px] font-medium px-3 py-1 rounded-full mt-3 border border-white/10">{{ $userData->fakultas ?? 'Fakultas Ilmu Komputer' }}</span>
+                    <h3 id="profile-card-name" class="font-bold text-lg">&nbsp;</h3>
+                    <p class="text-xs text-slate-400">NIM: <span id="profile-card-nim">-</span></p>
+                    <span id="profile-card-fakultas" class="inline-block bg-white/10 text-[10px] font-medium px-3 py-1 rounded-full mt-3 border border-white/10">-</span>
                 </div>
 
                 <!-- Pengaturan & Fitur -->
@@ -318,12 +347,36 @@
                         <div class="flex items-center gap-3 font-medium text-slate-700 dark:text-slate-300">
                             <i class="fa-solid fa-globe text-lg text-emerald-500"></i> <span data-i18n="language">Bahasa</span>
                         </div>
-                        <div class="relative flex items-center">
-                            <select id="language-select" onchange="changeLanguage(this.value)" class="text-xs bg-transparent text-slate-500 dark:text-slate-400 font-semibold focus:outline-none cursor-pointer border-none outline-none text-right appearance-none pr-5">
-                                <option value="id" class="bg-white dark:bg-slate-900 text-slate-800 dark:text-white">Indonesia (ID)</option>
-                                <option value="en" class="bg-white dark:bg-slate-900 text-slate-800 dark:text-white">English (EN)</option>
+                        <div class="relative">
+                            <!-- select asli disembunyikan, tetap dipakai sebagai penyimpan nilai bahasa -->
+                            <select id="language-select" onchange="changeLanguage(this.value)" class="sr-only" tabindex="-1" aria-hidden="true">
+                                <option value="id">Indonesia (ID)</option>
+                                <option value="en">English (EN)</option>
                             </select>
-                            <i class="fa-solid fa-chevron-down absolute right-0 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none"></i>
+                            <button type="button" id="lang-btn" onclick="toggleLangMenu(event)" aria-haspopup="listbox" aria-expanded="false"
+                                class="flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/70 dark:border-slate-700 transition-colors text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60">
+                                <span id="lang-btn-code" class="w-6 h-6 rounded-lg bg-emerald-500 text-white text-[10px] font-bold flex items-center justify-center transition-colors">ID</span>
+                                <span id="lang-btn-label">Indonesia</span>
+                                <i id="lang-btn-chevron" class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200"></i>
+                            </button>
+                            <div id="lang-menu" role="listbox" class="hidden fixed z-[60] w-52 p-1.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl opacity-0 scale-95 origin-top-right transition duration-150 ease-out">
+                                <button type="button" role="option" data-lang="id" onclick="selectLanguage('id')" class="lang-option w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                    <span class="w-8 h-8 rounded-lg bg-emerald-500 text-white text-[11px] font-bold flex items-center justify-center">ID</span>
+                                    <span class="flex-1 leading-tight">
+                                        <span class="block text-xs font-semibold text-slate-800 dark:text-slate-100">Indonesia</span>
+                                        <span class="block text-[10px] text-slate-400">Bahasa Indonesia</span>
+                                    </span>
+                                    <i class="lang-check fa-solid fa-circle-check text-emerald-500 text-sm"></i>
+                                </button>
+                                <button type="button" role="option" data-lang="en" onclick="selectLanguage('en')" class="lang-option w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                                    <span class="w-8 h-8 rounded-lg bg-blue-500 text-white text-[11px] font-bold flex items-center justify-center">EN</span>
+                                    <span class="flex-1 leading-tight">
+                                        <span class="block text-xs font-semibold text-slate-800 dark:text-slate-100">English</span>
+                                        <span class="block text-[10px] text-slate-400">English language</span>
+                                    </span>
+                                    <i class="lang-check fa-solid fa-circle-check text-emerald-500 text-sm"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                     
@@ -410,6 +463,11 @@
                     <i class="fa-solid fa-box-open text-4xl mb-3 opacity-30"></i>
                     <p class="text-sm">Tidak ada produk ditemukan.</p>
                 </div>
+                <div id="toko-error" class="hidden text-center py-12 text-slate-400">
+                    <i class="fa-solid fa-triangle-exclamation text-4xl mb-3 opacity-40"></i>
+                    <p class="text-sm mb-3">Produk gagal dimuat. Periksa koneksi lalu coba lagi.</p>
+                    <button type="button" onclick="loadProdukToko()" class="px-4 py-2 rounded-xl bg-slate-800 text-white text-xs font-bold">Muat ulang</button>
+                </div>
 
                 <!-- Grid Produk -->
                 <div id="toko-produk-grid" class="hidden grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
@@ -449,7 +507,7 @@
         </div>
 
         <!-- BOTTOM NAVIGATION -->
-        <nav class="md:hidden bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-around items-center absolute bottom-0 w-full z-40 h-16 transition-colors duration-200">
+        <nav id="mobile-bottom-nav" class="md:hidden bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-around items-center absolute bottom-0 w-full z-40 h-16 transition-colors duration-200">
             <button onclick="switchTab('beranda')" class="nav-btn-mobile flex flex-col items-center p-2 text-blue-600 dark:text-blue-400" data-target="beranda">
                 <i class="fa-solid fa-house text-lg mb-1"></i>
                 <span class="text-[9px] font-semibold">Beranda</span>
@@ -588,6 +646,21 @@
                     <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">Alamat Pengiriman</label>
                     <textarea id="atk-alamat-input" rows="2" placeholder="Tulis alamat lengkap tujuan pengiriman..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-slate-500 text-sm text-slate-800 dark:text-white resize-none"></textarea>
                 </div>
+
+                <div class="mt-4">
+                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">Metode Pembayaran</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="flex items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/80 text-sm text-slate-700 dark:text-slate-300">
+                            <input type="radio" name="atk-pay-option" value="di_tempat" checked class="accent-slate-800" onchange="updateAtkPayHint()">
+                            <span>Bayar di Tempat</span>
+                        </label>
+                        <label class="flex items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/80 text-sm text-slate-700 dark:text-slate-300">
+                            <input type="radio" name="atk-pay-option" value="online" class="accent-slate-800" onchange="updateAtkPayHint()">
+                            <span>Bayar Sekarang</span>
+                        </label>
+                    </div>
+                    <p id="atk-pay-hint" class="text-[11px] text-slate-400 mt-2">Bayar saat mengambil di meja sirkulasi</p>
+                </div>
             </div>
 
             <div class="p-5 border-t border-slate-100 dark:border-slate-800 space-y-3 flex-shrink-0">
@@ -648,10 +721,56 @@
         </div>
     </div>
 
+    <!-- MODAL PEMBAYARAN PESANAN ATK (SIMULASI) -->
+    <div id="pay-atk-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl shadow-2xl p-6 border border-slate-200/60 dark:border-slate-800">
+            <div class="flex items-start justify-between mb-1">
+                <h3 class="font-bold text-base text-slate-800 dark:text-white">Bayar Pesanan</h3>
+                <button type="button" onclick="closePayAtkModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <span class="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 mb-4">SIMULASI PEMBAYARAN - tidak ada uang sungguhan</span>
+            <div class="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-3.5 mb-4 text-xs">
+                <p id="pay-atk-items" class="font-semibold text-slate-800 dark:text-white"></p>
+                <p id="pay-atk-amount" class="font-mono font-bold text-slate-900 dark:text-white text-lg mt-2"></p>
+            </div>
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Metode Pembayaran</p>
+            <div class="space-y-2 mb-5 text-sm">
+                <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer"><input type="radio" name="pay-atk-method" value="QRIS" checked class="accent-slate-800"><span>QRIS</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer"><input type="radio" name="pay-atk-method" value="Transfer Bank" class="accent-slate-800"><span>Transfer Bank</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer"><input type="radio" name="pay-atk-method" value="E-Wallet" class="accent-slate-800"><span>E-Wallet</span></label>
+            </div>
+            <button id="pay-atk-submit" type="button" onclick="submitPayAtk()" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-xl hover:bg-blue-700 transition-all shadow-md text-sm">Bayar Sekarang</button>
+            <p class="text-[11px] text-slate-400 mt-3 text-center">Belum siap? Tutup saja, kamu bisa membayarnya nanti dari Riwayat Pembelian.</p>
+        </div>
+    </div>
+
+    <!-- MODAL PEMBAYARAN DENDA (SIMULASI) -->
+    <div id="pay-fine-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl shadow-2xl p-6 border border-slate-200/60 dark:border-slate-800">
+            <div class="flex items-start justify-between mb-1">
+                <h3 class="font-bold text-base text-slate-800 dark:text-white">Bayar Denda</h3>
+                <button type="button" onclick="closePayFineModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <span class="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 mb-4">SIMULASI PEMBAYARAN - tidak ada uang sungguhan</span>
+            <div class="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-3.5 mb-4 text-xs">
+                <p id="pay-fine-book" class="font-semibold text-slate-800 dark:text-white"></p>
+                <p id="pay-fine-detail" class="text-slate-400 mt-0.5"></p>
+                <p id="pay-fine-amount" class="font-mono font-bold text-rose-500 text-lg mt-2"></p>
+            </div>
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">Metode Pembayaran</p>
+            <div class="space-y-2 mb-5 text-sm">
+                <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer"><input type="radio" name="pay-fine-method" value="QRIS" checked class="accent-slate-800"><span>QRIS</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer"><input type="radio" name="pay-fine-method" value="Transfer Bank" class="accent-slate-800"><span>Transfer Bank</span></label>
+                <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer"><input type="radio" name="pay-fine-method" value="E-Wallet" class="accent-slate-800"><span>E-Wallet</span></label>
+            </div>
+            <button id="pay-fine-submit" type="button" onclick="submitPayFine()" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-xl hover:bg-blue-700 transition-all shadow-md text-sm">Bayar Sekarang</button>
+        </div>
+    </div>
+
     <!-- TOAST NOTIFICATION -->
-    <div id="success-toast" class="hidden fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 w-[92%] max-w-[400px] bg-slate-900 dark:bg-slate-800 text-white px-4 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 z-50 animate-[fadeIn_0.3s_cubic-bezier(0.175,0.885,0.32,1.275)] border border-slate-800 dark:border-slate-700">
-        <div class="bg-emerald-500 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 shadow-md">
-            <i class="fa-solid fa-check text-white text-sm"></i>
+    <div id="success-toast" class="hidden fixed bottom-20 md:bottom-6 left-1/2 -translate-x-1/2 w-[92%] max-w-[400px] bg-slate-900 dark:bg-slate-800 text-white px-4 py-3.5 rounded-2xl shadow-2xl flex items-center gap-3 z-[100] animate-[fadeIn_0.3s_cubic-bezier(0.175,0.885,0.32,1.275)] border border-slate-800 dark:border-slate-700">
+        <div id="toast-icon-wrap" class="bg-emerald-500 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 shadow-md">
+            <i id="toast-icon" class="fa-solid fa-check text-white text-sm"></i>
         </div>
         <div class="flex-1">
             <p id="toast-title" class="text-xs font-semibold text-emerald-400">Pemesanan Berhasil!</p>
@@ -686,21 +805,21 @@
         let wishlistBooks = [];
         let wishlistItems = []; // detail lengkap tiap entri wishlist/antrian (termasuk posisi & estimasi tanggal)
 
-        // Data user yang dikirimkan oleh server saat membuka halaman profil (mis. /{username} atau /{nim})
-        const SERVER_USER = @json($userData ?? null);
-
-        // Jika halaman dibuka dgn konteks profil mahasiswa tertentu,
-        // pastikan sesi libra_user langsung disinkronkan ke user tersebut.
-        if (SERVER_USER && SERVER_USER.id) {
-            try {
-                localStorage.setItem('libra_user', JSON.stringify(SERVER_USER));
-            } catch (e) {}
-        }
+        // Sesi hanya berasal dari login (token + libra_user). Tanpa token -> kembali ke /login.
+        (function () {
+            let ok = false;
+            try { ok = !!localStorage.getItem('libra_token') && !!JSON.parse(localStorage.getItem('libra_user') || 'null'); } catch (e) {}
+            if (!ok) { window.location.replace('/login'); return; }
+            const u = JSON.parse(localStorage.getItem('libra_user'));
+            const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+            set('profile-card-name', u.nama_lengkap || u.name || u.username || '');
+            set('profile-card-nim', u.nim || '-');
+            set('profile-card-fakultas', u.fakultas || '-');
+            const av = document.getElementById('profile-card-avatar');
+            if (av) av.src = u.avatar_url || ('https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent(u.username || u.name || 'libra'));
+        })();
 
         function getCurrentUserId() {
-            if (SERVER_USER && SERVER_USER.id) {
-                return SERVER_USER.id;
-            }
             const userStr = localStorage.getItem('libra_user');
             if (!userStr) return null;
             try {
@@ -786,7 +905,7 @@
                 'circ-due-date-2': '05 Juli 2026',
                 'circ-fine-item-title': 'Keterlambatan Pengembalian: "Sistem Basis Data"',
                 'circ-fine-item-desc': 'Terlambat 5 hari × Rp 2.000 / hari',
-                'circ-fine-note': '*Silakan lakukan pembayaran denda langsung di meja loket sirkulasi perpustakaan pusat untuk mengaktifkan kembali hak peminjaman penuh Anda.',
+                'circ-fine-note': '*Kembalikan bukunya ke perpustakaan, lalu bayar dendanya di bagian Tagihan Denda untuk mengaktifkan kembali hak peminjaman Anda.',
                 'modal-btn-book': 'Ambil / Booking Buku',
                 'modal-book-disabled': 'Buku Sedang Dipinjam'
             },
@@ -823,7 +942,7 @@
                 'circ-due-date-2': '05 July 2026',
                 'circ-fine-item-title': 'Overdue Return: "Database Systems"',
                 'circ-fine-item-desc': '5 days overdue × Rp 2,000 / day',
-                'circ-fine-note': '*Please complete your fine payment at the central library circulation desk to restore full borrowing privileges.',
+                'circ-fine-note': '*Return the book to the library, then pay the fine in the Fine Bills section to restore your borrowing privileges.',
                 'modal-btn-book': 'Book / Reserve Book',
                 'modal-book-disabled': 'Book is Currently Borrowed'
             }
@@ -1021,6 +1140,9 @@
             if(confirm(currentLang === 'id' ? "Keluar dari sesi?" : "Log out?")) { 
                 localStorage.removeItem('libra_token');
                 localStorage.removeItem('libra_user');
+                localStorage.removeItem('libra_remember');
+                localStorage.removeItem('libra_courier_seen');
+                sessionStorage.removeItem('libra_active');
                 window.location.href = '/login';
             } 
         }
@@ -1039,8 +1161,92 @@
             updateFineDisplay();
         }
 
+        // ============================================================
+        // DROPDOWN BAHASA (CUSTOM)
+        // ============================================================
+        function isLangMenuOpen() {
+            const m = document.getElementById('lang-menu');
+            return !!m && !m.classList.contains('hidden');
+        }
+
+        function openLangMenu() {
+            const btn = document.getElementById('lang-btn');
+            const menu = document.getElementById('lang-menu');
+            if (!btn || !menu) return;
+            menu.classList.remove('hidden');
+            // Posisi fixed supaya tidak terpotong oleh kartu pengaturan (overflow-hidden)
+            const r = btn.getBoundingClientRect();
+            const w = menu.offsetWidth || 208;
+            const h = menu.offsetHeight || 120;
+            const left = Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8));
+            const openUp = r.bottom + h + 12 > window.innerHeight && r.top > h + 12;
+            menu.style.left = left + 'px';
+            menu.style.top = (openUp ? r.top - h - 8 : r.bottom + 8) + 'px';
+            menu.style.transformOrigin = openUp ? 'bottom right' : 'top right';
+            requestAnimationFrame(() => {
+                menu.classList.remove('opacity-0', 'scale-95');
+                menu.classList.add('opacity-100', 'scale-100');
+            });
+            btn.setAttribute('aria-expanded', 'true');
+            document.getElementById('lang-btn-chevron').classList.add('rotate-180');
+        }
+
+        function closeLangMenu() {
+            const btn = document.getElementById('lang-btn');
+            const menu = document.getElementById('lang-menu');
+            if (!menu || menu.classList.contains('hidden')) return;
+            menu.classList.remove('opacity-100', 'scale-100');
+            menu.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => menu.classList.add('hidden'), 150);
+            if (btn) btn.setAttribute('aria-expanded', 'false');
+            const chev = document.getElementById('lang-btn-chevron');
+            if (chev) chev.classList.remove('rotate-180');
+        }
+
+        function toggleLangMenu(e) {
+            if (e) e.stopPropagation();
+            if (isLangMenuOpen()) closeLangMenu(); else openLangMenu();
+        }
+
+        function selectLanguage(lang) {
+            const sel = document.getElementById('language-select');
+            if (sel) sel.value = lang;
+            closeLangMenu();
+            if (lang !== currentLang) changeLanguage(lang);
+        }
+
+        // Samakan tampilan dropdown dengan bahasa aktif
+        function syncLangDropdown() {
+            const isEn = currentLang === 'en';
+            const code = document.getElementById('lang-btn-code');
+            const label = document.getElementById('lang-btn-label');
+            if (code) {
+                code.textContent = isEn ? 'EN' : 'ID';
+                code.classList.toggle('bg-blue-500', isEn);
+                code.classList.toggle('bg-emerald-500', !isEn);
+            }
+            if (label) label.textContent = isEn ? 'English' : 'Indonesia';
+            document.querySelectorAll('#lang-menu .lang-option').forEach(opt => {
+                const active = opt.dataset.lang === currentLang;
+                opt.setAttribute('aria-selected', active ? 'true' : 'false');
+                opt.classList.toggle('bg-slate-50', active);
+                opt.classList.toggle('dark:bg-slate-800/60', active);
+                const check = opt.querySelector('.lang-check');
+                if (check) check.style.visibility = active ? 'visible' : 'hidden';
+            });
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!isLangMenuOpen()) return;
+            if (!e.target.closest('#lang-menu') && !e.target.closest('#lang-btn')) closeLangMenu();
+        });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLangMenu(); });
+        window.addEventListener('resize', closeLangMenu);
+        window.addEventListener('scroll', closeLangMenu, true);
+
         function applyTranslations() {
             document.getElementById('language-select').value = currentLang;
+            syncLangDropdown();
             const dict = langDictionary[currentLang];
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
@@ -1057,22 +1263,89 @@
         // ============================================================
         // FUNGSI PUSTAKA
         // ============================================================
-        function liveSearch() {
+        const BOOKS_PER_PAGE = 50;
+        let bookPage = 1;
+
+        // resetPage=true: dipanggil saat pencarian/filter berubah (kembali ke halaman 1)
+        function liveSearch(resetPage = true) {
             const query = document.getElementById('search-input').value.toLowerCase().trim();
             const genreFilterEl = document.getElementById('genre-filter');
             const selectedGenre = genreFilterEl ? genreFilterEl.value : '';
             const container = document.getElementById('live-library-container');
             const cards = container.querySelectorAll('.book-card');
-            
+            if (resetPage) bookPage = 1;
+
+            const matched = [];
             cards.forEach((card) => {
                 const title = (card.dataset.title || '').toLowerCase();
                 const author = (card.dataset.author || '').toLowerCase();
                 const genre = card.dataset.genre || '';
                 const matchesQuery = title.includes(query) || author.includes(query);
                 const matchesGenre = !selectedGenre || genre === selectedGenre;
-                card.style.display = (matchesQuery && matchesGenre) ? '' : 'none';
+                if (matchesQuery && matchesGenre) matched.push(card); else card.style.display = 'none';
             });
+
+            const totalPages = Math.max(1, Math.ceil(matched.length / BOOKS_PER_PAGE));
+            if (bookPage > totalPages) bookPage = totalPages;
+            const start = (bookPage - 1) * BOOKS_PER_PAGE;
+            matched.forEach((card, i) => {
+                card.style.display = (i >= start && i < start + BOOKS_PER_PAGE) ? '' : 'none';
+            });
+            renderBookPagination(totalPages);
         }
+
+        function goToBookPage(n) {
+            bookPage = n;
+            liveSearch(false);
+            const c = document.getElementById('live-library-container');
+            if (c) c.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Klik "…" -> berubah jadi kotak angka; Enter untuk pindah halaman, Esc/klik di luar untuk batal.
+        function openPageJump(btn, totalPages) {
+            const inp = document.createElement('input');
+            inp.type = 'number'; inp.min = 1; inp.max = totalPages;
+            inp.placeholder = '1-' + totalPages;
+            inp.className = 'w-20 px-2 py-2 rounded-lg text-sm text-center border border-blue-500 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 outline-none';
+            let done = false;
+            const go = () => {
+                if (done) return; done = true;
+                const v = parseInt(inp.value, 10);
+                if (!isNaN(v)) goToBookPage(Math.min(totalPages, Math.max(1, v)));
+                else renderBookPagination(totalPages);
+            };
+            inp.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); go(); }
+                else if (e.key === 'Escape') { done = true; renderBookPagination(totalPages); }
+            });
+            inp.addEventListener('blur', go);
+            btn.replaceWith(inp);
+            inp.focus();
+        }
+
+        function renderBookPagination(totalPages) {
+            const box = document.getElementById('book-pagination');
+            if (!box) return;
+            if (totalPages <= 1) { box.innerHTML = ''; return; }
+            const base = 'px-4 py-2 rounded-lg text-sm transition-colors';
+            const idle = 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800';
+            const off = 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-300 dark:text-slate-600 cursor-not-allowed';
+            // Daftar nomor: 1 ... (aktif-1) aktif (aktif+1) ... terakhir
+            const nums = [];
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || Math.abs(i - bookPage) <= 1) nums.push(i);
+                else if (nums[nums.length - 1] !== '...') nums.push('...');
+            }
+            let html = `<button type="button" ${bookPage === 1 ? 'disabled' : `onclick="goToBookPage(${bookPage - 1})"`} class="${base} ${bookPage === 1 ? off : idle}">Sebelumnya</button>`;
+            nums.forEach(n => {
+                if (n === '...') html += `<button type="button" title="Ke halaman…" onclick="openPageJump(this, ${totalPages})" class="px-2 py-2 text-slate-400 hover:text-blue-600 rounded-lg transition-colors">…</button>`;
+                else html += `<button type="button" onclick="goToBookPage(${n})" class="${base} ${n === bookPage ? 'bg-blue-600 text-white font-semibold' : idle}">${n}</button>`;
+            });
+            html += `<button type="button" ${bookPage === totalPages ? 'disabled' : `onclick="goToBookPage(${bookPage + 1})"`} class="${base} ${bookPage === totalPages ? off : idle}">Selanjutnya</button>`;
+            box.innerHTML = html;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => liveSearch());
 
         // ============================================================
         // FUNGSI BOOK DETAIL MODAL - VERSI PERBAIKAN
@@ -1677,17 +1950,27 @@
                     : `Total fine to be paid: Rp ${userFine.toLocaleString('id-ID')}`);
         }
 
-        function showFineWidget() {
-            const widget = document.getElementById('fine-widget');
-            const amountEl = document.getElementById('fine-amount-display');
-            if (!widget || !amountEl) return;
+        let finesLoaded = false; // true setelah data peminjaman selesai dimuat & denda dihitung
 
+        function showFineWidget() {
+            const isId = currentLang === 'id';
+            // Data peminjaman belum selesai dimuat: jangan bilang "bersih" dulu.
+            if (!finesLoaded) {
+                showToast(isId ? "Memuat data denda..." : "Loading fine data...",
+                        isId ? "Tunggu sebentar, lalu tekan lagi." : "Please wait a moment, then try again.");
+                if (typeof loadUserLoans === 'function') loadUserLoans();
+                return;
+            }
             if (userFine > 0) {
-                amountEl.innerText = `Rp ${userFine.toLocaleString('id-ID')}`;
-                widget.classList.remove('hidden');
+                updateFineDisplay();
+                const widget = document.getElementById('fine-widget');
+                if (widget) widget.classList.remove('hidden');
+                showToast(isId ? "Total Denda Anda" : "Your Total Fine",
+                        (isId ? "Total denda yang harus dibayar: Rp " : "Total fine to be paid: Rp ") + userFine.toLocaleString('id-ID')
+                        + (isId ? ". Rincian & pembayaran ada di tab Sirkulasi." : ". Details & payment are in the Circulation tab."));
+                switchTab('sirkulasi');
             } else {
-                const isId = currentLang === 'id';
-                showToast(isId ? "Akun Bersih!" : "Clean Account!", 
+                showToast(isId ? "Akun Bersih!" : "Clean Account!",
                         isId ? "Akun Anda bersih dari denda!" : "Your account is free of fines!");
             }
         }
@@ -1774,6 +2057,9 @@
             // Reset ke warna default (emerald) supaya tidak kebawa warna merah
             // dari showToastToko() yang dipanggil sebelumnya.
             titleEl.className = 'text-xs font-semibold text-emerald-400';
+            const w = document.getElementById('toast-icon-wrap'), ic = document.getElementById('toast-icon');
+            if (w) w.className = 'bg-emerald-500 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 shadow-md';
+            if (ic) ic.className = 'fa-solid fa-check text-white text-sm';
             document.getElementById('toast-desc').textContent = desc;
             toast.classList.remove('hidden');
             clearTimeout(toast._tokoTimer);
@@ -1785,7 +2071,57 @@
         // ============================================================
         let activeLoans = [];
 
+        // ============================================================
+        // ORDER KURIR (pengantaran buku & ATK) -- dibaca oleh portal Kurir
+        // ============================================================
+        function buatOrderKurir({ prefix, id, items, alamat, total, status_bayar, metode_bayar }) {
+            let userObj = {};
+            try { userObj = JSON.parse(localStorage.getItem('libra_user') || '{}'); } catch (_) {}
+            const orderId = id || (prefix + '-' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + '-' + Math.floor(1000 + Math.random() * 9000));
+            const order = {
+                id: orderId,
+                order_id: orderId,
+                user_id: userObj.id || getCurrentUserId(),
+                user_name: userObj.nama_lengkap || userObj.name || 'Mahasiswa',
+                user_identity: `${userObj.nim || '-'} (${userObj.fakultas || 'Mahasiswa'})`,
+                user_phone: userObj.no_telepon || '-',
+                alamat: alamat || userObj.alamat_kirim || 'Alamat Terdaftar Pengguna',
+                items: items,
+                total_items: items.reduce((sum, it) => sum + (it.qty || 1), 0),
+                total: total || 0,
+                total_pembayaran: total || 0,
+                status: 'Menunggu',
+                status_bayar: status_bayar || null,
+                metode_bayar: metode_bayar || null,
+                waktu_pemesanan: new Date().toISOString(),
+                waktu_mulai_pengantaran: null,
+                waktu_selesai_pengantaran: null,
+                durasi_pengantaran_detik: null,
+                total_durasi: null,
+                tanggal: new Date().toISOString().slice(0, 10)
+            };
+            try {
+                const list = JSON.parse(localStorage.getItem('libra_courier_orders') || '[]');
+                list.unshift(order);
+                localStorage.setItem('libra_courier_orders', JSON.stringify(list));
+            } catch (e) { console.error('Gagal mencatat order kurir:', e); }
+            // Kirim juga ke server supaya kurir di perangkat lain ikut melihat
+            fetch('/api/orders', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify(order)
+            }).catch(() => { /* server belum siap: cukup localStorage */ });
+            return order;
+        }
+
         function openBookingForm() {
+            // Pengguna yang masih punya denda tidak boleh meminjam (server juga menolak).
+            if (userFine > 0) {
+                alert(currentLang === 'id'
+                    ? 'Kamu masih punya denda sebesar Rp ' + userFine.toLocaleString('id-ID') + '. Lunasi dulu di tab Sirkulasi (kembalikan buku yang terlambat, lalu bayar di Tagihan Denda) sebelum meminjam lagi.'
+                    : 'You still have an outstanding fine of Rp ' + userFine.toLocaleString('id-ID') + '. Please settle it in the Circulation tab (return any late book, then pay under Fine Bills) before borrowing again.');
+                return;
+            }
             // Sembunyikan rekomendasi buku dan tombol default
             document.getElementById('modal-rekomendasi-container').parentElement.classList.add('hidden');
             document.getElementById('booking-default-btn-container').classList.add('hidden');
@@ -1908,6 +2244,18 @@
                     throw new Error(firstFieldError || data.message || 'Gagal menyimpan peminjaman');
                 }
 
+                // Jika memilih Jasa Pengantaran, buatkan order untuk kurir
+                if (statusVal === 'Booking Dikonfirmasi Admin') {
+                    const bookTitle = document.getElementById('modal-book-title')?.textContent || 'Buku Pustaka';
+                    buatOrderKurir({
+                        prefix: 'BK',
+                        id: data.loan && data.loan.id ? String(data.loan.id) : undefined,
+                        alamat: user.alamat_kirim || null,
+                        items: [{ id: activeBookId, nama: bookTitle, tipe: 'Buku', harga: 0, qty: 1, subtotal: 0 }],
+                        total: 0
+                    });
+                }
+
                 // Sukses
                 closeDetailModal();
                 showToast('Peminjaman Berhasil!', `Buku berhasil disimpan ke sirkulasi Anda.`);
@@ -1969,14 +2317,11 @@
 
         async function updateBookStatuses() {
             try {
-                const response = await fetch('/api/pinjam');
+                const response = await fetch('/api/pinjam-aktif');
                 if (!response.ok) throw new Error('Gagal mengambil semua status peminjaman');
-                const allLoans = await response.json();
 
-                // Dapatkan ISBN buku yang sedang dipinjam (tanggal_kembali adalah null)
-                const borrowedBookISBNs = allLoans
-                    .filter(l => !l.tanggal_kembali)
-                    .map(l => l.book_id);
+                // Daftar ISBN buku yang sedang dipinjam oleh siapa pun
+                const borrowedBookISBNs = await response.json();
 
                 // Update status di card buku halaman pustaka
                 document.querySelectorAll('#live-library-container > .book-card').forEach(card => {
@@ -1987,13 +2332,13 @@
                         card.dataset.status = 'Dipinjam';
                         if (statusBadge) {
                             statusBadge.textContent = currentLang === 'id' ? 'Dipinjam' : 'On Loan';
-                            statusBadge.className = 'status-badge inline-block mt-2 px-2 py-0.5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 text-[9px] font-semibold rounded-full';
+                            statusBadge.className = 'status-badge inline-block px-2 py-0.5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 text-[9px] font-semibold rounded-full';
                         }
                     } else {
                         card.dataset.status = 'Tersedia';
                         if (statusBadge) {
                             statusBadge.textContent = currentLang === 'id' ? 'Tersedia' : 'Available';
-                            statusBadge.className = 'status-badge inline-block mt-2 px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[9px] font-semibold rounded-full';
+                            statusBadge.className = 'status-badge inline-block px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-[9px] font-semibold rounded-full';
                         }
                     }
                 });
@@ -2005,6 +2350,103 @@
                 syncWishlistUI();
             } catch (err) {
                 console.error('Error updating book statuses:', err);
+            }
+        }
+
+        // ============================================================
+        // PEMBAYARAN DENDA (SIMULASI) -- hanya untuk buku yang sudah dikembalikan
+        // ============================================================
+        function getUnpaidReturnedFines() {
+            return (activeLoans || []).filter(l =>
+                l.tanggal_kembali && Number(l.denda) > 0 && !l.denda_lunas_at
+            );
+        }
+
+        function renderUnpaidFines() {
+            const card = document.getElementById('unpaid-fines-card');
+            const list = document.getElementById('unpaid-fines-list');
+            if (!card || !list) return;
+            const isId = currentLang === 'id';
+            const items = getUnpaidReturnedFines();
+            if (items.length === 0) {
+                card.classList.add('hidden');
+                list.innerHTML = '';
+                return;
+            }
+            list.innerHTML = items.map(l => `
+                <div class="p-3.5 bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/40 rounded-xl flex justify-between items-center gap-3 text-xs">
+                    <div class="min-w-0">
+                        <h5 class="font-bold text-slate-800 dark:text-white truncate">${l.book_title || 'Buku'}</h5>
+                        <p class="text-slate-400 mt-0.5">${isId ? 'Dikembalikan' : 'Returned'}: ${formatDateIndo(l.tanggal_kembali)}</p>
+                        <span class="font-mono font-bold text-rose-500 text-sm">Rp ${Number(l.denda).toLocaleString('id-ID')}</span>
+                    </div>
+                    <button onclick="openPayFineModal('${l.id}')" class="shrink-0 px-3 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">${isId ? 'Bayar Denda' : 'Pay Fine'}</button>
+                </div>
+            `).join('');
+            card.classList.remove('hidden');
+        }
+
+        let payFineLoanId = null;
+        let payFineInFlight = false;
+
+        function openPayFineModal(loanId) {
+            const loan = (activeLoans || []).find(l => String(l.id) === String(loanId));
+            if (!loan) return;
+            const isId = currentLang === 'id';
+            payFineLoanId = loan.id;
+            document.getElementById('pay-fine-book').textContent = loan.book_title || 'Buku';
+            document.getElementById('pay-fine-detail').textContent =
+                (isId ? 'Keterlambatan pengembalian, dikembalikan ' : 'Late return, returned ') + formatDateIndo(loan.tanggal_kembali);
+            document.getElementById('pay-fine-amount').textContent = 'Rp ' + Number(loan.denda).toLocaleString('id-ID');
+            document.getElementById('pay-fine-modal').classList.remove('hidden');
+        }
+
+        function closePayFineModal() {
+            if (payFineInFlight) return;
+            document.getElementById('pay-fine-modal').classList.add('hidden');
+            payFineLoanId = null;
+        }
+
+        async function submitPayFine() {
+            if (payFineInFlight || !payFineLoanId) return;
+            const isId = currentLang === 'id';
+            const userStr = localStorage.getItem('libra_user');
+            if (!userStr) {
+                alert('Sesi habis. Silakan login kembali.');
+                window.location.href = '/login';
+                return;
+            }
+            const user = JSON.parse(userStr);
+            const method = (document.querySelector('input[name="pay-fine-method"]:checked') || {}).value || 'QRIS';
+            const btn = document.getElementById('pay-fine-submit');
+            const original = btn.textContent;
+            payFineInFlight = true;
+            btn.disabled = true;
+            btn.textContent = isId ? 'Memproses pembayaran...' : 'Processing payment...';
+
+            try {
+                // Jeda singkat supaya terasa seperti proses pembayaran sungguhan (simulasi).
+                await new Promise(r => setTimeout(r, 1800));
+                const res = await fetch(`/api/pinjam/${encodeURIComponent(payFineLoanId)}/bayar-denda`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ user_id: user.id, metode: method })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.success) throw new Error(data.message || 'Pembayaran gagal');
+
+                payFineInFlight = false;
+                closePayFineModal();
+                showToast(isId ? 'Denda Lunas!' : 'Fine Paid!',
+                    isId ? 'Pembayaran denda berhasil (simulasi). Kamu bisa meminjam buku lagi.'
+                         : 'Fine payment successful (simulation). You can borrow books again.');
+                await loadUserLoans();
+            } catch (err) {
+                alert(err.message);
+            } finally {
+                payFineInFlight = false;
+                btn.disabled = false;
+                btn.textContent = original;
             }
         }
 
@@ -2034,13 +2476,16 @@
                 }
             });
 
-            userFine = totalFine;
+            // Total denda = denda berjalan (buku terlambat) + denda belum lunas dari buku yang sudah dikembalikan
+            finesLoaded = true;
+            userFine = totalFine + getUnpaidReturnedFines().reduce((sum, l) => sum + Number(l.denda), 0);
+            renderUnpaidFines();
             
             // Render rincian denda berjalan
             const card = document.getElementById('fine-breakdown-card');
             const list = document.getElementById('fine-breakdown-list');
             if (card && list) {
-                if (userFine > 0) {
+                if (totalFine > 0) {
                     list.innerHTML = overdueItems.map(item => `
                         <div class="p-3.5 bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/40 rounded-xl flex justify-between items-center text-xs">
                             <div>
@@ -2050,7 +2495,7 @@
                             <span class="font-mono font-bold text-rose-500 text-sm">Rp ${item.amount.toLocaleString('id-ID')}</span>
                         </div>
                     `).join('') + `
-                        <p class="text-[11px] text-slate-400 leading-normal italic" data-i18n="circ-fine-note">*Silakan lakukan pembayaran denda langsung di meja loket sirkulasi perpustakaan pusat untuk mengaktifkan kembali hak peminjaman penuh Anda.</p>
+                        <p class="text-[11px] text-slate-400 leading-normal italic" data-i18n="circ-fine-note">*Kembalikan bukunya ke perpustakaan, lalu bayar dendanya di bagian Tagihan Denda untuk mengaktifkan kembali hak peminjaman Anda.</p>
                     `;
                     card.classList.remove('hidden');
                 } else {
@@ -2366,9 +2811,89 @@
             const wrap = document.getElementById('atk-alamat-wrap');
             if (!wrap) return;
             wrap.classList.toggle('hidden', !selected || selected.value !== 'antar');
+            updateAtkPayHint();
         }
 
-        // Ambil data produk dari API (endpoint /api/produk-atk atau fallback dummy)
+        // Keterangan di bawah pilihan pembayaran: menyesuaikan metode pengambilan
+        function updateAtkPayHint() {
+            const hint = document.getElementById('atk-pay-hint');
+            if (!hint) return;
+            const pay = document.querySelector('input[name="atk-pay-option"]:checked');
+            const del = document.querySelector('input[name="atk-delivery-option"]:checked');
+            if (pay && pay.value === 'online') {
+                hint.textContent = 'Bayar online sekarang (simulasi, tanpa uang sungguhan)';
+            } else if (del && del.value === 'antar') {
+                hint.textContent = 'Bayar ke kurir saat barang tiba di rumah';
+            } else {
+                hint.textContent = 'Bayar saat mengambil di meja sirkulasi';
+            }
+        }
+
+        // ============================================================
+        // PEMBAYARAN PESANAN ATK (SIMULASI)
+        // ============================================================
+        let payAtkOrder = null;
+        let payAtkInFlight = false;
+
+        function openPayAtkModal(orderOrId) {
+            const order = (orderOrId && typeof orderOrId === 'object')
+                ? orderOrId
+                : (riwayatAtkData || []).find(o => String(o.id) === String(orderOrId));
+            if (!order) return;
+            payAtkOrder = order;
+            const items = order.items || [];
+            document.getElementById('pay-atk-items').textContent =
+                items.map(i => `${i.nama} x${i.qty}`).join(', ') || 'Pesanan Toko ATK';
+            document.getElementById('pay-atk-amount').textContent = formatRupiah(order.total || 0);
+            document.getElementById('pay-atk-modal').classList.remove('hidden');
+        }
+
+        function closePayAtkModal() {
+            if (payAtkInFlight) return;
+            document.getElementById('pay-atk-modal').classList.add('hidden');
+            payAtkOrder = null;
+        }
+
+        async function submitPayAtk() {
+            if (payAtkInFlight || !payAtkOrder) return;
+            const isId = currentLang === 'id';
+            const userId = getCurrentUserId();
+            if (!userId) {
+                alert('Sesi habis. Silakan login kembali.');
+                window.location.href = '/login';
+                return;
+            }
+            const method = (document.querySelector('input[name="pay-atk-method"]:checked') || {}).value || 'QRIS';
+            const btn = document.getElementById('pay-atk-submit');
+            const original = btn.textContent;
+            payAtkInFlight = true;
+            btn.disabled = true;
+            btn.textContent = isId ? 'Memproses pembayaran...' : 'Processing payment...';
+            try {
+                await new Promise(r => setTimeout(r, 1800));   // jeda simulasi
+                const res = await fetch(`/api/pembelian-atk/${encodeURIComponent(payAtkOrder.id)}/bayar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ user_id: userId, metode: method })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok || data.success === false) throw new Error(data.message || 'Pembayaran gagal');
+
+                payAtkInFlight = false;
+                closePayAtkModal();
+                showToast(isId ? 'Pembayaran Berhasil!' : 'Payment Successful!',
+                    isId ? 'Pesanan ATK kamu sudah lunas (simulasi).' : 'Your ATK order is paid (simulation).');
+                loadRiwayatPembelian();
+            } catch (err) {
+                alert(err.message);
+            } finally {
+                payAtkInFlight = false;
+                btn.disabled = false;
+                btn.textContent = original;
+            }
+        }
+
+        // Ambil data produk dari API (/api/produk-atk); jika gagal tampil pesan error, bukan data palsu
         async function loadProdukToko() {
             const loading = document.getElementById('toko-loading');
             const empty = document.getElementById('toko-empty');
@@ -2377,45 +2902,21 @@
             if (empty) empty.classList.add('hidden');
             if (grid) grid.classList.add('hidden');
 
+            const errBox = document.getElementById('toko-error');
+            if (errBox) errBox.classList.add('hidden');
             try {
                 const res = await fetch('/api/produk-atk');
-                if (res.ok) {
-                    const data = await res.json();
-                    produkTokoData = Array.isArray(data) ? data : (data.data || []);
-                } else {
-                    throw new Error('Fallback ke data dummy');
-                }
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                const data = await res.json();
+                produkTokoData = Array.isArray(data) ? data : (data.data || []);
             } catch (e) {
-                // Data dummy jika API belum tersedia. Stok disimpan di localStorage
-                // (bukan langsung dari array statis) supaya kalau ada pembelian,
-                // stoknya benar-benar berkurang dan tidak "reset" tiap loadProdukToko() dipanggil ulang.
-                const DUMMY_PRODUK_DEFAULT = [
-                    { id: 'ATK-001', kode: 'ATK-001', nama: 'Pulpen Hitam', kategori: 'Alat Tulis', harga: 3000, stok: 100, gambar: 'https://fntkcqdqbarffqyqtqdo.supabase.co/storage/v1/object/public/produk-atk/images%20%289%29.jpg' },
-                    { id: 'ATK-002', kode: 'ATK-002', nama: 'Pulpen Biru', kategori: 'Alat Tulis', harga: 3000, stok: 100, gambar: 'https://fntkcqdqbarffqyqtqdo.supabase.co/storage/v1/object/public/produk-atk/images%20%288%29.jpg' },
-                    { id: 'ATK-003', kode: 'ATK-003', nama: 'Pensil 2B', kategori: 'Alat Tulis', harga: 2500, stok: 80, gambar: 'https://fntkcqdqbarffqyqtqdo.supabase.co/storage/v1/object/public/produk-atk/images%20%287%29.jpg' },
-                    { id: 'ATK-004', kode: 'ATK-004', nama: 'Penghapus', kategori: 'Alat Tulis', harga: 2000, stok: 60, gambar: 'https://fntkcqdqbarffqyqtqdo.supabase.co/storage/v1/object/public/produk-atk/images%20%286%29.jpg' },
-                    { id: 'ATK-005', kode: 'ATK-005', nama: 'Penggaris 30 cm', kategori: 'Alat Tulis', harga: 4000, stok: 50, gambar: 'https://fntkcqdqbarffqyqtqdo.supabase.co/storage/v1/object/public/produk-atk/images%20%285%29.jpg' },
-                    { id: 'ATK-006', kode: 'ATK-006', nama: 'Buku Tulis 38 Lembar', kategori: 'Kertas', harga: 5000, stok: 120, gambar: 'https://fntkcqdqbarffqyqtqdo.supabase.co/storage/v1/object/public/produk-atk/images%20%281%29.jpg' },
-                    { id: 'ATK-007', kode: 'ATK-007', nama: 'Kertas HVS A4 (rim)', kategori: 'Kertas', harga: 55000, stok: 30, gambar: 'https://fntkcqdqbarffqyqtqdo.supabase.co/storage/v1/object/public/produk-atk/images%20%283%29.jpg' },
-                    { id: 'ATK-008', kode: 'ATK-008', nama: 'Map Plastik', kategori: 'Perlengkapan', harga: 3500, stok: 70, gambar: 'https://fntkcqdqbarffqyqtqdo.supabase.co/storage/v1/object/public/produk-atk/images%20%284%29.jpg' },
-                    { id: 'ATK-009', kode: 'ATK-009', nama: 'Stapler Kecil', kategori: 'Perlengkapan', harga: 15000, stok: 25, gambar: 'https://fntkcqdqbarffqyqtqdo.supabase.co/storage/v1/object/public/produk-atk/images%20%2810%29.jpg' },
-                    { id: 'ATK-010', kode: 'ATK-010', nama: 'Highlighter', kategori: 'Alat Tulis', harga: 6000, stok: 40, gambar: 'https://fntkcqdqbarffqyqtqdo.supabase.co/storage/v1/object/public/produk-atk/images%20%282%29.jpg' },
-                ];
-
-                let savedStock = {};
-                try { savedStock = JSON.parse(localStorage.getItem('libra-dummy-stok-atk') || '{}'); } catch (err) { savedStock = {}; }
-
-                produkTokoData = DUMMY_PRODUK_DEFAULT.map(p => ({
-                    ...p,
-                    stok: savedStock[p.id] !== undefined ? savedStock[p.id] : p.stok
-                }));
-
-                // Inisialisasi penyimpanan stok kalau belum ada sama sekali
-                if (Object.keys(savedStock).length === 0) {
-                    const initial = {};
-                    DUMMY_PRODUK_DEFAULT.forEach(p => { initial[p.id] = p.stok; });
-                    localStorage.setItem('libra-dummy-stok-atk', JSON.stringify(initial));
-                }
+                console.error('Gagal memuat produk ATK:', e);
+                produkTokoData = [];
+                if (loading) loading.classList.add('hidden');
+                if (grid) grid.classList.add('hidden');
+                if (empty) empty.classList.add('hidden');
+                if (errBox) errBox.classList.remove('hidden');
+                return;
             }
 
             populateKategoriFilter();
@@ -2666,6 +3167,9 @@
                 ? (document.getElementById('atk-alamat-input')?.value || '').trim()
                 : null;
 
+            const payEl = document.querySelector('input[name="atk-pay-option"]:checked');
+            const metodeBayar = payEl ? payEl.value : 'di_tempat';
+
             const totalHarga = keranjang.reduce((s, k) => s + k.harga * k.qty, 0);
 
             const checkoutBtn = document.getElementById('checkout-btn');
@@ -2681,6 +3185,7 @@
                 // Status awal SAMA kosakatanya dgn booking buku, supaya langsung
                 // kebaca oleh kartu accordion Sirkulasi yang sudah ada.
                 status: metodePengiriman === 'antar' ? 'Booking Dikonfirmasi Admin' : 'Booking',
+                metode_bayar: metodeBayar,
             };
 
             try {
@@ -2704,6 +3209,22 @@
                     'emerald'
                 );
 
+                // Pesanan diantar -> teruskan ke kurir
+                if (metodePengiriman === 'antar') {
+                    buatOrderKurir({
+                        prefix: 'ORD',
+                        id: data.order && data.order.id,
+                        status_bayar: 'Belum Dibayar',
+                        metode_bayar: metodeBayar === 'di_tempat' ? 'Bayar di Tempat' : null,
+                        alamat: alamatKirim,
+                        total: totalHarga,
+                        items: keranjang.map(k => ({
+                            produk_id: k.id, id: k.id, kode: k.kode, nama: k.nama, tipe: 'ATK',
+                            harga: k.harga, qty: k.qty, subtotal: k.harga * k.qty
+                        }))
+                    });
+                }
+
                 keranjang = [];
                 updateCartBadge();
                 document.getElementById('cart-modal').classList.add('hidden');
@@ -2711,6 +3232,14 @@
                 document.querySelector('input[name="atk-delivery-option"][value="ambil_sendiri"]').checked = true;
                 toggleAtkAlamatField();
                 if (document.getElementById('atk-alamat-input')) document.getElementById('atk-alamat-input').value = '';
+                const payDefault = document.querySelector('input[name="atk-pay-option"][value="di_tempat"]');
+                if (payDefault) payDefault.checked = true;
+                updateAtkPayHint();
+
+                // Pilih "Bayar Sekarang": langsung buka simulasi pembayaran untuk pesanan ini
+                if (metodeBayar === 'online' && data.order) {
+                    setTimeout(() => openPayAtkModal(data.order), 250);
+                }
 
                 loadRiwayatPembelian();
                 loadProdukToko(); // Refresh stok
@@ -2820,6 +3349,18 @@
                 const items = r.items || [];
                 const metode = r.metode_pengiriman === 'antar' ? 'Diantar ke Rumah' : 'Ambil Sendiri di Sirkulasi';
 
+                // Status pembayaran
+                let payHtml = '';
+                if (!isBatal) {
+                    if (r.status_bayar === 'Lunas') {
+                        payHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"><i class="fa-solid fa-circle-check text-[10px]"></i> Lunas${r.metode_bayar ? ' (' + escapeHtmlAtk(r.metode_bayar) + ')' : ''}</span>`;
+                    } else if (r.metode_bayar === 'Bayar di Tempat') {
+                        payHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"><i class="fa-solid fa-hand-holding-dollar text-[10px]"></i> ${r.metode_pengiriman === 'antar' ? 'Bayar ke kurir saat tiba' : 'Bayar di meja sirkulasi'}</span>`;
+                    } else {
+                        payHtml = `<button type="button" onclick="openPayAtkModal('${r.id}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors"><i class="fa-solid fa-credit-card text-[10px]"></i> Bayar Sekarang</button>`;
+                    }
+                }
+
                 // Status Badge
                 let statusBadge = '';
                 if (isSelesai) {
@@ -2877,6 +3418,7 @@
                                     <i class="fa-solid fa-hourglass-half text-[10px]"></i> Batas ambil: 2 jam sejak pesanan dibuat
                                 </span>
                             ` : ''}
+                            ${payHtml}
                         </div>
                         <div class="text-right">
                             <span class="text-[10px] text-slate-400 block">Total</span>
@@ -2930,9 +3472,14 @@
             if (title) title.textContent = type === 'emerald' ? 'Berhasil!' : 'Perhatian!';
             title.className = `text-xs font-semibold ${type === 'emerald' ? 'text-emerald-400' : 'text-red-400'}`;
             if (desc) desc.textContent = msg;
+            const ok = type === 'emerald';
+            const wrap = document.getElementById('toast-icon-wrap');
+            const icon = document.getElementById('toast-icon');
+            if (wrap) wrap.className = `${ok ? 'bg-emerald-500' : 'bg-red-500'} rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 shadow-md`;
+            if (icon) icon.className = `fa-solid ${ok ? 'fa-check' : 'fa-xmark'} text-white text-sm`;
             toast.classList.remove('hidden');
             clearTimeout(toast._tokoTimer);
-            toast._tokoTimer = setTimeout(() => toast.classList.add('hidden'), 3500);
+            toast._tokoTimer = setTimeout(() => toast.classList.add('hidden'), ok ? 3500 : 6000);
         }
 
         // Sinkron input qty dengan subtotal di modal beli
@@ -2964,8 +3511,389 @@
             });
         });
 
+        // Sinkronisasi status pengantaran Kurir (browser yang sama)
+        window.addEventListener('storage', function (e) {
+            if (e.key !== 'libra_courier_orders') return;
+            try {
+                loadRiwayatPembelian();
+                const orders = JSON.parse(e.newValue || '[]');
+                const userId = getCurrentUserId();
+                const mine = orders.filter(o => !o.user_id || String(o.user_id) === String(userId));
+                const latest = mine[0];
+                if (latest) {
+                    const idText = latest.order_id || latest.id;
+                    if (latest.status === 'Sedang Diantar') {
+                        showToast('Pesanan Diantar', `Kurir telah memulai pengantaran pesanan Anda (${idText})! 🚚`);
+                    } else if (latest.status === 'Selesai') {
+                        showToast('Pesanan Sampai', `Pesanan Anda (${idText}) telah sampai di tujuan! 🎉`);
+                    }
+                }
+            } catch (_) {}
+        });
+
+        // Sinkronisasi status pengantaran lintas perangkat: tanya server berkala
+        // (kurir bisa memakai perangkat lain, jadi event 'storage' saja tidak cukup).
+        const COURIER_POLL_MS = 15000;
+        const COURIER_SEEN_KEY = 'libra_courier_seen';
+
+        async function pollCourierOrders() {
+            if (document.hidden) return;
+            const userId = getCurrentUserId();
+            if (!userId) return;
+            try {
+                const res = await fetch('/api/orders?user_id=' + encodeURIComponent(userId), { headers: { 'Accept': 'application/json' } });
+                if (!res.ok) return;
+                const orders = await res.json();
+                if (!Array.isArray(orders)) return; // tabel belum dimigrasi
+
+                let seen = null;
+                try { seen = JSON.parse(localStorage.getItem(COURIER_SEEN_KEY) || 'null'); } catch (_) {}
+                const next = {};
+                let changed = false;
+
+                orders.forEach(o => {
+                    const id = o.order_id || o.id;
+                    next[id] = o.status;
+                    // Baseline pertama: jangan membunyikan notifikasi untuk pesanan lama
+                    if (seen && seen[id] !== o.status) {
+                        const isId = currentLang === 'id';
+                        if (o.status === 'Sedang Diantar') {
+                            showToast(isId ? 'Pesanan Diantar' : 'Order On the Way',
+                                isId ? `Kurir sedang mengantar pesanan Anda (${id})! 🚚` : `The courier is delivering your order (${id})! 🚚`);
+                        } else if (o.status === 'Selesai') {
+                            showToast(isId ? 'Pesanan Sampai' : 'Order Delivered',
+                                isId ? `Pesanan Anda (${id}) telah sampai di tujuan! 🎉` : `Your order (${id}) has arrived! 🎉`);
+                        }
+                        changed = true;
+                    }
+                });
+
+                localStorage.setItem(COURIER_SEEN_KEY, JSON.stringify(next));
+                if (changed) {
+                    loadRiwayatPembelian();
+                    loadUserLoans();
+                }
+            } catch (_) { /* jaringan putus: coba lagi di putaran berikutnya */ }
+        }
+
+        setTimeout(pollCourierOrders, 3000);
+        setInterval(pollCourierOrders, COURIER_POLL_MS);
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) pollCourierOrders(); });
+
         console.log('📚 Sistem Libra siap digunakan dengan Supabase via Blade!');
         console.log(`📊 Total buku: ${booksData.length}`);
+    </script>
+    <!-- Lapisan terjemahan tambahan: menerjemahkan teks yang tidak punya data-i18n -->
+    <script>
+    (function () {
+        const EXACT = {
+            'Sistem Informasi Perpustakaan': 'Library Information System',
+            'Toko ATK': 'ATK Store',
+            'Ganti tema gelap/terang': 'Toggle dark/light theme',
+            'Notifikasi Terbaru': 'Latest Notifications',
+            'Tandai dibaca': 'Mark as read',
+            'Memuat notifikasi...': 'Loading notifications...',
+            'Silakan login untuk melihat notifikasi.': 'Please log in to view notifications.',
+            'Belum ada notifikasi.': 'No notifications yet.',
+            'Gagal memuat notifikasi.': 'Failed to load notifications.',
+            'Cari judul atau penulis buku secara live...': 'Search book titles or authors live...',
+            'Cari judul buku secara live...': 'Search book titles live...',
+            'Semua Genre': 'All Genres',
+            'Tahun:': 'Year:',
+            'Tersedia': 'Available',
+            'Dipinjam': 'On Loan',
+            'Sebelumnya': 'Previous',
+            'Ke halaman…': 'Go to page…',
+            'Selanjutnya': 'Next',
+            'Memuat data peminjaman...': 'Loading loan data...',
+            'Peminjaman Aktif Saya': 'My Active Loans',
+            'Rincian Informasi Denda Berjalan': 'Current Fine Details',
+            'Belum ada peminjaman aktif.': 'No active loans.',
+            '(Terlambat)': '(Overdue)',
+            '(Hari Ini)': '(Today)',
+            // Nama produk & kategori Toko ATK
+            'Pulpen Hitam': 'Black Pen',
+            'Pulpen Biru': 'Blue Pen',
+            'Pensil 2B': '2B Pencil',
+            'Penghapus': 'Eraser',
+            'Penggaris 30 cm': '30 cm Ruler',
+            'Buku Tulis 38 Lembar': '38-Sheet Notebook',
+            'Kertas HVS A4 (rim)': 'A4 Copy Paper (ream)',
+            'Map Plastik': 'Plastic Folder',
+            'Stapler Kecil': 'Small Stapler',
+            'Highlighter': 'Highlighter',
+            'Kertas': 'Paper',
+            'Bayar di Tempat': 'Pay on Site',
+            'Bayar Pesanan': 'Pay for Order',
+            'Bayar saat mengambil di meja sirkulasi': 'Pay when you pick up at the circulation desk',
+            'Bayar ke kurir saat barang tiba di rumah': 'Pay the courier when the items arrive at your home',
+            'Bayar online sekarang (simulasi, tanpa uang sungguhan)': 'Pay online now (simulation, no real money)',
+            'Bayar ke kurir saat tiba': 'Pay the courier on arrival',
+            'Bayar di meja sirkulasi': 'Pay at the circulation desk',
+            'Lunas': 'Paid',
+            'Belum siap? Tutup saja, kamu bisa membayarnya nanti dari Riwayat Pembelian.': 'Not ready? Just close this, you can pay later from Purchase History.',
+            'Pembayaran Berhasil!': 'Payment Successful!',
+            'Pesanan ATK kamu sudah lunas (simulasi).': 'Your ATK order is paid (simulation).',
+            'Tagihan Denda': 'Fine Bills',
+            'Denda dari buku yang sudah dikembalikan. Lunasi untuk bisa meminjam lagi.': 'Fines from returned books. Pay them to borrow again.',
+            'Bayar Denda': 'Pay Fine',
+            'SIMULASI PEMBAYARAN - tidak ada uang sungguhan': 'PAYMENT SIMULATION - no real money involved',
+            'Metode Pembayaran': 'Payment Method',
+            'Transfer Bank': 'Bank Transfer',
+            'Bayar Sekarang': 'Pay Now',
+            'Memproses pembayaran...': 'Processing payment...',
+            'Denda Lunas!': 'Fine Paid!',
+            'Semua': 'All',
+            'Sedang Dipesan': 'In Progress',
+            'Selesai': 'Completed',
+            'Dibatalkan': 'Cancelled',
+            'Refresh': 'Refresh',
+            'Memuat riwayat...': 'Loading history...',
+            'Total': 'Total',
+            'Ambil Sendiri di Sirkulasi': 'Self Pickup at Circulation',
+            'Batas ambil: 2 jam sejak pesanan dibuat': 'Pickup deadline: 2 hours after the order is placed',
+            'Tidak ada pesanan yang sedang diproses saat ini.': 'There are no orders in progress right now.',
+            'Belum ada pesanan yang telah selesai.': 'No completed orders yet.',
+            'Kamu sudah ada di antrian buku ini.': 'You are already in the queue for this book.',
+            'Belum ada buku lain dengan genre yang sama.': 'There are no other books with the same genre yet.',
+            'Kamu sudah membooking buku ini. Cek tab Sirkulasi.': 'You have already booked this book. Check the Circulation tab.',
+            'Masuk Antrian': 'Join Queue',
+            'Batalkan Antrian': 'Leave Queue',
+            'Ditahan untuk Antrian Lain': 'Held for Another Queue',
+            'Ini giliranmu!': "It's your turn!",
+            'Booking & Antar ke Rumah': 'Book & Deliver to Home',
+            'Perkiraan giliranmu:': 'Estimated turn:',
+            'Perkiraan:': 'Estimate:',
+            'Booking sebelum': 'Book before',
+            ', atau giliranmu akan hangus.': ', or your turn will expire.',
+            'Kalau sampai': 'If by',
+            'dia tidak booking, giliran otomatis pindah ke antrian berikutnya.': 'they have not booked, the turn automatically moves to the next person in the queue.',
+            'Buku': 'Book',
+            'Beli alat tulis & perlengkapan langsung dari perpustakaan.': 'Buy stationery & supplies directly from the library.',
+            'Keranjang': 'Cart',
+            'Cari nama atau kode produk...': 'Search product name or code...',
+            'Semua Kategori': 'All Categories',
+            'Alat Tulis': 'Stationery',
+            'Perlengkapan': 'Supplies',
+            'Memuat produk...': 'Loading products...',
+            'Tidak ada produk ditemukan.': 'No products found.',
+            'Produk gagal dimuat. Periksa koneksi lalu coba lagi.': 'Failed to load products. Check your connection and try again.',
+            'Muat ulang': 'Reload',
+            'Belum ada riwayat pembelian.': 'No purchase history yet.',
+            'Riwayat Pembelian': 'Purchase History',
+            'Total Denda': 'Total Fine',
+            'Beranda': 'Home',
+            'Pustaka': 'Library',
+            'Sirkulasi': 'Circulation',
+            'Profil': 'Profile',
+            'Detail Buku': 'Book Details',
+            'Rekomendasi Buku Serupa': 'Similar Book Recommendations',
+            'Formulir Peminjaman Buku': 'Book Loan Form',
+            'Mulai Tanggal': 'Start Date',
+            'Sampai Tanggal': 'Until Date',
+            'Opsi Pengambilan': 'Pickup Option',
+            'Ambil Sendiri': 'Self Pickup',
+            'Jasa Pengantaran': 'Delivery Service',
+            'Batal': 'Cancel',
+            'Konfirmasi': 'Confirm',
+            'Keranjang masih kosong.': 'Your cart is empty.',
+            'Metode Pengiriman': 'Delivery Method',
+            'Diantar ke Rumah': 'Deliver to Home',
+            'Alamat Pengiriman': 'Delivery Address',
+            'Tulis alamat lengkap tujuan pengiriman...': 'Write the full delivery address...',
+            'Total Pembayaran': 'Total Payment',
+            'Tambah ke Keranjang': 'Add to Cart',
+            'Jumlah': 'Quantity',
+            'Pemesanan Berhasil!': 'Order Successful!',
+            'Stok Habis': 'Out of Stock',
+            'Deskripsi buku tidak tersedia.': 'Book description is not available.',
+            'Baru saja': 'Just now',
+            'Berhasil!': 'Success!',
+            'Perhatian!': 'Attention!',
+            'Info': 'Info',
+            'Gagal': 'Failed',
+            'Tidak Bisa Masuk Antrian': 'Cannot Join Queue',
+            'Berhasil Masuk Antrian': 'Joined Queue',
+            'Antrian Dibatalkan': 'Queue Cancelled',
+            'Peminjaman Berhasil!': 'Loan Successful!',
+            'Buku berhasil disimpan ke sirkulasi Anda.': 'The book has been saved to your circulation.',
+            'Silakan login untuk ikut antrian.': 'Please log in to join the queue.',
+            'Terjadi kesalahan, coba lagi.': 'An error occurred, please try again.',
+            'Kamu telah keluar dari antrian buku ini.': 'You have left the queue for this book.',
+            'Kamu sedang meminjam buku ini': 'You are currently borrowing this book',
+            'Buku ini sedang ditahan untuk orang pertama di antrian': 'This book is being held for the first person in the queue',
+            'Belum bisa diperkirakan': 'Cannot be estimated yet',
+            'Belum ada perkiraan': 'No estimate yet',
+            'Menunggu Kurir': 'Waiting for Courier',
+            'Sedang Diantar Kurir': 'Out for Delivery',
+            'Menunggu diambil sendiri': 'Waiting for self pickup',
+            'Pesanan ATK — ambil sendiri': 'ATK Order — self pickup',
+            'Pesanan ATK': 'ATK Order',
+            'Ambil pesananmu': 'Pick up your order',
+            'Sesi habis. Silakan login kembali.': 'Session expired. Please log in again.',
+            'Mohon isi tanggal pinjam dan batas pengembalian!': 'Please fill in the loan date and return deadline!',
+            'Batas pengembalian harus setelah tanggal pinjam!': 'The return deadline must be after the loan date!',
+            'Jumlah tidak valid!': 'Invalid quantity!',
+            'Melebihi stok tersedia!': 'Exceeds available stock!',
+            'Melebihi stok!': 'Exceeds stock!',
+            'Gagal memproses pesanan. Coba lagi.': 'Failed to process the order. Please try again.',
+            'Tidak bisa terhubung ke server. Coba lagi.': 'Cannot connect to the server. Please try again.',
+            'Pesanan diterima! Akan diantar ke alamatmu, pantau statusnya di tab Sirkulasi.': 'Order received! It will be delivered to your address, track its status in the Circulation tab.',
+            'Pesanan diterima! Ambil di meja sirkulasi dalam 2 jam.': 'Order received! Pick it up at the circulation desk within 2 hours.',
+            'Terima kasih telah meminjam! Buku sedang diantarkan oleh kurir ke alamatmu.': 'Thank you for borrowing! The book is being delivered by courier to your address.'
+        };
+
+        // [pola, pengganti] untuk teks yang mengandung angka/nama dinamis
+        const PATTERNS = [
+            [/^Lunas \((.+)\)$/, (m, a) => 'Paid (' + a + ')'],
+            [/^Dipesan: (.+)$/, (m, a) => 'Ordered: ' + translate(a)],
+            [/^Selesai pada: (.+)$/, (m, a) => 'Completed on: ' + translate(a)],
+            [/^(\d+) menit lalu$/, '$1 minutes ago'],
+            [/^(\d+) jam lalu$/, '$1 hours ago'],
+            [/^(\d+) hari lalu$/, '$1 days ago'],
+            [/^Stok: (\d+)$/, 'Stock: $1'],
+            [/^Stok tersedia:/, 'Available stock:'],
+            [/^Tahun: (.+)$/, 'Year: $1'],
+            [/^Terlambat (\d+) hari × Rp (.+) \/ hari$/, 'Overdue $1 days × Rp $2 / day'],
+            [/^(\d+) orang sedang mengantre$/, '$1 people are in the queue'],
+            [/^Kalau kamu antre sekarang, kamu jadi antrian ke-(\d+)\. Perkiraan giliranmu:$/, 'If you join the queue now, you will be number $1. Estimated turn:'],
+            [/^Antrian ke-(\d+)$/, 'Queue #$1'],
+            [/^Masuk Antrian \(jadi ke-(\d+)\)$/, 'Join Queue (you will be #$1)'],
+            [/^Kamu ada di antrian ke-(\d+) dari (\d+)\.$/, 'You are number $1 of $2 in the queue.'],
+            [/^Kamu antrian ke-(\d+) dari (\d+)$/, 'You are number $1 of $2 in the queue'],
+            [/^Kamu telah masuk antrian untuk buku "(.*)"\. Kami akan memberi tahu kamu saat giliranmu tiba\.$/, 'You have joined the queue for the book "$1". We will notify you when it is your turn.'],
+            [/^Terima kasih telah meminjam buku "(.*)"! Buku sedang diantarkan oleh kurir ke alamatmu\.$/, 'Thank you for borrowing "$1"! The book is being delivered by courier to your address.'],
+            [/^"(.*)" ditambahkan ke keranjang!$/, (m, a) => '"' + translate(a) + '" added to the cart!'],
+            [/^Durasi peminjaman maksimal adalah 1 bulan dari tanggal pinjam\. Silakan pilih tanggal pengembalian paling lambat (.+)\.$/, 'The maximum loan period is 1 month from the loan date. Please choose a return date no later than $1.'],
+            [/^(Ambil pesananmu|Ambil buku) langsung di meja sirkulasi perpustakaan sebelum batas waktu di atas habis\.$/, 'Pick up your order/book directly at the library circulation desk before the deadline above.']
+        ];
+
+        const MONTHS = {Jan:'Jan',Feb:'Feb',Mar:'Mar',Apr:'Apr',Jun:'Jun',Jul:'Jul',Agu:'Aug',Sep:'Sep',Okt:'Oct',Nov:'Nov',Des:'Dec',Januari:'January',Februari:'February',Maret:'March',April:'April',Mei:'May',Juni:'June',Juli:'July',Agustus:'August',September:'September',Oktober:'October',November:'November',Desember:'December'};
+
+        function translate(str) {
+            const m = str.match(/^(\s*)([\s\S]*?)(\s*)$/);
+            const lead = m[1], core = m[2], trail = m[3];
+            if (!core) return str;
+            const norm = core.replace(/\s+/g, ' ');
+            if (EXACT[norm] !== undefined) return lead + EXACT[norm] + trail;
+            for (const [re, rep] of PATTERNS) {
+                if (re.test(norm)) return lead + norm.replace(re, rep) + trail;
+            }
+            // Tanggal berbahasa Indonesia, mis. "29 Juni 2026"
+            const d = norm.match(/^(\d{1,2}) (Januari|Februari|Maret|April|Mei|Juni|Juli|Agustus|September|Oktober|November|Desember|Jan|Feb|Mar|Apr|Jun|Jul|Agu|Sep|Okt|Nov|Des)(?: (\d{4}))?(.*)$/);
+            if (d) return lead + d[1] + ' ' + MONTHS[d[2]] + (d[3] ? ' ' + d[3] : '') + translate(d[4] || '') + trail;
+            return str;
+        }
+
+        const SKIP = new Set(['SCRIPT', 'STYLE', 'TEXTAREA', 'NOSCRIPT']);
+        const ATTRS = ['placeholder', 'title', 'aria-label'];
+        const textState = new Map();   // node -> { orig, en }
+        const attrState = new Map();   // "el|attr" handled via el -> {attr: {orig,en}}
+        let busy = false;
+
+        function processText(node) {
+            const parent = node.parentNode;
+            if (!parent || SKIP.has(parent.nodeName)) return;
+            const st = textState.get(node);
+            if (st && node.nodeValue === st.en) return; // sudah kita terjemahkan
+            const current = node.nodeValue;
+            const en = translate(current);
+            if (en !== current) {
+                textState.set(node, { orig: current, en });
+                node.nodeValue = en;
+            } else if (st) {
+                textState.delete(node);
+            }
+        }
+
+        function processAttrs(el) {
+            for (const a of ATTRS) {
+                if (!el.hasAttribute || !el.hasAttribute(a)) continue;
+                const cur = el.getAttribute(a);
+                let st = attrState.get(el);
+                if (st && st[a] && cur === st[a].en) continue;
+                const en = translate(cur);
+                if (en !== cur) {
+                    if (!st) { st = {}; attrState.set(el, st); }
+                    st[a] = { orig: cur, en };
+                    el.setAttribute(a, en);
+                } else if (st && st[a]) {
+                    delete st[a];
+                }
+            }
+        }
+
+        function walk(root) {
+            if (!root) return;
+            if (root.nodeType === 3) { processText(root); return; }
+            if (root.nodeType !== 1) return;
+            if (SKIP.has(root.nodeName)) return;
+            processAttrs(root);
+            const tw = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+                acceptNode(n) {
+                    return (n.nodeType === 1 && SKIP.has(n.nodeName)) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT;
+                }
+            });
+            let n;
+            while ((n = tw.nextNode())) {
+                if (n.nodeType === 3) processText(n); else processAttrs(n);
+            }
+        }
+
+        function restore() {
+            textState.forEach((st, node) => {
+                if (node.nodeValue === st.en) node.nodeValue = st.orig;
+            });
+            textState.clear();
+            attrState.forEach((st, el) => {
+                for (const a in st) {
+                    if (el.getAttribute(a) === st[a].en) el.setAttribute(a, st[a].orig);
+                }
+            });
+            attrState.clear();
+        }
+
+        function sync() {
+            busy = true;
+            try {
+                if (typeof currentLang !== 'undefined' && currentLang === 'en') walk(document.body);
+                else restore();
+            } finally { busy = false; }
+        }
+
+        const observer = new MutationObserver(muts => {
+            if (busy || currentLang !== 'en') return;
+            busy = true;
+            try {
+                for (const m of muts) {
+                    if (m.type === 'childList') m.addedNodes.forEach(walk);
+                    else if (m.type === 'characterData') processText(m.target);
+                    else if (m.type === 'attributes') processAttrs(m.target);
+                }
+            } finally { busy = false; }
+        });
+        observer.observe(document.body, {
+            childList: true, subtree: true, characterData: true,
+            attributes: true, attributeFilter: ATTRS
+        });
+
+        // Sinkronkan setiap kali bahasa diganti
+        const origChange = window.changeLanguage;
+        window.changeLanguage = function (lang) {
+            if (lang !== 'en') restore();
+            origChange(lang);
+            sync();
+        };
+
+        // Terjemahkan juga pesan alert()
+        const origAlert = window.alert;
+        window.alert = function (msg) {
+            return origAlert.call(window, (currentLang === 'en' && typeof msg === 'string') ? translate(msg) : msg);
+        };
+
+        sync();
+        window.addEventListener('load', sync);
+    })();
     </script>
 </body>
 </html>

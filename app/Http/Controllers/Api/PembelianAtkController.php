@@ -8,6 +8,7 @@ use App\Models\PembelianAtk;
 use App\Models\ProdukAtk;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
 class PembelianAtkController extends Controller
@@ -96,6 +97,8 @@ class PembelianAtkController extends Controller
             'metode_pengiriman'        => ['required', 'in:ambil_sendiri,antar'],
             'alamat_kirim'             => ['nullable', 'string', 'max:500'],
             'status'                   => ['sometimes', 'nullable', 'string'],
+            // 'di_tempat' = bayar saat ambil / saat barang tiba; 'online' = bayar lewat simulasi setelah checkout
+            'metode_bayar'             => ['sometimes', 'nullable', 'in:di_tempat,online'],
         ]);
 
         try {
@@ -140,6 +143,8 @@ class PembelianAtkController extends Controller
                     'metode_pengiriman' => $data['metode_pengiriman'],
                     'alamat_kirim'      => $data['alamat_kirim'] ?? null,
                     'status'            => $status,
+                    'status_bayar'      => 'Belum Dibayar',
+                    'metode_bayar'      => ($data['metode_bayar'] ?? 'di_tempat') === 'di_tempat' ? 'Bayar di Tempat' : null,
                 ]);
 
                 Notification::create([
@@ -180,7 +185,8 @@ class PembelianAtkController extends Controller
         }
 
         $data = $request->validate([
-            'status' => ['required', 'string'],
+            'status'       => ['required', 'string'],
+            'status_bayar' => ['sometimes', 'nullable', 'in:Belum Dibayar,Lunas'],
         ]);
 
         $newStatus = $data['status'];
@@ -190,6 +196,19 @@ class PembelianAtkController extends Controller
 
         if (in_array($newStatus, ['Selesai']) && ! $order->tanggal_selesai) {
             $order->tanggal_selesai = now();
+        }
+
+        // Admin menandai pembayaran secara manual (mis. tunai diterima di meja sirkulasi).
+        if (($data['status_bayar'] ?? null) === 'Lunas' && $order->status_bayar !== 'Lunas') {
+            $order->status_bayar = 'Lunas';
+            $order->metode_bayar = $order->metode_bayar ?: 'Bayar di Tempat';
+            $order->dibayar_at = now();
+        }
+
+        // Pesanan "bayar di tempat" yang sudah selesai (diambil/diterima) otomatis dianggap lunas.
+        if ($newStatus === 'Selesai' && $order->status_bayar !== 'Lunas' && $order->metode_bayar === 'Bayar di Tempat') {
+            $order->status_bayar = 'Lunas';
+            $order->dibayar_at = now();
         }
 
         // Kalau dibatalkan DAN sebelumnya belum final, kembalikan stoknya.
@@ -213,6 +232,60 @@ class PembelianAtkController extends Controller
         ]);
 
         return response()->json($order);
+    }
+
+    /**
+     * POST /api/pembelian-atk/{id}/bayar   (SIMULASI -- tidak ada uang sungguhan)
+     * body: { user_id, metode: 'QRIS'|'Transfer Bank'|'E-Wallet' }
+     * Jumlah selalu diambil dari database, bukan dari browser.
+     */
+    public function bayar(Request $request, string $id)
+    {
+        $data = $request->validate([
+            'user_id' => ['required', 'string'],
+            'metode'  => ['required', 'in:QRIS,Transfer Bank,E-Wallet'],
+        ]);
+
+        $order = PembelianAtk::find($id);
+        if (! $order) {
+            return response()->json(['success' => false, 'message' => 'Pesanan tidak ditemukan.'], 404);
+        }
+        if ((string) $order->user_id !== (string) $data['user_id']) {
+            return response()->json(['success' => false, 'message' => 'Pesanan ini bukan milik akun kamu.'], 403);
+        }
+        if ($order->status === 'Dibatalkan') {
+            return response()->json(['success' => false, 'message' => 'Pesanan ini sudah dibatalkan.'], 422);
+        }
+        if ($order->status_bayar === 'Lunas') {
+            return response()->json(['success' => false, 'message' => 'Pesanan ini sudah lunas.'], 409);
+        }
+        if ($order->metode_bayar === 'Bayar di Tempat') {
+            return response()->json(['success' => false, 'message' => 'Pesanan ini dipilih bayar di tempat.'], 422);
+        }
+
+        $order->status_bayar = 'Lunas';
+        $order->metode_bayar = $data['metode'];
+        $order->dibayar_at = now();
+        $order->save();
+
+        // Beri tahu kurir (kalau pesanan ini diantar) bahwa tidak perlu menagih.
+        if (Schema::hasTable('courier_orders') && Schema::hasColumn('courier_orders', 'status_bayar')) {
+            DB::table('courier_orders')
+                ->where('id', $order->id)->orWhere('order_id', $order->id)
+                ->update(['status_bayar' => 'Lunas', 'metode_bayar' => $data['metode']]);
+        }
+
+        Notification::create([
+            'id'      => (string) Str::uuid(),
+            'user_id' => $order->user_id,
+            'title'   => 'Pembayaran Berhasil',
+            'message' => 'Pembayaran Rp' . number_format($order->total, 0, ',', '.')
+                . ' untuk pesanan Toko ATK berhasil via ' . $data['metode'] . ' (simulasi).',
+            'type'    => 'success',
+            'is_read' => false,
+        ]);
+
+        return response()->json(['success' => true, 'order' => $order]);
     }
 
     public function destroy(string $id)

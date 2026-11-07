@@ -102,6 +102,12 @@ class User extends Authenticatable implements CanResetPassword
         return strtolower($this->nim) === 'admin';
     }
 
+    public function isKurir(): bool
+    {
+        return strtolower((string) $this->nim) === 'kurir'
+            || strtolower((string) $this->username) === 'kurir';
+    }
+
     /**
      * Relasi dengan tabel pinjam (sirkulasi) untuk backend-admin-v2
      */
