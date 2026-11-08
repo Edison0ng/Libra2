@@ -15,7 +15,7 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
@@ -23,12 +23,24 @@
             darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'] },
                     colors: {
+                        north: {
+                            bg: '#F1EFEA',
+                            card: '#FDFCF9',
+                            dark: '#151512',
+                            darkHover: '#23231F',
+                            border: '#E5E2DA',
+                            borderDark: '#262620',
+                            lime: '#BEF264',
+                            indigo: '#6366F1',
+                            text: '#1A1916',
+                            muted: '#78756D',
+                        },
                         libra: {
-                            dark: '#1E293B',
-                            bg: '#F8FAFC',
-                            primary: '#3B82F6',
+                            dark: '#151512',
+                            bg: '#F1EFEA',
+                            primary: '#6366F1',
                             red: '#E11D48'
                         }
                     }
@@ -37,6 +49,15 @@
         }
     </script>
     <style>
+        body {
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+            background-color: #F1EFEA;
+            color: #1A1916;
+        }
+        .dark body {
+            background-color: #151512;
+            color: #EAE8E2;
+        }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .tab-content { display: none; }
@@ -114,67 +135,86 @@
         })();
     </script>
 </head>
-<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex h-screen overflow-hidden transition-colors duration-200">
+<body class="bg-[#F1EFEA] text-[#1A1916] dark:bg-[#151512] dark:text-[#EAE8E2] flex h-screen overflow-hidden transition-colors duration-200">
 
     <!-- SIDEBAR -->
-    <aside class="hidden md:flex flex-col w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 h-full transition-colors duration-200">
-        <div class="p-6 border-b border-slate-100 dark:border-slate-800">
-            <h1 class="text-2xl font-bold text-slate-800 dark:text-white tracking-tight flex items-center gap-2">
-                <i class="fa-solid fa-book-bookmark text-blue-600"></i> LIBRA
-            </h1>
-            <p class="text-[10px] text-slate-400 font-medium tracking-widest mt-1 uppercase">Sistem Informasi Perpustakaan</p>
+    <aside class="hidden md:flex flex-col w-60 flex-shrink-0 bg-[#151512] border-r border-[#262620] h-full transition-colors duration-200 select-none text-[#9C988F]">
+        <div class="p-5 pb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-[#BEF264] flex items-center justify-center text-[#151512] font-black text-base shadow-sm">
+                    L
+                </div>
+                <div class="flex items-baseline gap-1.5">
+                    <span class="text-lg font-bold text-white tracking-tight">LIBRA</span>
+                    <span class="text-[9px] font-bold tracking-widest text-[#BEF264] uppercase">PORTAL</span>
+                </div>
+            </div>
+
+            <!-- Workspace Card -->
+            <div class="mt-4 p-2.5 rounded-xl bg-[#21211D] border border-[#2E2E28] flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-[#BEF264] text-[#151512] flex items-center justify-center text-xs font-black shadow-sm">
+                    MH
+                </div>
+                <div class="overflow-hidden leading-tight">
+                    <p class="text-xs font-semibold text-white truncate" id="sidebar-user-name">Mahasiswa</p>
+                    <p class="text-[10px] text-[#8A867D] truncate">Anggota Perpustakaan</p>
+                </div>
+            </div>
         </div>
-        <nav class="flex-1 p-4 space-y-1.5">
-            <button onclick="switchTab('beranda')" id="nav-beranda-btn" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-semibold bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 transition-all" data-target="beranda">
-                <i class="fa-solid fa-house w-5 text-lg"></i> <span data-i18n="nav-beranda">Beranda</span>
+
+        <nav class="flex-1 px-3 py-2 space-y-1.5 overflow-y-auto hide-scrollbar text-xs">
+            <p class="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-[#6E6B64]">Menu Mahasiswa</p>
+            <button onclick="switchTab('beranda')" id="nav-beranda-btn" class="nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left font-semibold bg-[#BEF264] text-[#151512] transition-all" data-target="beranda">
+                <i class="fa-solid fa-house w-4 text-sm"></i> <span data-i18n="nav-beranda">Beranda</span>
             </button>
-            <button onclick="switchTab('buku')" id="nav-buku-btn" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all" data-target="buku">
-                <i class="fa-solid fa-magnifying-glass w-5 text-lg"></i> <span data-i18n="nav-pustaka">Pustaka</span>
+            <button onclick="switchTab('buku')" id="nav-buku-btn" class="nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left font-medium text-[#9C988F] hover:text-white hover:bg-[#21211D] transition-all" data-target="buku">
+                <i class="fa-solid fa-magnifying-glass w-4 text-sm"></i> <span data-i18n="nav-pustaka">Pustaka</span>
             </button>
-            <button onclick="switchTab('sirkulasi')" id="nav-sirkulasi-btn" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all" data-target="sirkulasi">
-                <i class="fa-solid fa-arrows-spin w-5 text-lg"></i> <span data-i18n="nav-sirkulasi">Sirkulasi</span>
+            <button onclick="switchTab('sirkulasi')" id="nav-sirkulasi-btn" class="nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left font-medium text-[#9C988F] hover:text-white hover:bg-[#21211D] transition-all" data-target="sirkulasi">
+                <i class="fa-solid fa-arrows-spin w-4 text-sm"></i> <span data-i18n="nav-sirkulasi">Sirkulasi</span>
             </button>
-            <button onclick="switchTab('toko')" id="nav-toko-btn" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all" data-target="toko">
-                <i class="fa-solid fa-store w-5 text-lg"></i> <span>Toko ATK</span>
-                <span id="cart-badge-sidebar" class="hidden ml-auto bg-slate-800 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">0</span>
+            <button onclick="switchTab('toko')" id="nav-toko-btn" class="nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left font-medium text-[#9C988F] hover:text-white hover:bg-[#21211D] transition-all" data-target="toko">
+                <i class="fa-solid fa-store w-4 text-sm"></i> <span>Toko ATK</span>
+                <span id="cart-badge-sidebar" class="hidden ml-auto bg-[#BEF264] text-[#151512] text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">0</span>
             </button>
-            <button onclick="switchTab('profil')" id="nav-profil-btn" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all" data-target="profil">
-                <i class="fa-regular fa-user w-5 text-lg"></i> <span data-i18n="nav-profil">Profil</span>
+            <button onclick="switchTab('profil')" id="nav-profil-btn" class="nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left font-medium text-[#9C988F] hover:text-white hover:bg-[#21211D] transition-all" data-target="profil">
+                <i class="fa-regular fa-user w-4 text-sm"></i> <span data-i18n="nav-profil">Profil</span>
             </button>
         </nav>
     </aside>
 
     <!-- KONTEN UTAMA -->
-    <main class="flex-1 flex flex-col h-full relative overflow-hidden">
+    <main class="flex-1 flex flex-col h-full relative min-w-0 overflow-hidden">
         
         <!-- HEADER -->
-        <header class="bg-slate-900 dark:bg-slate-950 text-white px-6 py-4 flex items-center justify-between shadow-md z-20">
+        <header class="bg-[#F1EFEA] dark:bg-[#151512] text-[#1A1916] dark:text-[#EAE8E2] px-4 md:px-6 py-4 flex items-center justify-between border-b border-[#E5E2DA] dark:border-[#262620] z-20 min-w-0">
             <div>
-                <h2 id="header-title" class="font-bold text-lg md:text-xl tracking-wide">Beranda</h2>
-                <p id="header-subtitle" class="text-xs text-slate-400">Selamat datang kembali, Mahasiswa!</p>
+                <p class="text-[10px] md:text-[11px] font-bold tracking-wider uppercase text-[#8A867D]">PORTAL MAHASISWA</p>
+                <h2 id="header-title" class="font-extrabold text-xl md:text-2xl tracking-tight text-[#1A1916] dark:text-white">Beranda</h2>
+                <p id="header-subtitle" class="text-xs text-[#78756D] mt-0.5">Selamat datang kembali, Mahasiswa!</p>
             </div>
             
             <div class="flex items-center gap-3">
-                <button onclick="toggleDarkMode()" id="dark-mode-toggle" title="Ganti tema gelap/terang" aria-label="Ganti tema gelap/terang" class="focus:outline-none relative p-2 w-10 h-10 flex items-center justify-center bg-slate-800 dark:bg-slate-900 rounded-xl hover:bg-slate-700 transition-colors">
-                    <i class="fa-regular fa-moon text-lg dark:hidden"></i>
-                    <i class="fa-regular fa-sun text-lg hidden dark:inline text-amber-300"></i>
+                <button onclick="toggleDarkMode()" id="dark-mode-toggle" title="Ganti tema gelap/terang" aria-label="Ganti tema gelap/terang" class="focus:outline-none relative p-2 w-9 h-9 flex items-center justify-center bg-[#FDFCF9] dark:bg-[#21211D] border border-[#E5E2DA] dark:border-[#2E2E28] rounded-xl text-[#78756D] hover:text-[#1A1916] dark:hover:text-white transition">
+                    <i class="fa-regular fa-moon text-sm dark:hidden"></i>
+                    <i class="fa-regular fa-sun text-sm hidden dark:inline text-[#BEF264]"></i>
                 </button>
 
-                <button onclick="toggleNotif(event)" class="focus:outline-none relative p-2 bg-slate-800 dark:bg-slate-900 rounded-xl hover:bg-slate-700 transition-colors">
-                    <i class="fa-regular fa-bell text-lg"></i>
-                    <span id="notif-badge" class="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                <button onclick="toggleNotif(event)" class="focus:outline-none relative p-2 w-9 h-9 flex items-center justify-center bg-[#FDFCF9] dark:bg-[#21211D] border border-[#E5E2DA] dark:border-[#2E2E28] rounded-xl text-[#78756D] hover:text-[#1A1916] dark:hover:text-white transition">
+                    <i class="fa-regular fa-bell text-sm"></i>
+                    <span id="notif-badge" class="absolute top-1.5 right-1.5 flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#BEF264] opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-[#BEF264]"></span>
                     </span>
                 </button>
 
-                <div id="notif-panel" class="hidden absolute right-6 top-16 w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 z-50 overflow-hidden text-slate-800 dark:text-slate-100">
-                    <div class="flex justify-between items-center p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
-                        <h3 class="font-bold text-sm">Notifikasi Terbaru</h3>
-                        <button class="text-xs text-blue-500 font-semibold" onclick="clearNotifications()">Tandai dibaca</button>
+                <div id="notif-panel" class="hidden absolute right-6 top-16 w-80 bg-[#FDFCF9] dark:bg-[#1C1C18] rounded-2xl shadow-xl border border-[#E5E2DA] dark:border-[#262620] z-50 overflow-hidden text-[#1A1916] dark:text-[#EAE8E2]">
+                    <div class="flex justify-between items-center p-4 border-b border-[#E5E2DA] dark:border-[#262620] bg-[#F7F5F0] dark:bg-[#21211D]">
+                        <h3 class="font-bold text-xs uppercase tracking-wider text-[#1A1916] dark:text-white">Notifikasi Terbaru</h3>
+                        <button class="text-[11px] text-[#5B9E16] dark:text-[#BEF264] font-semibold hover:underline" onclick="clearNotifications()">Tandai dibaca</button>
                     </div>
                     <div id="notif-list" class="p-4 space-y-3.5 max-h-72 overflow-y-auto hide-scrollbar">
-                        <p class="text-xs text-slate-400 text-center py-4">Memuat notifikasi...</p>
+                        <p class="text-xs text-[#78756D] text-center py-4">Memuat notifikasi...</p>
                     </div>
                 </div>
             </div>
@@ -275,56 +315,56 @@
                      tab Sirkulasi tidak penuh sesak kalau ada banyak pesanan berjalan sekaligus;
                      detail timeline/countdown lengkap baru muncul saat barisnya diklik. -->
                 <template id="circ-order-template">
-                    <div class="circ-order-card bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 overflow-hidden">
-                        <button type="button" class="circ-order-toggle-btn w-full flex items-center justify-between gap-3 p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                    <div class="circ-order-card bg-[#FDFCF9] dark:bg-[#1C1C18] rounded-2xl border border-[#E5E2DA] dark:border-[#262620] overflow-hidden">
+                        <button type="button" class="circ-order-toggle-btn w-full flex items-center justify-between gap-3 p-4 text-left hover:bg-[#F7F5F0] dark:hover:bg-[#21211D] transition-colors">
                             <div class="flex items-center gap-3 min-w-0">
                                 <div class="circ-order-icon-wrap w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0">
                                     <i class="circ-order-icon-el text-base"></i>
                                 </div>
                                 <div class="min-w-0">
-                                    <p class="circ-order-title-el font-bold text-sm text-slate-800 dark:text-white truncate"></p>
-                                    <p class="circ-order-status-label-el text-xs text-slate-400 mt-0.5 truncate"></p>
+                                    <p class="circ-order-title-el font-bold text-sm text-[#1A1916] dark:text-white truncate"></p>
+                                    <p class="circ-order-status-label-el text-xs text-[#78756D] mt-0.5 truncate"></p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-3 flex-shrink-0">
-                                <span class="circ-order-right-el font-mono text-xs font-bold text-slate-600 dark:text-slate-300"></span>
-                                <i class="fa-solid fa-chevron-down circ-order-chevron-el text-slate-400 text-xs transition-transform duration-200"></i>
+                                <span class="circ-order-right-el font-mono text-xs font-bold text-[#1A1916] dark:text-[#EAE8E2]"></span>
+                                <i class="fa-solid fa-chevron-down circ-order-chevron-el text-[#78756D] text-xs transition-transform duration-200"></i>
                             </div>
                         </button>
-                        <div class="circ-order-detail-el hidden border-t border-slate-100 dark:border-slate-800 p-4"></div>
+                        <div class="circ-order-detail-el hidden border-t border-[#E5E2DA] dark:border-[#262620] p-4"></div>
                     </div>
                 </template>
 
-                <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800">
-                    <h4 class="font-bold text-sm mb-4 text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="circ-active-loans">Peminjaman Aktif Saya</h4>
+                <div class="bg-[#FDFCF9] dark:bg-[#1C1C18] p-6 rounded-2xl border border-[#E5E2DA] dark:border-[#262620]">
+                    <h4 class="font-bold text-xs uppercase tracking-wider mb-4 text-[#8A867D]" data-i18n="circ-active-loans">Peminjaman Aktif Saya</h4>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs min-w-[500px]">
                             <thead>
-                                <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400">
-                                    <th class="pb-3 font-semibold" data-i18n="circ-table-title">Judul Buku</th>
-                                    <th class="pb-3 font-semibold" data-i18n="circ-table-loan-date">Tgl Pinjam</th>
-                                    <th class="pb-3 font-semibold" data-i18n="circ-table-due-date">Batas Kembali</th>
+                                <tr class="border-b border-[#E5E2DA] dark:border-[#262620] text-[#78756D]">
+                                    <th class="pb-3 font-semibold uppercase text-[10px] tracking-wider" data-i18n="circ-table-title">Judul Buku</th>
+                                    <th class="pb-3 font-semibold uppercase text-[10px] tracking-wider" data-i18n="circ-table-loan-date">Tgl Pinjam</th>
+                                    <th class="pb-3 font-semibold uppercase text-[10px] tracking-wider" data-i18n="circ-table-due-date">Batas Kembali</th>
                                 </tr>
                             </thead>
-                            <tbody id="active-loans-tbody" class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-300">
+                            <tbody id="active-loans-tbody" class="divide-y divide-[#E5E2DA] dark:divide-[#262620] text-[#1A1916] dark:text-[#EAE8E2]">
                                 <tr>
-                                    <td colspan="3" class="text-center py-8 text-slate-400 italic">Memuat data peminjaman...</td>
+                                    <td colspan="3" class="text-center py-8 text-[#78756D] italic">Memuat data peminjaman...</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <div id="fine-breakdown-card" class="hidden bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800">
-                    <h4 class="font-bold text-sm mb-4 text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="circ-fine-breakdown">Rincian Informasi Denda Berjalan</h4>
+                <div id="fine-breakdown-card" class="hidden bg-[#FDFCF9] dark:bg-[#1C1C18] p-6 rounded-2xl border border-[#E5E2DA] dark:border-[#262620]">
+                    <h4 class="font-bold text-xs uppercase tracking-wider mb-4 text-[#8A867D]" data-i18n="circ-fine-breakdown">Rincian Informasi Denda Berjalan</h4>
                     <div id="fine-breakdown-list" class="space-y-3">
                         <!-- Akan diisi secara dinamis -->
                     </div>
                 </div>
 
-                <div id="unpaid-fines-card" class="hidden bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800">
-                    <h4 class="font-bold text-sm mb-1 text-slate-700 dark:text-slate-300 uppercase tracking-wider">Tagihan Denda</h4>
-                    <p class="text-[11px] text-slate-400 mb-4">Denda dari buku yang sudah dikembalikan. Lunasi untuk bisa meminjam lagi.</p>
+                <div id="unpaid-fines-card" class="hidden bg-[#FDFCF9] dark:bg-[#1C1C18] p-6 rounded-2xl border border-[#E5E2DA] dark:border-[#262620]">
+                    <h4 class="font-bold text-xs uppercase tracking-wider mb-1 text-[#8A867D]">Tagihan Denda</h4>
+                    <p class="text-[11px] text-[#78756D] mb-4">Denda dari buku yang sudah dikembalikan. Lunasi untuk bisa meminjam lagi.</p>
                     <div id="unpaid-fines-list" class="space-y-3"></div>
                 </div>
             </div>
@@ -332,13 +372,13 @@
             <!-- TAB 4: PROFIL -->
             <div id="profil" class="tab-content max-w-xl mx-auto space-y-6">
                 <!-- Profil Mahasiswa -->
-                <div class="bg-gradient-to-br from-slate-800 to-slate-950 dark:from-slate-900 dark:to-black p-6 rounded-3xl text-center text-white shadow-md relative overflow-hidden">
-                    <div class="w-20 h-20 bg-slate-700 rounded-full mx-auto mb-3 border-4 border-slate-600 overflow-hidden">
+                <div class="bg-[#151512] border border-[#262620] p-6 rounded-3xl text-center text-white relative overflow-hidden">
+                    <div class="w-20 h-20 bg-[#21211D] rounded-full mx-auto mb-3 border-4 border-[#262620] overflow-hidden">
                         <img id="profile-card-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=libra" class="w-full h-full object-cover">
                     </div>
                     <h3 id="profile-card-name" class="font-bold text-lg">&nbsp;</h3>
-                    <p class="text-xs text-slate-400">NIM: <span id="profile-card-nim">-</span></p>
-                    <span id="profile-card-fakultas" class="inline-block bg-white/10 text-[10px] font-medium px-3 py-1 rounded-full mt-3 border border-white/10">-</span>
+                    <p class="text-xs text-[#8A867D]">NIM: <span id="profile-card-nim">-</span></p>
+                    <span id="profile-card-fakultas" class="inline-block bg-[#BEF264]/15 text-[#BEF264] border border-[#BEF264]/30 text-[10px] font-bold px-3 py-1 rounded-full mt-3">-</span>
                 </div>
 
                 <!-- Pengaturan & Fitur -->
@@ -355,13 +395,13 @@
                             </select>
                             <button type="button" id="lang-btn" onclick="toggleLangMenu(event)" aria-haspopup="listbox" aria-expanded="false"
                                 class="flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/70 dark:border-slate-700 transition-colors text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60">
-                                <span id="lang-btn-code" class="w-6 h-6 rounded-lg bg-emerald-500 text-white text-[10px] font-bold flex items-center justify-center transition-colors">ID</span>
+                                <span id="lang-btn-code" class="w-6 h-6 rounded-lg bg-[#BEF264] text-[#151512] text-[10px] font-black flex items-center justify-center transition-colors">ID</span>
                                 <span id="lang-btn-label">Indonesia</span>
                                 <i id="lang-btn-chevron" class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200"></i>
                             </button>
                             <div id="lang-menu" role="listbox" class="hidden fixed z-[60] w-52 p-1.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl opacity-0 scale-95 origin-top-right transition duration-150 ease-out">
                                 <button type="button" role="option" data-lang="id" onclick="selectLanguage('id')" class="lang-option w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                                    <span class="w-8 h-8 rounded-lg bg-emerald-500 text-white text-[11px] font-bold flex items-center justify-center">ID</span>
+                                    <span class="w-8 h-8 rounded-lg bg-[#BEF264] text-[#151512] text-[11px] font-black flex items-center justify-center">ID</span>
                                     <span class="flex-1 leading-tight">
                                         <span class="block text-xs font-semibold text-slate-800 dark:text-slate-100">Indonesia</span>
                                         <span class="block text-[10px] text-slate-400">Bahasa Indonesia</span>
@@ -369,7 +409,7 @@
                                     <i class="lang-check fa-solid fa-circle-check text-emerald-500 text-sm"></i>
                                 </button>
                                 <button type="button" role="option" data-lang="en" onclick="selectLanguage('en')" class="lang-option w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                                    <span class="w-8 h-8 rounded-lg bg-blue-500 text-white text-[11px] font-bold flex items-center justify-center">EN</span>
+                                    <span class="w-8 h-8 rounded-lg bg-[#BEF264] text-[#151512] text-[11px] font-black flex items-center justify-center">EN</span>
                                     <span class="flex-1 leading-tight">
                                         <span class="block text-xs font-semibold text-slate-800 dark:text-slate-100">English</span>
                                         <span class="block text-[10px] text-slate-400">English language</span>
@@ -384,13 +424,13 @@
                         <div class="flex items-center gap-3 font-medium text-slate-700 dark:text-slate-300">
                             <i class="fa-solid fa-wallet text-lg text-rose-500"></i> <span data-i18n="fine-status">Status Informasi Denda</span>
                         </div>
-                        <span class="text-xs text-blue-500 font-semibold flex items-center gap-1"><span data-i18n="show-action">Tampilkan</span> <i class="fa-solid fa-chevron-right text-[10px]"></i></span>
+                        <span class="text-xs text-[#5B9E16] dark:text-[#BEF264] font-semibold flex items-center gap-1"><span data-i18n="show-action">Tampilkan</span> <i class="fa-solid fa-chevron-right text-[10px]"></i></span>
                     </div>
 
                     <!-- Formulir Feedback -->
                     <div class="p-4 border-b border-slate-100 dark:border-slate-800">
                         <div class="flex items-center gap-2 mb-1">
-                            <i class="fa-solid fa-comment-dots text-blue-500 text-sm"></i>
+                            <i class="fa-solid fa-comment-dots text-[#5B9E16] dark:text-[#BEF264] text-sm"></i>
                             <h4 class="font-bold text-sm text-slate-800 dark:text-white" data-i18n="feedback-title">Kirim Masukan / Feedback</h4>
                         </div>
                         <p class="text-xs text-slate-400 leading-normal mb-4" data-i18n="feedback-desc">Bantu kami meningkatkan Sistem Libra dengan memberikan saran atau laporan kendala Anda.</p>
@@ -409,7 +449,7 @@
                                 <label data-i18n="feedback-label-msg" for="feedback-message" class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Pesan Anda</label>
                                 <textarea id="feedback-message" rows="4" required class="w-full text-xs px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-slate-800 dark:text-white resize-none" placeholder="Tuliskan saran atau masukan Anda di sini..."></textarea>
                             </div>
-                            <button type="submit" data-i18n="feedback-btn-submit" class="w-full py-2.5 bg-blue-600 text-white text-xs font-semibold rounded-xl shadow-sm hover:bg-blue-700 transition-colors">
+                            <button type="submit" data-i18n="feedback-btn-submit" class="w-full py-2.5 bg-[#BEF264] hover:bg-[#aee64b] text-[#151512] text-xs font-bold rounded-xl shadow-sm transition-colors">
                                 Kirim Feedback
                             </button>
                         </form>
@@ -423,20 +463,23 @@
 
             <!-- TAB 5: TOKO ATK -->
             <div id="toko" class="tab-content max-w-4xl mx-auto space-y-5">
-                <!-- Header Toko -->
-                <div class="bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl p-5 text-white shadow-lg shadow-slate-900/30 flex items-center justify-between gap-4">
-                    <div class="flex items-center gap-4">
-                        <div class="text-3xl"><i class="fa-solid fa-store"></i></div>
+                <!-- Header Toko (Northstar Dark Card) -->
+                <div class="bg-[#151512] rounded-2xl p-5 text-white border border-[#262620] flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-10 h-10 rounded-xl bg-[#BEF264] text-[#151512] flex items-center justify-center text-lg font-bold shadow-sm">
+                            <i class="fa-solid fa-store"></i>
+                        </div>
                         <div>
-                            <h4 class="font-bold text-lg">Toko ATK</h4>
-                            <p class="text-sm text-slate-300 mt-0.5">Beli alat tulis & perlengkapan langsung dari perpustakaan.</p>
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-[#8A867D]">Katalog Toko</p>
+                            <h4 class="font-bold text-lg text-white">Toko ATK Perpustakaan</h4>
+                            <p class="text-xs text-[#9C988F] mt-0.5">Beli alat tulis & perlengkapan langsung dari perpustakaan.</p>
                         </div>
                     </div>
                     <!-- Tombol Keranjang -->
-                    <button onclick="toggleCart()" class="relative bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-semibold py-2 px-4 rounded-xl flex items-center gap-2 transition-all border border-white/30">
-                        <i class="fa-solid fa-cart-shopping"></i>
+                    <button onclick="toggleCart()" class="relative bg-[#21211D] hover:bg-[#2A2A24] text-white font-semibold py-2 px-4 rounded-xl flex items-center gap-2 transition border border-[#2E2E28] text-xs">
+                        <i class="fa-solid fa-cart-shopping text-[#BEF264]"></i>
                         <span class="hidden sm:inline">Keranjang</span>
-                        <span id="cart-count-badge" class="hidden bg-rose-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">0</span>
+                        <span id="cart-count-badge" class="hidden bg-[#BEF264] text-[#151512] text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">0</span>
                     </button>
                 </div>
 
@@ -473,24 +516,24 @@
                 <div id="toko-produk-grid" class="hidden grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
 
                 <!-- Riwayat Pembelian -->
-                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-                    <div class="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800 flex-wrap gap-2">
-                        <h4 class="font-bold text-sm text-slate-800 dark:text-white flex items-center gap-2">
-                            <i class="fa-solid fa-receipt text-slate-500 dark:text-slate-400"></i> Riwayat Pembelian Saya
+                <div class="bg-[#FDFCF9] dark:bg-[#1C1C18] rounded-2xl border border-[#E5E2DA] dark:border-[#262620] overflow-hidden">
+                    <div class="flex items-center justify-between p-4 border-b border-[#E5E2DA] dark:border-[#262620] bg-[#F7F5F0] dark:bg-[#21211D] flex-wrap gap-2">
+                        <h4 class="font-bold text-sm text-[#1A1916] dark:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-receipt text-[#78756D] dark:text-[#A8A49C]"></i> Riwayat Pembelian Saya
                         </h4>
                         <div class="flex items-center gap-2 flex-wrap">
-                            <div class="inline-flex p-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[11px] font-medium text-slate-600 dark:text-slate-300">
-                                <button type="button" onclick="setRiwayatFilter('semua')" id="btn-riwayat-semua" class="px-2.5 py-1 rounded-md bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white font-semibold transition">Semua</button>
-                                <button type="button" onclick="setRiwayatFilter('proses')" id="btn-riwayat-proses" class="px-2.5 py-1 rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">Sedang Dipesan</button>
-                                <button type="button" onclick="setRiwayatFilter('selesai')" id="btn-riwayat-selesai" class="px-2.5 py-1 rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">Selesai</button>
+                            <div class="inline-flex p-0.5 rounded-lg bg-[#EAE8E1] dark:bg-[#262620] text-[11px] font-medium text-[#78756D] dark:text-[#A8A49C]">
+                                <button type="button" onclick="setRiwayatFilter('semua')" id="btn-riwayat-semua" class="px-2.5 py-1 rounded-md bg-[#FDFCF9] dark:bg-[#151512] shadow-sm text-[#1A1916] dark:text-white font-semibold transition">Semua</button>
+                                <button type="button" onclick="setRiwayatFilter('proses')" id="btn-riwayat-proses" class="px-2.5 py-1 rounded-md text-[#78756D] dark:text-[#A8A49C] hover:text-[#1A1916] dark:hover:text-white transition">Sedang Dipesan</button>
+                                <button type="button" onclick="setRiwayatFilter('selesai')" id="btn-riwayat-selesai" class="px-2.5 py-1 rounded-md text-[#78756D] dark:text-[#A8A49C] hover:text-[#1A1916] dark:hover:text-white transition">Selesai</button>
                             </div>
-                            <button onclick="loadRiwayatPembelian()" class="text-xs text-slate-800 dark:text-slate-200 font-semibold hover:underline ml-1">
+                            <button onclick="loadRiwayatPembelian()" class="text-xs text-[#1A1916] dark:text-white font-semibold hover:underline ml-1">
                                 <i class="fa-solid fa-rotate-right mr-1"></i>Refresh
                             </button>
                         </div>
                     </div>
-                    <div id="riwayat-pembelian-list" class="divide-y divide-slate-100 dark:divide-slate-800 max-h-96 overflow-y-auto hide-scrollbar">
-                        <div class="text-center py-8 text-slate-400 text-xs italic">Memuat riwayat...</div>
+                    <div id="riwayat-pembelian-list" class="divide-y divide-[#E5E2DA] dark:divide-[#262620] max-h-96 overflow-y-auto hide-scrollbar">
+                        <div class="text-center py-8 text-[#78756D] text-xs italic">Memuat riwayat...</div>
                     </div>
                 </div>
             </div>
@@ -507,26 +550,26 @@
         </div>
 
         <!-- BOTTOM NAVIGATION -->
-        <nav id="mobile-bottom-nav" class="md:hidden bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-around items-center absolute bottom-0 w-full z-40 h-16 transition-colors duration-200">
-            <button onclick="switchTab('beranda')" class="nav-btn-mobile flex flex-col items-center p-2 text-blue-600 dark:text-blue-400" data-target="beranda">
-                <i class="fa-solid fa-house text-lg mb-1"></i>
+        <nav id="mobile-bottom-nav" class="md:hidden bg-[#151512] border-t border-[#262620] flex justify-around items-center absolute bottom-0 w-full z-40 h-16 transition-colors duration-200">
+            <button onclick="switchTab('beranda')" class="nav-btn-mobile flex flex-col items-center p-2 text-[#BEF264]" data-target="beranda">
+                <i class="fa-solid fa-house text-base mb-1"></i>
                 <span class="text-[9px] font-semibold">Beranda</span>
             </button>
-            <button onclick="switchTab('buku')" class="nav-btn-mobile flex flex-col items-center p-2 text-slate-400" data-target="buku">
-                <i class="fa-solid fa-magnifying-glass text-lg mb-1"></i>
+            <button onclick="switchTab('buku')" class="nav-btn-mobile flex flex-col items-center p-2 text-[#9C988F] hover:text-white" data-target="buku">
+                <i class="fa-solid fa-magnifying-glass text-base mb-1"></i>
                 <span class="text-[9px] font-semibold">Pustaka</span>
             </button>
-            <button onclick="switchTab('sirkulasi')" class="nav-btn-mobile flex flex-col items-center p-2 text-slate-400" data-target="sirkulasi">
-                <i class="fa-solid fa-arrows-spin text-lg mb-1"></i>
+            <button onclick="switchTab('sirkulasi')" class="nav-btn-mobile flex flex-col items-center p-2 text-[#9C988F] hover:text-white" data-target="sirkulasi">
+                <i class="fa-solid fa-arrows-spin text-base mb-1"></i>
                 <span class="text-[9px] font-semibold">Sirkulasi</span>
             </button>
-            <button onclick="switchTab('toko')" class="nav-btn-mobile flex flex-col items-center p-2 text-slate-400 relative" data-target="toko">
-                <i class="fa-solid fa-store text-lg mb-1"></i>
+            <button onclick="switchTab('toko')" class="nav-btn-mobile flex flex-col items-center p-2 text-[#9C988F] hover:text-white relative" data-target="toko">
+                <i class="fa-solid fa-store text-base mb-1"></i>
                 <span class="text-[9px] font-semibold">Toko ATK</span>
-                <span id="cart-badge-mobile" class="hidden absolute top-1 right-1 bg-slate-800 text-white text-[8px] font-bold rounded-full w-4 h-4 flex items-center justify-center">0</span>
+                <span id="cart-badge-mobile" class="hidden absolute top-1 right-1 bg-[#BEF264] text-[#151512] text-[8px] font-bold rounded-full w-4 h-4 flex items-center justify-center">0</span>
             </button>
-            <button onclick="switchTab('profil')" class="nav-btn-mobile flex flex-col items-center p-2 text-slate-400" data-target="profil">
-                <i class="fa-regular fa-user text-lg mb-1"></i>
+            <button onclick="switchTab('profil')" class="nav-btn-mobile flex flex-col items-center p-2 text-[#9C988F] hover:text-white" data-target="profil">
+                <i class="fa-regular fa-user text-base mb-1"></i>
                 <span class="text-[9px] font-semibold">Profil</span>
             </button>
         </nav>
@@ -567,7 +610,7 @@
 
             <!-- Tombol Default untuk membuka form -->
             <div class="mt-6" id="booking-default-btn-container">
-                <button onclick="openBookingForm()" class="w-full bg-slate-900 dark:bg-blue-600 text-white text-sm font-semibold py-3 rounded-xl shadow-md hover:bg-slate-800 dark:hover:bg-blue-700 active:scale-[0.98] transition-all">
+                <button onclick="openBookingForm()" class="w-full bg-[#BEF264] hover:bg-[#aee64b] text-[#151512] text-sm font-bold py-3 rounded-xl shadow-sm active:scale-[0.98] transition-all">
                     <i class="fa-solid fa-book-open mr-2"></i> Booking & Antar ke Rumah
                 </button>
             </div>
@@ -608,7 +651,7 @@
                 
                 <div class="flex gap-2 pt-2">
                     <button type="button" onclick="cancelBookingForm()" class="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold py-2.5 rounded-xl border border-slate-200/60 dark:border-slate-700 hover:bg-slate-200 transition-all">Batal</button>
-                    <button type="button" onclick="submitBookingForm()" class="flex-1 bg-blue-600 text-white font-semibold py-2.5 rounded-xl hover:bg-blue-700 transition-all shadow-md">Konfirmasi</button>
+                    <button type="button" onclick="submitBookingForm()" class="flex-1 bg-[#BEF264] hover:bg-[#aee64b] text-[#151512] font-bold py-2.5 rounded-xl transition-all shadow-sm">Konfirmasi</button>
                 </div>
             </div>
         </div>
@@ -739,7 +782,7 @@
                 <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer"><input type="radio" name="pay-atk-method" value="Transfer Bank" class="accent-slate-800"><span>Transfer Bank</span></label>
                 <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer"><input type="radio" name="pay-atk-method" value="E-Wallet" class="accent-slate-800"><span>E-Wallet</span></label>
             </div>
-            <button id="pay-atk-submit" type="button" onclick="submitPayAtk()" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-xl hover:bg-blue-700 transition-all shadow-md text-sm">Bayar Sekarang</button>
+            <button id="pay-atk-submit" type="button" onclick="submitPayAtk()" class="w-full bg-[#BEF264] hover:bg-[#aee64b] text-[#151512] font-bold py-3 rounded-xl transition-all shadow-sm text-sm">Bayar Sekarang</button>
             <p class="text-[11px] text-slate-400 mt-3 text-center">Belum siap? Tutup saja, kamu bisa membayarnya nanti dari Riwayat Pembelian.</p>
         </div>
     </div>
@@ -763,7 +806,7 @@
                 <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer"><input type="radio" name="pay-fine-method" value="Transfer Bank" class="accent-slate-800"><span>Transfer Bank</span></label>
                 <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer"><input type="radio" name="pay-fine-method" value="E-Wallet" class="accent-slate-800"><span>E-Wallet</span></label>
             </div>
-            <button id="pay-fine-submit" type="button" onclick="submitPayFine()" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-xl hover:bg-blue-700 transition-all shadow-md text-sm">Bayar Sekarang</button>
+            <button id="pay-fine-submit" type="button" onclick="submitPayFine()" class="w-full bg-[#BEF264] hover:bg-[#aee64b] text-[#151512] font-bold py-3 rounded-xl transition-all shadow-sm text-sm">Bayar Sekarang</button>
         </div>
     </div>
 
@@ -978,17 +1021,17 @@
 
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 if(btn.getAttribute('data-target') === tabId) {
-                    btn.className = "nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-semibold bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 transition-all";
+                    btn.className = "nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left font-semibold bg-[#BEF264] text-[#151512] transition-all";
                 } else {
-                    btn.className = "nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all";
+                    btn.className = "nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left font-medium text-[#9C988F] hover:text-white hover:bg-[#21211D] transition-all";
                 }
             });
 
             document.querySelectorAll('.nav-btn-mobile').forEach(btn => {
                 if(btn.getAttribute('data-target') === tabId) {
-                    btn.className = 'nav-btn-mobile flex flex-col items-center p-2 text-blue-600 dark:text-blue-400';
+                    btn.className = 'nav-btn-mobile flex flex-col items-center p-2 text-[#BEF264]';
                 } else {
-                    btn.className = 'nav-btn-mobile flex flex-col items-center p-2 text-slate-400';
+                    btn.className = 'nav-btn-mobile flex flex-col items-center p-2 text-[#9C988F] hover:text-white';
                 }
             });
 
@@ -1340,7 +1383,7 @@
             let html = `<button type="button" ${bookPage === 1 ? 'disabled' : `onclick="goToBookPage(${bookPage - 1})"`} class="${base} ${bookPage === 1 ? off : idle}">Sebelumnya</button>`;
             nums.forEach(n => {
                 if (n === '...') html += `<button type="button" title="Ke halaman…" onclick="openPageJump(this, ${totalPages})" class="px-2 py-2 text-slate-400 hover:text-blue-600 rounded-lg transition-colors">…</button>`;
-                else html += `<button type="button" onclick="goToBookPage(${n})" class="${base} ${n === bookPage ? 'bg-blue-600 text-white font-semibold' : idle}">${n}</button>`;
+                else html += `<button type="button" onclick="goToBookPage(${n})" class="${base} ${n === bookPage ? 'bg-[#BEF264] text-[#151512] font-bold' : idle}">${n}</button>`;
             });
             html += `<button type="button" ${bookPage === totalPages ? 'disabled' : `onclick="goToBookPage(${bookPage + 1})"`} class="${base} ${bookPage === totalPages ? off : idle}">Selanjutnya</button>`;
             box.innerHTML = html;
@@ -1490,7 +1533,7 @@
                         : '-';
 
                     bookingBtn.disabled = false;
-                    bookingBtn.className = 'w-full bg-slate-900 dark:bg-blue-600 text-white text-sm font-semibold py-3 rounded-xl shadow-md hover:bg-slate-800 dark:hover:bg-blue-700 active:scale-[0.98] transition-all';
+                    bookingBtn.className = 'w-full bg-[#BEF264] hover:bg-[#aee64b] text-[#151512] text-sm font-bold py-3 rounded-xl shadow-sm active:scale-[0.98] transition-all';
                     bookingBtn.innerHTML = `<i class="fa-solid fa-book-open mr-2"></i> Booking & Antar ke Rumah`;
 
                     card.innerHTML = `
@@ -1507,7 +1550,7 @@
                 // ===== Kondisi 1: buku tersedia bebas, tidak ada hold sama sekali =====
                 if (info.book_available) {
                     bookingBtn.disabled = false;
-                    bookingBtn.className = 'w-full bg-slate-900 dark:bg-blue-600 text-white text-sm font-semibold py-3 rounded-xl shadow-md hover:bg-slate-800 dark:hover:bg-blue-700 active:scale-[0.98] transition-all';
+                    bookingBtn.className = 'w-full bg-[#BEF264] hover:bg-[#aee64b] text-[#151512] text-sm font-bold py-3 rounded-xl shadow-sm active:scale-[0.98] transition-all';
                     bookingBtn.innerHTML = `<i class="fa-solid fa-book-open mr-2"></i> Booking & Antar ke Rumah`;
                     card.classList.add('hidden');
                     return;
@@ -1516,8 +1559,8 @@
                 // ===== Kondisi 4: buku masih dipinjam org lain -- tampilkan join/leave antrian =====
                 if (info.already_in_queue) {
                     card.innerHTML = `
-                        <div class="bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 rounded-xl p-4 text-sm">
-                            <p class="font-bold text-blue-700 dark:text-blue-400">
+                        <div class="bg-[#BEF264]/10 border border-[#BEF264]/30 rounded-xl p-4 text-sm">
+                            <p class="font-bold text-[#1F4503] dark:text-[#BEF264]">
                                 <i class="fa-solid fa-list-ol mr-1.5"></i> Kamu antrian ke-${info.your_position} dari ${info.total_in_queue}
                             </p>
                             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Perkiraan giliranmu: <span class="font-semibold">${estText}</span></p>
@@ -2707,8 +2750,8 @@
                         ${data.type === 'atk' ? 'Ambil pesananmu' : 'Ambil buku'} langsung di meja sirkulasi perpustakaan sebelum batas waktu di atas habis.
                     </p>`;
             } else if (isCourier) {
-                // --- Sedang dalam proses pengiriman kurir: badge biru + nama tahap saat ini ---
-                iconWrap.className = 'circ-order-icon-wrap w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-400';
+                // --- Sedang dalam proses pengiriman kurir: badge lime + nama tahap saat ini ---
+                iconWrap.className = 'circ-order-icon-wrap w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#BEF264]/20 text-[#1F4503] dark:bg-[#BEF264]/15 dark:text-[#BEF264] border border-[#BEF264]/30';
                 iconEl.className = 'circ-order-icon-el text-base fa-solid fa-truck';
 
                 const isId = currentLang === 'id';
@@ -2751,14 +2794,14 @@
 
                 const dotClass = isDone
                     ? 'bg-emerald-500'
-                    : (isActive ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-700');
+                    : (isActive ? 'bg-[#BEF264]' : 'bg-slate-300 dark:bg-slate-700');
 
                 const dotInner = isDone
                     ? '<i class="fa-solid fa-check text-[8px] text-white"></i>'
-                    : (isActive ? '<span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>' : '');
+                    : (isActive ? '<span class="w-1.5 h-1.5 rounded-full bg-[#151512] animate-pulse"></span>' : '');
 
                 const titleClass = isActive
-                    ? 'text-sm font-bold text-blue-600 dark:text-blue-400'
+                    ? 'text-sm font-bold text-[#1A1916] dark:text-[#BEF264]'
                     : (isDone
                         ? 'text-sm font-semibold text-slate-600 dark:text-slate-400'
                         : 'text-sm font-semibold text-slate-400 dark:text-slate-600');
@@ -2987,11 +3030,11 @@
                     ${p.gambar
                         ? `<div class="aspect-[4/3] bg-slate-100 dark:bg-slate-800 overflow-hidden relative">
                                <img src="${p.gambar}" alt="${p.nama}" loading="lazy" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
-                               <div class="hidden absolute inset-0 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800/40 dark:to-slate-900/30 p-4 flex items-center justify-center">
+                               <div class="hidden absolute inset-0 bg-[#F1EFEA] dark:bg-[#21211D] p-4 flex items-center justify-center">
                                    <i class="fa-solid ${icon} text-3xl text-slate-500 dark:text-slate-400"></i>
                                </div>
                            </div>`
-                        : `<div class="bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800/40 dark:to-slate-900/30 p-4 flex items-center justify-center aspect-[4/3]">
+                        : `<div class="bg-[#F1EFEA] dark:bg-[#21211D] p-4 flex items-center justify-center aspect-[4/3]">
                                <i class="fa-solid ${icon} text-3xl text-slate-500 dark:text-slate-400"></i>
                            </div>`}
                     <div class="p-3 flex flex-col gap-1.5 flex-1">
@@ -3005,7 +3048,7 @@
                             </span>
                         </div>
                         <button onclick="openBeli('${p.id}')"
-                            class="mt-2 w-full py-1.5 text-xs font-bold rounded-xl transition-all ${habis ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed' : 'bg-slate-800 hover:bg-slate-900 text-white shadow-sm shadow-slate-900/20'}"
+                            class="mt-2 w-full py-1.5 text-xs font-bold rounded-xl transition-all ${habis ? 'bg-[#EAE8E1] dark:bg-[#262620] text-slate-400 cursor-not-allowed' : 'bg-[#BEF264] hover:bg-[#aee64b] text-[#151512] shadow-sm'}"
                             ${habis ? 'disabled' : ''}>
                             <i class="fa-solid fa-cart-plus mr-1"></i>${habis ? 'Habis' : 'Beli'}
                         </button>
@@ -3397,14 +3440,14 @@
                     } else if (r.metode_bayar === 'Bayar di Tempat') {
                         payHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"><i class="fa-solid fa-hand-holding-dollar text-[10px]"></i> ${r.metode_pengiriman === 'antar' ? 'Bayar ke kurir saat tiba' : 'Bayar di meja sirkulasi'}</span>`;
                     } else {
-                        payHtml = `<button type="button" onclick="openPayAtkModal('${r.id}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors"><i class="fa-solid fa-credit-card text-[10px]"></i> Bayar Sekarang</button>`;
+                        payHtml = `<button type="button" onclick="openPayAtkModal('${r.id}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-[#BEF264] text-[#151512] hover:bg-[#aee64b] transition-colors"><i class="fa-solid fa-credit-card text-[10px]"></i> Bayar Sekarang</button>`;
                     }
                 }
 
                 // Status Badge
                 let statusBadge = '';
                 if (isSelesai) {
-                    statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                    statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#BEF264] text-[#151512]">
                         <i class="fa-solid fa-circle-check"></i> Selesai
                     </span>`;
                 } else if (isBatal) {
@@ -3412,8 +3455,8 @@
                         <i class="fa-solid fa-circle-xmark"></i> Dibatalkan
                     </span>`;
                 } else {
-                    statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
-                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span> ${escapeHtmlAtk(status)}
+                    statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#BEF264]/20 text-[#1F4503] dark:bg-[#BEF264]/15 dark:text-[#BEF264] border border-[#BEF264]/30">
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#BEF264] animate-pulse"></span> ${escapeHtmlAtk(status)}
                     </span>`;
                 }
 
