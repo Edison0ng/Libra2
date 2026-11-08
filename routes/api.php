@@ -41,6 +41,13 @@ Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 // Reset password: submit token + password baru
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
+// ===================== DATA REFERENSI PUBLIK =====================
+// Katalog buku, detail buku, produk ATK, dan status buku dipinjam dapat diakses tanpa wajib login
+Route::get('books', [BookController::class, 'index']);
+Route::get('books/{book}', [BookController::class, 'show']);
+Route::get('produk-atk', [ProdukAtkController::class, 'index']);
+Route::get('pinjam-aktif', [PinjamController::class, 'bukuSedangDipinjam']);
+
 
 // ===================== RUTE TERPROTEKSI =====================
 // Semua di bawah ini wajib login (token Laravel Sanctum).
@@ -72,13 +79,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/orders', [CourierOrderController::class, 'index']);
         Route::post('/orders', [CourierOrderController::class, 'store']);
     });
-
-    Route::get('pinjam-aktif', [PinjamController::class, 'bukuSedangDipinjam']);
-
-    // ---------- Data referensi (semua yang sudah login boleh baca) ----------
-    Route::get('books', [BookController::class, 'index']);
-    Route::get('books/{book}', [BookController::class, 'show']);
-    Route::get('produk-atk', [ProdukAtkController::class, 'index']);
 
     // ---------- Kurir & admin ----------
     Route::middleware('role:admin,kurir')->group(function () {

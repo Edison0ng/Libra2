@@ -823,7 +823,8 @@
             const userStr = localStorage.getItem('libra_user');
             if (!userStr) return null;
             try {
-                return JSON.parse(userStr).id;
+                const u = JSON.parse(userStr);
+                return u.id || u.user_id || null;
             } catch (e) {
                 return null;
             }
@@ -1890,6 +1891,7 @@
         // Sekarang setiap booking aktif (status Booking / Diantar Kurir) dirender
         // sebagai kartu terpisah berdasarkan id booking-nya masing-masing.
         const circCountdownIntervals = {};
+        const expiredNotifiedLoans = new Set();
 
         function clearAllCircCountdowns() {
             Object.values(circCountdownIntervals).forEach(id => clearInterval(id));
@@ -1905,23 +1907,23 @@
                 const diffMs = deadlineDate.getTime() - Date.now();
                 if (diffMs <= 0) {
                     timerEl.textContent = '00:00:00';
-                    // Booking sudah kadaluarsa. Penghapusan sebenarnya terjadi
-                    // di backend (lihat PinjamController::cancelExpiredBookings,
-                    // dijalankan tiap kali data peminjaman di-fetch). Di sini
-                    // kita cukup beri tahu pengguna & minta data terbaru supaya
-                    // kartu ini hilang begitu backend selesai menghapusnya.
-                    if (!timerEl.dataset.expiredNotified) {
-                        timerEl.dataset.expiredNotified = '1';
-                        showToast(
-                            'Batas Waktu Habis',
-                            'Booking tidak diambil dalam waktu 2 jam dan telah dibatalkan otomatis.'
-                        );
-                        loadUserLoans();
+                    // Booking sudah kadaluarsa. Penghapusan terjadi di backend.
+                    // Cegah loop tak hingga: hanya panggil reload jika countdown sebelumnya pernah berjalan positif.
+                    if (!expiredNotifiedLoans.has(loanId)) {
+                        expiredNotifiedLoans.add(loanId);
+                        if (timerEl.dataset.started) {
+                            showToast(
+                                'Batas Waktu Habis',
+                                'Booking tidak diambil dalam waktu 2 jam dan telah dibatalkan otomatis.'
+                            );
+                            loadUserLoans();
+                        }
                     }
                     clearInterval(circCountdownIntervals[loanId]);
                     delete circCountdownIntervals[loanId];
                     return;
                 }
+                timerEl.dataset.started = '1';
                 const totalSeconds = Math.floor(diffMs / 1000);
                 const hours = Math.floor(totalSeconds / 3600);
                 const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -1930,7 +1932,9 @@
             };
 
             tick();
-            circCountdownIntervals[loanId] = setInterval(tick, 1000);
+            if (deadlineDate.getTime() > Date.now()) {
+                circCountdownIntervals[loanId] = setInterval(tick, 1000);
+            }
         }
 
         function triggerToast() {
@@ -2277,14 +2281,14 @@
         let atkOrders = []; // Pesanan Toko ATK milik user yang sedang login (dimuat bareng peminjaman buku)
 
         async function loadAtkOrders() {
-            const userStr = localStorage.getItem('libra_user');
-            if (!userStr) return;
-            const user = JSON.parse(userStr);
+            const userId = getCurrentUserId();
+            if (!userId) return;
 
             try {
-                const response = await fetch(`/api/pembelian-atk?user_id=${user.id}`);
+                const response = await fetch(`/api/pembelian-atk?user_id=${encodeURIComponent(userId)}`);
                 if (!response.ok) throw new Error('Gagal mengambil data pesanan ATK');
-                atkOrders = await response.json();
+                const data = await response.json();
+                atkOrders = Array.isArray(data) ? data : (data.data || []);
             } catch (err) {
                 console.error('Error loading ATK orders:', err);
                 atkOrders = [];
@@ -2292,14 +2296,14 @@
         }
 
         async function loadUserLoans() {
-            const userStr = localStorage.getItem('libra_user');
-            if (!userStr) return;
-            const user = JSON.parse(userStr);
+            const userId = getCurrentUserId();
+            if (!userId) return;
 
             try {
-                const response = await fetch(`/api/pinjam?user_id=${user.id}`);
+                const response = await fetch(`/api/pinjam?user_id=${encodeURIComponent(userId)}`);
                 if (!response.ok) throw new Error('Gagal mengambil data peminjaman');
-                activeLoans = await response.json();
+                const data = await response.json();
+                activeLoans = Array.isArray(data) ? data : (data.data || []);
 
                 // Pesanan ATK dimuat bersamaan supaya kartu status di Sirkulasi
                 // (buku + ATK) selalu dirender dari data yang sinkron.
@@ -2598,16 +2602,19 @@
         // Alias untuk kompatibilitas data lama/legacy yang mungkin masih
         // memakai istilah dummy sebelumnya, supaya tidak tampil kosong.
         const COURIER_STATUS_ALIASES = {
-            'Diantar Kurir': 'Sedang Diantar Kurir'
+            'diantar kurir': 'Sedang Diantar Kurir',
+            'sedang diantar': 'Sedang Diantar Kurir',
+            'sedang dikirim': 'Sedang Diantar Kurir'
         };
 
         function resolveCourierStatusKey(rawStatus) {
-            return COURIER_STATUS_ALIASES[rawStatus] || rawStatus;
+            const s = String(rawStatus || '').toLowerCase().trim();
+            return COURIER_STATUS_ALIASES[s] || rawStatus;
         }
 
         function isCourierTrackedStatus(rawStatus) {
-            const key = resolveCourierStatusKey(rawStatus);
-            return COURIER_FLOW_STEPS.some(step => step.key === key);
+            const key = String(resolveCourierStatusKey(rawStatus) || '').toLowerCase().trim();
+            return COURIER_FLOW_STEPS.some(step => step.key.toLowerCase().trim() === key);
         }
 
         function updateCourierStatusVisibility() {
@@ -2621,9 +2628,10 @@
             container.innerHTML = '';
 
             // --- Peminjaman buku yang masih perlu perhatian (belum dikembalikan) ---
-            const pendingLoans = activeLoans.filter(l =>
-                !l.tanggal_kembali && (l.status === 'Booking' || isCourierTrackedStatus(l.status))
-            );
+            const pendingLoans = (activeLoans || []).filter(l => {
+                const st = String(l.status || '').toLowerCase().trim();
+                return !l.tanggal_kembali && (st === 'booking' || isCourierTrackedStatus(l.status));
+            });
             pendingLoans.forEach(loan => {
                 container.appendChild(buildOrderCard({
                     uid: 'buku-' + loan.id,
@@ -2635,9 +2643,18 @@
             });
 
             // --- Pesanan Toko ATK yang masih berjalan (belum selesai/dibatalkan) ---
-            const pendingAtkOrders = (atkOrders || []).filter(o => !['Selesai', 'Dibatalkan'].includes(o.status));
+            const pendingAtkOrders = (atkOrders || []).filter(o => {
+                const s = String(o.status || '').toLowerCase().trim();
+                return s !== 'selesai' && s !== 'dibatalkan';
+            });
             pendingAtkOrders.forEach(order => {
-                const judul = (order.items || []).map(i => i.nama).join(', ') || 'Pesanan ATK';
+                let items = order.items || [];
+                if (typeof items === 'string') {
+                    try { items = JSON.parse(items); } catch (_) { items = []; }
+                }
+                const judul = Array.isArray(items) && items.length > 0
+                    ? items.map(i => i.nama).filter(Boolean).join(', ')
+                    : 'Pesanan ATK';
                 container.appendChild(buildOrderCard({
                     uid: 'atk-' + order.id,
                     title: judul,
@@ -2670,7 +2687,7 @@
 
             titleEl.textContent = data.title;
 
-            const isPickup = data.status === 'Booking';
+            const isPickup = String(data.status || '').toLowerCase().trim() === 'booking';
             const isCourier = !isPickup && isCourierTrackedStatus(data.status);
 
             if (isPickup) {
@@ -2695,8 +2712,8 @@
                 iconEl.className = 'circ-order-icon-el text-base fa-solid fa-truck';
 
                 const isId = currentLang === 'id';
-                const statusKey = resolveCourierStatusKey(data.status);
-                const stepInfo = COURIER_FLOW_STEPS.find(step => step.key === statusKey);
+                const statusKey = String(resolveCourierStatusKey(data.status) || '').toLowerCase().trim();
+                const stepInfo = COURIER_FLOW_STEPS.find(step => step.key.toLowerCase().trim() === statusKey);
                 statusLabelEl.textContent = stepInfo ? (isId ? stepInfo.titleId : stepInfo.titleEn) : data.status;
                 rightEl.remove(); // tidak ada countdown numerik utk kurir, cukup label status di atas
 
@@ -2721,8 +2738,8 @@
         /** Bangun HTML timeline 4-langkah kurir (dipakai buku maupun pesanan ATK). */
         function buildCourierTimelineHtml(rawStatus) {
             const isId = currentLang === 'id';
-            const statusKey = resolveCourierStatusKey(rawStatus);
-            const currentIndex = COURIER_FLOW_STEPS.findIndex(step => step.key === statusKey);
+            const statusKey = String(resolveCourierStatusKey(rawStatus) || '').toLowerCase().trim();
+            const currentIndex = COURIER_FLOW_STEPS.findIndex(step => step.key.toLowerCase().trim() === statusKey);
 
             const stepsHtml = COURIER_FLOW_STEPS.map((step, idx) => {
                 // done   : tahap sudah dilewati (lebih awal dari status saat ini)
@@ -2987,7 +3004,7 @@
                                 ${habis ? 'Stok Habis' : 'Stok: ' + p.stok}
                             </span>
                         </div>
-                        <button onclick="openBeli(${JSON.stringify(p).replace(/"/g, '&quot;')})"
+                        <button onclick="openBeli('${p.id}')"
                             class="mt-2 w-full py-1.5 text-xs font-bold rounded-xl transition-all ${habis ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed' : 'bg-slate-800 hover:bg-slate-900 text-white shadow-sm shadow-slate-900/20'}"
                             ${habis ? 'disabled' : ''}>
                             <i class="fa-solid fa-cart-plus mr-1"></i>${habis ? 'Habis' : 'Beli'}
@@ -3010,7 +3027,11 @@
         }
 
         // Buka modal beli produk
-        function openBeli(produk) {
+        function openBeli(idOrProduk) {
+            const produk = (idOrProduk && typeof idOrProduk === 'object')
+                ? idOrProduk
+                : produkTokoData.find(p => String(p.id) === String(idOrProduk));
+            if (!produk) return;
             produkDipilih = produk;
             document.getElementById('beli-produk-nama').textContent = produk.nama;
             document.getElementById('beli-produk-kode').textContent = produk.kode;
@@ -3167,6 +3188,11 @@
                 ? (document.getElementById('atk-alamat-input')?.value || '').trim()
                 : null;
 
+            if (metodePengiriman === 'antar' && (!alamatKirim || alamatKirim.length === 0)) {
+                showToastToko('Silakan masukkan alamat pengiriman terlebih dahulu!', 'red');
+                return;
+            }
+
             const payEl = document.querySelector('input[name="atk-pay-option"]:checked');
             const metodeBayar = payEl ? payEl.value : 'di_tempat';
 
@@ -3200,6 +3226,10 @@
                     showToastToko(data.message || 'Gagal memproses pesanan. Coba lagi.', 'red');
                     if (checkoutBtn) { checkoutBtn.disabled = false; checkoutBtn.innerHTML = originalBtnText; }
                     return;
+                }
+
+                if (data.order) {
+                    simpanRiwayatLokal(data.order);
                 }
 
                 showToastToko(
@@ -3258,10 +3288,16 @@
         }
 
         function simpanRiwayatLokal(payload) {
+            if (!payload) return;
             try {
                 const key = getRiwayatAtkKey();
                 const riwayat = JSON.parse(localStorage.getItem(key) || '[]');
-                riwayat.unshift({ ...payload, id: Date.now(), created_at: new Date().toISOString() });
+                const existIdx = riwayat.findIndex(o => String(o.id) === String(payload.id));
+                if (existIdx >= 0) {
+                    riwayat[existIdx] = { ...riwayat[existIdx], ...payload };
+                } else {
+                    riwayat.unshift({ ...payload, created_at: payload.created_at || new Date().toISOString() });
+                }
                 localStorage.setItem(key, JSON.stringify(riwayat.slice(0, 50)));
             } catch (e) { /* ignore */ }
         }
@@ -3343,10 +3379,14 @@
             container.innerHTML = filtered.map(r => {
                 const status = r.status || 'Booking';
                 const isSelesai = isOrderSelesai(status);
-                const isBatal = String(status).toLowerCase() === 'dibatalkan';
+                const isBatal = String(status).toLowerCase().trim() === 'dibatalkan';
                 const waktuPesan = formatWaktuAtk(r.created_at);
                 const waktuSelesai = r.tanggal_selesai ? formatWaktuAtk(r.tanggal_selesai) : null;
-                const items = r.items || [];
+                let items = r.items || [];
+                if (typeof items === 'string') {
+                    try { items = JSON.parse(items); } catch (_) { items = []; }
+                }
+                if (!Array.isArray(items)) items = [];
                 const metode = r.metode_pengiriman === 'antar' ? 'Diantar ke Rumah' : 'Ambil Sendiri di Sirkulasi';
 
                 // Status pembayaran
@@ -3444,6 +3484,11 @@
                     if (res.ok) {
                         const data = await res.json();
                         riwayat = Array.isArray(data) ? data : (data.data || []);
+                        if (riwayat.length > 0) {
+                            try {
+                                localStorage.setItem(getRiwayatAtkKey(), JSON.stringify(riwayat));
+                            } catch (_) {}
+                        }
                     }
                 }
             } catch (e) {
