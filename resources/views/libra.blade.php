@@ -138,7 +138,7 @@
 <body class="bg-[#F1EFEA] text-[#1A1916] dark:bg-[#151512] dark:text-[#EAE8E2] flex h-screen overflow-hidden transition-colors duration-200">
 
     <!-- SIDEBAR -->
-    <aside class="hidden md:flex flex-col w-60 flex-shrink-0 bg-[#151512] border-r border-[#262620] h-full transition-colors duration-200 select-none text-[#9C988F]">
+    <aside class="hidden md:flex flex-col w-60 bg-[#151512] border-r border-[#262620] h-full transition-colors duration-200 select-none text-[#9C988F]">
         <div class="p-5 pb-4">
             <div class="flex items-center gap-3">
                 <div class="w-8 h-8 rounded-lg bg-[#BEF264] flex items-center justify-center text-[#151512] font-black text-base shadow-sm">
@@ -152,7 +152,7 @@
 
             <!-- Workspace Card -->
             <div class="mt-4 p-2.5 rounded-xl bg-[#21211D] border border-[#2E2E28] flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-lg bg-[#BEF264] text-[#151512] flex items-center justify-center text-xs font-black shadow-sm">
+                <div class="w-8 h-8 rounded-lg bg-[#6366F1] text-white flex items-center justify-center text-xs font-bold shadow-sm">
                     MH
                 </div>
                 <div class="overflow-hidden leading-tight">
@@ -184,10 +184,10 @@
     </aside>
 
     <!-- KONTEN UTAMA -->
-    <main class="flex-1 flex flex-col h-full relative min-w-0 overflow-hidden">
+    <main class="flex-1 flex flex-col h-full relative overflow-hidden">
         
         <!-- HEADER -->
-        <header class="bg-[#F1EFEA] dark:bg-[#151512] text-[#1A1916] dark:text-[#EAE8E2] px-4 md:px-6 py-4 flex items-center justify-between border-b border-[#E5E2DA] dark:border-[#262620] z-20 min-w-0">
+        <header class="bg-[#F1EFEA] dark:bg-[#151512] text-[#1A1916] dark:text-[#EAE8E2] px-6 py-4 flex items-center justify-between border-b border-[#E5E2DA] dark:border-[#262620] z-20">
             <div>
                 <p class="text-[10px] md:text-[11px] font-bold tracking-wider uppercase text-[#8A867D]">PORTAL MAHASISWA</p>
                 <h2 id="header-title" class="font-extrabold text-xl md:text-2xl tracking-tight text-[#1A1916] dark:text-white">Beranda</h2>
@@ -211,7 +211,7 @@
                 <div id="notif-panel" class="hidden absolute right-6 top-16 w-80 bg-[#FDFCF9] dark:bg-[#1C1C18] rounded-2xl shadow-xl border border-[#E5E2DA] dark:border-[#262620] z-50 overflow-hidden text-[#1A1916] dark:text-[#EAE8E2]">
                     <div class="flex justify-between items-center p-4 border-b border-[#E5E2DA] dark:border-[#262620] bg-[#F7F5F0] dark:bg-[#21211D]">
                         <h3 class="font-bold text-xs uppercase tracking-wider text-[#1A1916] dark:text-white">Notifikasi Terbaru</h3>
-                        <button class="text-[11px] text-[#5B9E16] dark:text-[#BEF264] font-semibold hover:underline" onclick="clearNotifications()">Tandai dibaca</button>
+                        <button class="text-[11px] text-[#6366F1] dark:text-[#BEF264] font-semibold hover:underline" onclick="clearNotifications()">Tandai dibaca</button>
                     </div>
                     <div id="notif-list" class="p-4 space-y-3.5 max-h-72 overflow-y-auto hide-scrollbar">
                         <p class="text-xs text-[#78756D] text-center py-4">Memuat notifikasi...</p>
@@ -372,13 +372,13 @@
             <!-- TAB 4: PROFIL -->
             <div id="profil" class="tab-content max-w-xl mx-auto space-y-6">
                 <!-- Profil Mahasiswa -->
-                <div class="bg-[#151512] border border-[#262620] p-6 rounded-3xl text-center text-white relative overflow-hidden">
-                    <div class="w-20 h-20 bg-[#21211D] rounded-full mx-auto mb-3 border-4 border-[#262620] overflow-hidden">
+                <div class="bg-gradient-to-br from-slate-800 to-slate-950 dark:from-slate-900 dark:to-black p-6 rounded-3xl text-center text-white shadow-md relative overflow-hidden">
+                    <div class="w-20 h-20 bg-slate-700 rounded-full mx-auto mb-3 border-4 border-slate-600 overflow-hidden">
                         <img id="profile-card-avatar" src="https://api.dicebear.com/7.x/avataaars/svg?seed=libra" class="w-full h-full object-cover">
                     </div>
                     <h3 id="profile-card-name" class="font-bold text-lg">&nbsp;</h3>
-                    <p class="text-xs text-[#8A867D]">NIM: <span id="profile-card-nim">-</span></p>
-                    <span id="profile-card-fakultas" class="inline-block bg-[#BEF264]/15 text-[#BEF264] border border-[#BEF264]/30 text-[10px] font-bold px-3 py-1 rounded-full mt-3">-</span>
+                    <p class="text-xs text-slate-400">NIM: <span id="profile-card-nim">-</span></p>
+                    <span id="profile-card-fakultas" class="inline-block bg-white/10 text-[10px] font-medium px-3 py-1 rounded-full mt-3 border border-white/10">-</span>
                 </div>
 
                 <!-- Pengaturan & Fitur -->
@@ -395,13 +395,13 @@
                             </select>
                             <button type="button" id="lang-btn" onclick="toggleLangMenu(event)" aria-haspopup="listbox" aria-expanded="false"
                                 class="flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/70 dark:border-slate-700 transition-colors text-xs font-semibold text-slate-700 dark:text-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/60">
-                                <span id="lang-btn-code" class="w-6 h-6 rounded-lg bg-[#BEF264] text-[#151512] text-[10px] font-black flex items-center justify-center transition-colors">ID</span>
+                                <span id="lang-btn-code" class="w-6 h-6 rounded-lg bg-emerald-500 text-white text-[10px] font-bold flex items-center justify-center transition-colors">ID</span>
                                 <span id="lang-btn-label">Indonesia</span>
                                 <i id="lang-btn-chevron" class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200"></i>
                             </button>
                             <div id="lang-menu" role="listbox" class="hidden fixed z-[60] w-52 p-1.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl opacity-0 scale-95 origin-top-right transition duration-150 ease-out">
                                 <button type="button" role="option" data-lang="id" onclick="selectLanguage('id')" class="lang-option w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                                    <span class="w-8 h-8 rounded-lg bg-[#BEF264] text-[#151512] text-[11px] font-black flex items-center justify-center">ID</span>
+                                    <span class="w-8 h-8 rounded-lg bg-emerald-500 text-white text-[11px] font-bold flex items-center justify-center">ID</span>
                                     <span class="flex-1 leading-tight">
                                         <span class="block text-xs font-semibold text-slate-800 dark:text-slate-100">Indonesia</span>
                                         <span class="block text-[10px] text-slate-400">Bahasa Indonesia</span>
@@ -409,7 +409,7 @@
                                     <i class="lang-check fa-solid fa-circle-check text-emerald-500 text-sm"></i>
                                 </button>
                                 <button type="button" role="option" data-lang="en" onclick="selectLanguage('en')" class="lang-option w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
-                                    <span class="w-8 h-8 rounded-lg bg-[#BEF264] text-[#151512] text-[11px] font-black flex items-center justify-center">EN</span>
+                                    <span class="w-8 h-8 rounded-lg bg-blue-500 text-white text-[11px] font-bold flex items-center justify-center">EN</span>
                                     <span class="flex-1 leading-tight">
                                         <span class="block text-xs font-semibold text-slate-800 dark:text-slate-100">English</span>
                                         <span class="block text-[10px] text-slate-400">English language</span>
@@ -424,13 +424,13 @@
                         <div class="flex items-center gap-3 font-medium text-slate-700 dark:text-slate-300">
                             <i class="fa-solid fa-wallet text-lg text-rose-500"></i> <span data-i18n="fine-status">Status Informasi Denda</span>
                         </div>
-                        <span class="text-xs text-[#5B9E16] dark:text-[#BEF264] font-semibold flex items-center gap-1"><span data-i18n="show-action">Tampilkan</span> <i class="fa-solid fa-chevron-right text-[10px]"></i></span>
+                        <span class="text-xs text-blue-500 font-semibold flex items-center gap-1"><span data-i18n="show-action">Tampilkan</span> <i class="fa-solid fa-chevron-right text-[10px]"></i></span>
                     </div>
 
                     <!-- Formulir Feedback -->
                     <div class="p-4 border-b border-slate-100 dark:border-slate-800">
                         <div class="flex items-center gap-2 mb-1">
-                            <i class="fa-solid fa-comment-dots text-[#5B9E16] dark:text-[#BEF264] text-sm"></i>
+                            <i class="fa-solid fa-comment-dots text-blue-500 text-sm"></i>
                             <h4 class="font-bold text-sm text-slate-800 dark:text-white" data-i18n="feedback-title">Kirim Masukan / Feedback</h4>
                         </div>
                         <p class="text-xs text-slate-400 leading-normal mb-4" data-i18n="feedback-desc">Bantu kami meningkatkan Sistem Libra dengan memberikan saran atau laporan kendala Anda.</p>
@@ -449,7 +449,7 @@
                                 <label data-i18n="feedback-label-msg" for="feedback-message" class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1.5">Pesan Anda</label>
                                 <textarea id="feedback-message" rows="4" required class="w-full text-xs px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-slate-800 dark:text-white resize-none" placeholder="Tuliskan saran atau masukan Anda di sini..."></textarea>
                             </div>
-                            <button type="submit" data-i18n="feedback-btn-submit" class="w-full py-2.5 bg-[#BEF264] hover:bg-[#aee64b] text-[#151512] text-xs font-bold rounded-xl shadow-sm transition-colors">
+                            <button type="submit" data-i18n="feedback-btn-submit" class="w-full py-2.5 bg-blue-600 text-white text-xs font-semibold rounded-xl shadow-sm hover:bg-blue-700 transition-colors">
                                 Kirim Feedback
                             </button>
                         </form>
@@ -610,7 +610,7 @@
 
             <!-- Tombol Default untuk membuka form -->
             <div class="mt-6" id="booking-default-btn-container">
-                <button onclick="openBookingForm()" class="w-full bg-[#BEF264] hover:bg-[#aee64b] text-[#151512] text-sm font-bold py-3 rounded-xl shadow-sm active:scale-[0.98] transition-all">
+                <button onclick="openBookingForm()" class="w-full bg-slate-900 dark:bg-blue-600 text-white text-sm font-semibold py-3 rounded-xl shadow-md hover:bg-slate-800 dark:hover:bg-blue-700 active:scale-[0.98] transition-all">
                     <i class="fa-solid fa-book-open mr-2"></i> Booking & Antar ke Rumah
                 </button>
             </div>
@@ -651,7 +651,7 @@
                 
                 <div class="flex gap-2 pt-2">
                     <button type="button" onclick="cancelBookingForm()" class="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold py-2.5 rounded-xl border border-slate-200/60 dark:border-slate-700 hover:bg-slate-200 transition-all">Batal</button>
-                    <button type="button" onclick="submitBookingForm()" class="flex-1 bg-[#BEF264] hover:bg-[#aee64b] text-[#151512] font-bold py-2.5 rounded-xl transition-all shadow-sm">Konfirmasi</button>
+                    <button type="button" onclick="submitBookingForm()" class="flex-1 bg-blue-600 text-white font-semibold py-2.5 rounded-xl hover:bg-blue-700 transition-all shadow-md">Konfirmasi</button>
                 </div>
             </div>
         </div>
@@ -782,7 +782,7 @@
                 <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer"><input type="radio" name="pay-atk-method" value="Transfer Bank" class="accent-slate-800"><span>Transfer Bank</span></label>
                 <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer"><input type="radio" name="pay-atk-method" value="E-Wallet" class="accent-slate-800"><span>E-Wallet</span></label>
             </div>
-            <button id="pay-atk-submit" type="button" onclick="submitPayAtk()" class="w-full bg-[#BEF264] hover:bg-[#aee64b] text-[#151512] font-bold py-3 rounded-xl transition-all shadow-sm text-sm">Bayar Sekarang</button>
+            <button id="pay-atk-submit" type="button" onclick="submitPayAtk()" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-xl hover:bg-blue-700 transition-all shadow-md text-sm">Bayar Sekarang</button>
             <p class="text-[11px] text-slate-400 mt-3 text-center">Belum siap? Tutup saja, kamu bisa membayarnya nanti dari Riwayat Pembelian.</p>
         </div>
     </div>
@@ -806,7 +806,7 @@
                 <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer"><input type="radio" name="pay-fine-method" value="Transfer Bank" class="accent-slate-800"><span>Transfer Bank</span></label>
                 <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer"><input type="radio" name="pay-fine-method" value="E-Wallet" class="accent-slate-800"><span>E-Wallet</span></label>
             </div>
-            <button id="pay-fine-submit" type="button" onclick="submitPayFine()" class="w-full bg-[#BEF264] hover:bg-[#aee64b] text-[#151512] font-bold py-3 rounded-xl transition-all shadow-sm text-sm">Bayar Sekarang</button>
+            <button id="pay-fine-submit" type="button" onclick="submitPayFine()" class="w-full bg-blue-600 text-white font-semibold py-3 rounded-xl hover:bg-blue-700 transition-all shadow-md text-sm">Bayar Sekarang</button>
         </div>
     </div>
 
@@ -1383,7 +1383,7 @@
             let html = `<button type="button" ${bookPage === 1 ? 'disabled' : `onclick="goToBookPage(${bookPage - 1})"`} class="${base} ${bookPage === 1 ? off : idle}">Sebelumnya</button>`;
             nums.forEach(n => {
                 if (n === '...') html += `<button type="button" title="Ke halaman…" onclick="openPageJump(this, ${totalPages})" class="px-2 py-2 text-slate-400 hover:text-blue-600 rounded-lg transition-colors">…</button>`;
-                else html += `<button type="button" onclick="goToBookPage(${n})" class="${base} ${n === bookPage ? 'bg-[#BEF264] text-[#151512] font-bold' : idle}">${n}</button>`;
+                else html += `<button type="button" onclick="goToBookPage(${n})" class="${base} ${n === bookPage ? 'bg-blue-600 text-white font-semibold' : idle}">${n}</button>`;
             });
             html += `<button type="button" ${bookPage === totalPages ? 'disabled' : `onclick="goToBookPage(${bookPage + 1})"`} class="${base} ${bookPage === totalPages ? off : idle}">Selanjutnya</button>`;
             box.innerHTML = html;
@@ -1533,7 +1533,7 @@
                         : '-';
 
                     bookingBtn.disabled = false;
-                    bookingBtn.className = 'w-full bg-[#BEF264] hover:bg-[#aee64b] text-[#151512] text-sm font-bold py-3 rounded-xl shadow-sm active:scale-[0.98] transition-all';
+                    bookingBtn.className = 'w-full bg-slate-900 dark:bg-blue-600 text-white text-sm font-semibold py-3 rounded-xl shadow-md hover:bg-slate-800 dark:hover:bg-blue-700 active:scale-[0.98] transition-all';
                     bookingBtn.innerHTML = `<i class="fa-solid fa-book-open mr-2"></i> Booking & Antar ke Rumah`;
 
                     card.innerHTML = `
@@ -1550,7 +1550,7 @@
                 // ===== Kondisi 1: buku tersedia bebas, tidak ada hold sama sekali =====
                 if (info.book_available) {
                     bookingBtn.disabled = false;
-                    bookingBtn.className = 'w-full bg-[#BEF264] hover:bg-[#aee64b] text-[#151512] text-sm font-bold py-3 rounded-xl shadow-sm active:scale-[0.98] transition-all';
+                    bookingBtn.className = 'w-full bg-slate-900 dark:bg-blue-600 text-white text-sm font-semibold py-3 rounded-xl shadow-md hover:bg-slate-800 dark:hover:bg-blue-700 active:scale-[0.98] transition-all';
                     bookingBtn.innerHTML = `<i class="fa-solid fa-book-open mr-2"></i> Booking & Antar ke Rumah`;
                     card.classList.add('hidden');
                     return;
@@ -1559,8 +1559,8 @@
                 // ===== Kondisi 4: buku masih dipinjam org lain -- tampilkan join/leave antrian =====
                 if (info.already_in_queue) {
                     card.innerHTML = `
-                        <div class="bg-[#BEF264]/10 border border-[#BEF264]/30 rounded-xl p-4 text-sm">
-                            <p class="font-bold text-[#1F4503] dark:text-[#BEF264]">
+                        <div class="bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 rounded-xl p-4 text-sm">
+                            <p class="font-bold text-blue-700 dark:text-blue-400">
                                 <i class="fa-solid fa-list-ol mr-1.5"></i> Kamu antrian ke-${info.your_position} dari ${info.total_in_queue}
                             </p>
                             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Perkiraan giliranmu: <span class="font-semibold">${estText}</span></p>
@@ -2343,23 +2343,19 @@
             if (!userId) return;
 
             try {
-                // Muat pinjaman buku & pesanan ATK secara paralel (Promise.all) agar load tab sirkulasi 2x lebih cepat
-                const [pinjamRes, _] = await Promise.all([
-                    fetch(`/api/pinjam?user_id=${encodeURIComponent(userId)}`),
-                    loadAtkOrders()
-                ]);
-
-                if (!pinjamRes.ok) throw new Error('Gagal mengambil data peminjaman');
-                const data = await pinjamRes.json();
+                const response = await fetch(`/api/pinjam?user_id=${encodeURIComponent(userId)}`);
+                if (!response.ok) throw new Error('Gagal mengambil data peminjaman');
+                const data = await response.json();
                 activeLoans = Array.isArray(data) ? data : (data.data || []);
 
-                // Render konten Sirkulasi langsung tanpa menunda
+                // Pesanan ATK dimuat bersamaan supaya kartu status di Sirkulasi
+                // (buku + ATK) selalu dirender dari data yang sinkron.
+                await loadAtkOrders();
+
                 renderActiveLoans();
                 calculateFines();
                 updateCourierStatusVisibility();
-
-                // Sinkronkan status buku & wishlist secara non-blocking di background
-                updateBookStatuses();
+                await updateBookStatuses();
                 syncWishlistUI();
             } catch (err) {
                 console.error('Error loading loans:', err);
@@ -2754,8 +2750,8 @@
                         ${data.type === 'atk' ? 'Ambil pesananmu' : 'Ambil buku'} langsung di meja sirkulasi perpustakaan sebelum batas waktu di atas habis.
                     </p>`;
             } else if (isCourier) {
-                // --- Sedang dalam proses pengiriman kurir: badge lime + nama tahap saat ini ---
-                iconWrap.className = 'circ-order-icon-wrap w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#BEF264]/20 text-[#1F4503] dark:bg-[#BEF264]/15 dark:text-[#BEF264] border border-[#BEF264]/30';
+                // --- Sedang dalam proses pengiriman kurir: badge biru + nama tahap saat ini ---
+                iconWrap.className = 'circ-order-icon-wrap w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-400';
                 iconEl.className = 'circ-order-icon-el text-base fa-solid fa-truck';
 
                 const isId = currentLang === 'id';
@@ -2798,14 +2794,14 @@
 
                 const dotClass = isDone
                     ? 'bg-emerald-500'
-                    : (isActive ? 'bg-[#BEF264]' : 'bg-slate-300 dark:bg-slate-700');
+                    : (isActive ? 'bg-blue-500' : 'bg-slate-300 dark:bg-slate-700');
 
                 const dotInner = isDone
                     ? '<i class="fa-solid fa-check text-[8px] text-white"></i>'
-                    : (isActive ? '<span class="w-1.5 h-1.5 rounded-full bg-[#151512] animate-pulse"></span>' : '');
+                    : (isActive ? '<span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>' : '');
 
                 const titleClass = isActive
-                    ? 'text-sm font-bold text-[#1A1916] dark:text-[#BEF264]'
+                    ? 'text-sm font-bold text-blue-600 dark:text-blue-400'
                     : (isDone
                         ? 'text-sm font-semibold text-slate-600 dark:text-slate-400'
                         : 'text-sm font-semibold text-slate-400 dark:text-slate-600');
@@ -3034,11 +3030,11 @@
                     ${p.gambar
                         ? `<div class="aspect-[4/3] bg-slate-100 dark:bg-slate-800 overflow-hidden relative">
                                <img src="${p.gambar}" alt="${p.nama}" loading="lazy" class="w-full h-full object-cover transition-transform duration-300 hover:scale-105" onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
-                               <div class="hidden absolute inset-0 bg-[#F1EFEA] dark:bg-[#21211D] p-4 flex items-center justify-center">
+                               <div class="hidden absolute inset-0 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800/40 dark:to-slate-900/30 p-4 flex items-center justify-center">
                                    <i class="fa-solid ${icon} text-3xl text-slate-500 dark:text-slate-400"></i>
                                </div>
                            </div>`
-                        : `<div class="bg-[#F1EFEA] dark:bg-[#21211D] p-4 flex items-center justify-center aspect-[4/3]">
+                        : `<div class="bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800/40 dark:to-slate-900/30 p-4 flex items-center justify-center aspect-[4/3]">
                                <i class="fa-solid ${icon} text-3xl text-slate-500 dark:text-slate-400"></i>
                            </div>`}
                     <div class="p-3 flex flex-col gap-1.5 flex-1">
@@ -3052,7 +3048,7 @@
                             </span>
                         </div>
                         <button onclick="openBeli('${p.id}')"
-                            class="mt-2 w-full py-1.5 text-xs font-bold rounded-xl transition-all ${habis ? 'bg-[#EAE8E1] dark:bg-[#262620] text-slate-400 cursor-not-allowed' : 'bg-[#BEF264] hover:bg-[#aee64b] text-[#151512] shadow-sm'}"
+                            class="mt-2 w-full py-1.5 text-xs font-bold rounded-xl transition-all ${habis ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed' : 'bg-slate-800 hover:bg-slate-900 text-white shadow-sm shadow-slate-900/20'}"
                             ${habis ? 'disabled' : ''}>
                             <i class="fa-solid fa-cart-plus mr-1"></i>${habis ? 'Habis' : 'Beli'}
                         </button>
@@ -3444,14 +3440,14 @@
                     } else if (r.metode_bayar === 'Bayar di Tempat') {
                         payHtml = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"><i class="fa-solid fa-hand-holding-dollar text-[10px]"></i> ${r.metode_pengiriman === 'antar' ? 'Bayar ke kurir saat tiba' : 'Bayar di meja sirkulasi'}</span>`;
                     } else {
-                        payHtml = `<button type="button" onclick="openPayAtkModal('${r.id}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-[#BEF264] text-[#151512] hover:bg-[#aee64b] transition-colors"><i class="fa-solid fa-credit-card text-[10px]"></i> Bayar Sekarang</button>`;
+                        payHtml = `<button type="button" onclick="openPayAtkModal('${r.id}')" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-blue-600 text-white hover:bg-blue-700 transition-colors"><i class="fa-solid fa-credit-card text-[10px]"></i> Bayar Sekarang</button>`;
                     }
                 }
 
                 // Status Badge
                 let statusBadge = '';
                 if (isSelesai) {
-                    statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#BEF264] text-[#151512]">
+                    statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
                         <i class="fa-solid fa-circle-check"></i> Selesai
                     </span>`;
                 } else if (isBatal) {
@@ -3459,8 +3455,8 @@
                         <i class="fa-solid fa-circle-xmark"></i> Dibatalkan
                     </span>`;
                 } else {
-                    statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-[#BEF264]/20 text-[#1F4503] dark:bg-[#BEF264]/15 dark:text-[#BEF264] border border-[#BEF264]/30">
-                        <span class="w-1.5 h-1.5 rounded-full bg-[#BEF264] animate-pulse"></span> ${escapeHtmlAtk(status)}
+                    statusBadge = `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300">
+                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span> ${escapeHtmlAtk(status)}
                     </span>`;
                 }
 
@@ -3521,18 +3517,9 @@
             const container = document.getElementById('riwayat-pembelian-list');
             if (!container) return;
 
-            // 1. Tampilkan data dari localStorage seketika (0ms) agar pengguna tidak melihat loading lama
-            try {
-                const cached = JSON.parse(localStorage.getItem(getRiwayatAtkKey()) || '[]');
-                if (cached.length > 0 && (!riwayatAtkData || riwayatAtkData.length === 0)) {
-                    riwayatAtkData = cached;
-                    renderRiwayatPembelianList();
-                }
-            } catch (_) {}
-
             let riwayat = [];
 
-            // 2. Ambil data terbaru dari API secara asynchronous
+            // Coba dari API dulu
             try {
                 const userId = getCurrentUserId();
                 if (userId) {
