@@ -5,6 +5,7 @@
     try {
       var url = typeof input === 'string' ? input : (input && input.url) || '';
       var path = url.replace(/^https?:\/\/[^/]+/, '').split('?')[0];
+      if (path && !path.startsWith('/')) path = '/' + path;
       if (path.indexOf('/api/') === 0 && PUBLIC.indexOf(path) === -1) {
         init = init || {};
         var h = new Headers(init.headers || (typeof input !== 'string' && input.headers) || {});

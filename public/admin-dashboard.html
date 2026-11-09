@@ -1447,12 +1447,28 @@
             }
         }
 
+        function getAuthHeaders(extra = {}) {
+            const token = localStorage.getItem('libra_token');
+            const h = { 'Accept': 'application/json', ...extra };
+            if (token) {
+                h['Authorization'] = 'Bearer ' + token;
+            }
+            return h;
+        }
+
         // --- Core API Functions ---
         async function fetchAPI(endpoint) {
             try {
                 const res = await fetch(`${API}/${endpoint}`, {
-                    headers: { 'Accept': 'application/json' }
+                    headers: getAuthHeaders()
                 });
+                if (res.status === 401) {
+                    console.warn(`[fetchAPI] Sesi berakhir (401) pada endpoint: ${endpoint}`);
+                    localStorage.removeItem('libra_token');
+                    localStorage.removeItem('libra_user');
+                    window.location.replace('/login');
+                    return [];
+                }
                 if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
                 const result = await res.json();
@@ -1490,15 +1506,19 @@
             try {
                 res = await fetch(url, {
                     method: method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
+                    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify(payload)
                 });
             } catch (networkErr) {
                 console.error("Error jaringan saat menyimpan data (kemungkinan CORS/offline):", networkErr);
                 return { success: false, message: 'Tidak dapat terhubung ke server. Cek koneksi internet atau konfigurasi CORS backend.' };
+            }
+
+            if (res.status === 401) {
+                localStorage.removeItem('libra_token');
+                localStorage.removeItem('libra_user');
+                window.location.replace('/login');
+                return { success: false, message: 'Sesi berakhir. Silakan login kembali.' };
             }
 
             // Ambil body response sebagai teks dulu (aman untuk JSON maupun bukan JSON,
@@ -1540,8 +1560,14 @@
             try {
                 const res = await fetch(url, {
                     method: 'DELETE',
-                    headers: { 'Accept': 'application/json' }
+                    headers: getAuthHeaders()
                 });
+                if (res.status === 401) {
+                    localStorage.removeItem('libra_token');
+                    localStorage.removeItem('libra_user');
+                    window.location.replace('/login');
+                    return;
+                }
                 if (res.ok) {
                     triggerToast('Data berhasil dihapus', 'emerald');
                     refreshCallback();
@@ -1773,7 +1799,7 @@
             try {
                 const res = await fetch(`${API}/wishlist/force-release`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ book_id: bookId })
                 });
                 const data = await res.json().catch(() => ({}));
@@ -2071,6 +2097,14 @@
         };
 
         window.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('libra_token');
+            const user = JSON.parse(localStorage.getItem('libra_user') || 'null');
+            const ok = token && user && (user.role === 'admin' || String(user.nim).toLowerCase() === 'admin' || String(user.username).toLowerCase() === 'admin');
+            if (!ok) {
+                window.location.replace('/login');
+                return;
+            }
+
             fetchBooks();
             fetchUsers();
             fetchPeminjams();
@@ -2332,7 +2366,9 @@
             fd.append('gambar', file);
             try {
                 const res = await fetch(`${API}/produk-atk/${encodeURIComponent(productId)}/gambar`, {
-                    method: 'POST', headers: { 'Accept': 'application/json' }, body: fd
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: fd
                 });
                 const data = await res.json().catch(() => ({}));
                 if (!res.ok) {
@@ -2347,7 +2383,10 @@
         async function removeStoreProductImage() {
             const id = document.getElementById('store-product-id').value;
             if (!id || !confirm('Hapus gambar produk ini?')) return;
-            const res = await fetch(`${API}/produk-atk/${encodeURIComponent(id)}/gambar`, { method: 'DELETE', headers: { 'Accept': 'application/json' } });
+            const res = await fetch(`${API}/produk-atk/${encodeURIComponent(id)}/gambar`, {
+                method: 'DELETE',
+                headers: getAuthHeaders()
+            });
             if (!res.ok) { triggerToast('Gagal menghapus gambar.', 'red'); return; }
             document.getElementById('store-product-image').value = '';
             setStoreProductPreview(null);
