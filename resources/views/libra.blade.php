@@ -886,6 +886,27 @@
             try { ok = !!localStorage.getItem('libra_token') && !!JSON.parse(localStorage.getItem('libra_user') || 'null'); } catch (e) {}
             if (!ok) { window.location.replace('/login'); return; }
             const u = JSON.parse(localStorage.getItem('libra_user'));
+
+            // Halaman mahasiswa hanya untuk akun mahasiswa. Akun admin/kurir
+            // dikirim ke dashboard masing-masing, bukan ditampilkan di sini.
+            const role = String(u.role || '').toLowerCase();
+            if (role === 'admin') { window.location.replace('/admin-dashboard.html'); return; }
+            if (role === 'kurir') { window.location.replace('/kurir'); return; }
+
+            // Sesi (token + libra_user) disimpan di localStorage yang DIPAKAI BERSAMA
+            // semua tab di alamat yang sama. Kalau tab lain login sebagai akun lain,
+            // tab ini harus tahu dan tidak diam-diam berganti akun.
+            const myId = String(u.id || '');
+            window.addEventListener('storage', function (e) {
+                if (e.key !== 'libra_user' && e.key !== 'libra_token') return;
+                let nowId = '';
+                try { nowId = String((JSON.parse(localStorage.getItem('libra_user') || 'null') || {}).id || ''); } catch (_) {}
+                if (nowId !== myId) {
+                    alert('Akun pada browser ini berubah karena ada tab lain yang login/logout. Silakan login ulang.');
+                    window.location.replace('/login');
+                }
+            });
+
             const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
             set('profile-card-name', u.nama_lengkap || u.name || u.username || '');
             set('profile-card-nim', u.nim || '-');
