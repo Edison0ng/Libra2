@@ -1,6 +1,37 @@
 <!DOCTYPE html>
 <html lang="id" class="">
 <head>
+    <!-- Interceptor Otentikasi API Otomatis (Bearer Token Sanctum) -->
+    <script>
+    (function () {
+      var PUBLIC = ['/api/login', '/api/register', '/api/forgot-password', '/api/reset-password', '/api/test'];
+      var orig = window.fetch.bind(window);
+      window.fetch = function (input, init) {
+        try {
+          var url = typeof input === 'string' ? input : (input && input.url) || '';
+          var path = url.replace(/^https?:\/\/[^/]+/, '').split('?')[0];
+          if (path && !path.startsWith('/')) path = '/' + path;
+          if (path.indexOf('/api/') === 0 && PUBLIC.indexOf(path) === -1) {
+            init = init || {};
+            var h = new Headers(init.headers || (typeof input !== 'string' && input.headers) || {});
+            var t = localStorage.getItem('libra_token');
+            if (t && !h.has('Authorization')) h.set('Authorization', 'Bearer ' + t);
+            if (!h.has('Accept')) h.set('Accept', 'application/json');
+            init.headers = h;
+            return orig(input, init).then(function (res) {
+              if (res.status === 401) {
+                ['libra_token', 'libra_user', 'libra_remember'].forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
+                try { sessionStorage.removeItem('libra_active'); } catch (e) {}
+                if (location.pathname !== '/login') location.href = '/login';
+              }
+              return res;
+            });
+          }
+        } catch (e) {}
+        return orig(input, init);
+      };
+    })();
+    </script>
     <script src="/js/auth-fetch.js"></script>
 <script>
   /* Ingat Saya: kalau tidak dicentang saat login, sesi hanya berlaku selama browser/tab dibuka */
@@ -15,7 +46,7 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
@@ -23,12 +54,24 @@
             darkMode: 'class',
             theme: {
                 extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'] },
                     colors: {
+                        north: {
+                            bg: '#F1EFEA',
+                            card: '#FDFCF9',
+                            dark: '#151512',
+                            darkHover: '#23231F',
+                            border: '#E5E2DA',
+                            borderDark: '#262620',
+                            lime: '#BEF264',
+                            indigo: '#6366F1',
+                            text: '#1A1916',
+                            muted: '#78756D',
+                        },
                         libra: {
-                            dark: '#1E293B',
-                            bg: '#F8FAFC',
-                            primary: '#3B82F6',
+                            dark: '#151512',
+                            bg: '#F1EFEA',
+                            primary: '#6366F1',
                             red: '#E11D48'
                         }
                     }
@@ -37,6 +80,15 @@
         }
     </script>
     <style>
+        body {
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+            background-color: #F1EFEA;
+            color: #1A1916;
+        }
+        .dark body {
+            background-color: #151512;
+            color: #EAE8E2;
+        }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .tab-content { display: none; }
@@ -114,32 +166,50 @@
         })();
     </script>
 </head>
-<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex h-screen overflow-hidden transition-colors duration-200">
+<body class="bg-[#F1EFEA] text-[#1A1916] dark:bg-[#151512] dark:text-[#EAE8E2] flex h-screen overflow-hidden transition-colors duration-200">
 
     <!-- SIDEBAR -->
-    <aside class="hidden md:flex flex-col w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 h-full transition-colors duration-200">
-        <div class="p-6 border-b border-slate-100 dark:border-slate-800">
-            <h1 class="text-2xl font-bold text-slate-800 dark:text-white tracking-tight flex items-center gap-2">
-                <i class="fa-solid fa-book-bookmark text-blue-600"></i> LIBRA
-            </h1>
-            <p class="text-[10px] text-slate-400 font-medium tracking-widest mt-1 uppercase">Sistem Informasi Perpustakaan</p>
+    <aside class="hidden md:flex flex-col w-60 bg-[#151512] border-r border-[#262620] h-full transition-colors duration-200 select-none text-[#9C988F]">
+        <div class="p-5 pb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-[#BEF264] flex items-center justify-center text-[#151512] font-black text-base shadow-sm">
+                    L
+                </div>
+                <div class="flex items-baseline gap-1.5">
+                    <span class="text-lg font-bold text-white tracking-tight">LIBRA</span>
+                    <span class="text-[9px] font-bold tracking-widest text-[#BEF264] uppercase">PORTAL</span>
+                </div>
+            </div>
+
+            <!-- Workspace Card -->
+            <div class="mt-4 p-2.5 rounded-xl bg-[#21211D] border border-[#2E2E28] flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-[#6366F1] text-white flex items-center justify-center text-xs font-bold shadow-sm">
+                    MH
+                </div>
+                <div class="overflow-hidden leading-tight">
+                    <p class="text-xs font-semibold text-white truncate" id="sidebar-user-name">Mahasiswa</p>
+                    <p class="text-[10px] text-[#8A867D] truncate">Anggota Perpustakaan</p>
+                </div>
+            </div>
         </div>
-        <nav class="flex-1 p-4 space-y-1.5">
-            <button onclick="switchTab('beranda')" id="nav-beranda-btn" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-semibold bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 transition-all" data-target="beranda">
-                <i class="fa-solid fa-house w-5 text-lg"></i> <span data-i18n="nav-beranda">Beranda</span>
+
+        <nav class="flex-1 px-3 py-2 space-y-1.5 overflow-y-auto hide-scrollbar text-xs">
+            <p class="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-[#6E6B64]">Menu Mahasiswa</p>
+            <button onclick="switchTab('beranda')" id="nav-beranda-btn" class="nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left font-semibold bg-[#BEF264] text-[#151512] transition-all" data-target="beranda">
+                <i class="fa-solid fa-house w-4 text-sm"></i> <span data-i18n="nav-beranda">Beranda</span>
             </button>
-            <button onclick="switchTab('buku')" id="nav-buku-btn" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all" data-target="buku">
-                <i class="fa-solid fa-magnifying-glass w-5 text-lg"></i> <span data-i18n="nav-pustaka">Pustaka</span>
+            <button onclick="switchTab('buku')" id="nav-buku-btn" class="nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left font-medium text-[#9C988F] hover:text-white hover:bg-[#21211D] transition-all" data-target="buku">
+                <i class="fa-solid fa-magnifying-glass w-4 text-sm"></i> <span data-i18n="nav-pustaka">Pustaka</span>
             </button>
-            <button onclick="switchTab('sirkulasi')" id="nav-sirkulasi-btn" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all" data-target="sirkulasi">
-                <i class="fa-solid fa-arrows-spin w-5 text-lg"></i> <span data-i18n="nav-sirkulasi">Sirkulasi</span>
+            <button onclick="switchTab('sirkulasi')" id="nav-sirkulasi-btn" class="nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left font-medium text-[#9C988F] hover:text-white hover:bg-[#21211D] transition-all" data-target="sirkulasi">
+                <i class="fa-solid fa-arrows-spin w-4 text-sm"></i> <span data-i18n="nav-sirkulasi">Sirkulasi</span>
             </button>
-            <button onclick="switchTab('toko')" id="nav-toko-btn" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all" data-target="toko">
-                <i class="fa-solid fa-store w-5 text-lg"></i> <span>Toko ATK</span>
-                <span id="cart-badge-sidebar" class="hidden ml-auto bg-slate-800 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">0</span>
+            <button onclick="switchTab('toko')" id="nav-toko-btn" class="nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left font-medium text-[#9C988F] hover:text-white hover:bg-[#21211D] transition-all" data-target="toko">
+                <i class="fa-solid fa-store w-4 text-sm"></i> <span>Toko ATK</span>
+                <span id="cart-badge-sidebar" class="hidden ml-auto bg-[#BEF264] text-[#151512] text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">0</span>
             </button>
-            <button onclick="switchTab('profil')" id="nav-profil-btn" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all" data-target="profil">
-                <i class="fa-regular fa-user w-5 text-lg"></i> <span data-i18n="nav-profil">Profil</span>
+            <button onclick="switchTab('profil')" id="nav-profil-btn" class="nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left font-medium text-[#9C988F] hover:text-white hover:bg-[#21211D] transition-all" data-target="profil">
+                <i class="fa-regular fa-user w-4 text-sm"></i> <span data-i18n="nav-profil">Profil</span>
             </button>
         </nav>
     </aside>
@@ -148,33 +218,34 @@
     <main class="flex-1 flex flex-col h-full relative overflow-hidden">
         
         <!-- HEADER -->
-        <header class="bg-slate-900 dark:bg-slate-950 text-white px-6 py-4 flex items-center justify-between shadow-md z-20">
+        <header class="bg-[#F1EFEA] dark:bg-[#151512] text-[#1A1916] dark:text-[#EAE8E2] px-6 py-4 flex items-center justify-between border-b border-[#E5E2DA] dark:border-[#262620] z-20">
             <div>
-                <h2 id="header-title" class="font-bold text-lg md:text-xl tracking-wide">Beranda</h2>
-                <p id="header-subtitle" class="text-xs text-slate-400">Selamat datang kembali, Mahasiswa!</p>
+                <p class="text-[10px] md:text-[11px] font-bold tracking-wider uppercase text-[#8A867D]">PORTAL MAHASISWA</p>
+                <h2 id="header-title" class="font-extrabold text-xl md:text-2xl tracking-tight text-[#1A1916] dark:text-white">Beranda</h2>
+                <p id="header-subtitle" class="text-xs text-[#78756D] mt-0.5">Selamat datang kembali, Mahasiswa!</p>
             </div>
             
             <div class="flex items-center gap-3">
-                <button onclick="toggleDarkMode()" id="dark-mode-toggle" title="Ganti tema gelap/terang" aria-label="Ganti tema gelap/terang" class="focus:outline-none relative p-2 w-10 h-10 flex items-center justify-center bg-slate-800 dark:bg-slate-900 rounded-xl hover:bg-slate-700 transition-colors">
-                    <i class="fa-regular fa-moon text-lg dark:hidden"></i>
-                    <i class="fa-regular fa-sun text-lg hidden dark:inline text-amber-300"></i>
+                <button onclick="toggleDarkMode()" id="dark-mode-toggle" title="Ganti tema gelap/terang" aria-label="Ganti tema gelap/terang" class="focus:outline-none relative p-2 w-9 h-9 flex items-center justify-center bg-[#FDFCF9] dark:bg-[#21211D] border border-[#E5E2DA] dark:border-[#2E2E28] rounded-xl text-[#78756D] hover:text-[#1A1916] dark:hover:text-white transition">
+                    <i class="fa-regular fa-moon text-sm dark:hidden"></i>
+                    <i class="fa-regular fa-sun text-sm hidden dark:inline text-[#BEF264]"></i>
                 </button>
 
-                <button onclick="toggleNotif(event)" class="focus:outline-none relative p-2 bg-slate-800 dark:bg-slate-900 rounded-xl hover:bg-slate-700 transition-colors">
-                    <i class="fa-regular fa-bell text-lg"></i>
-                    <span id="notif-badge" class="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                <button onclick="toggleNotif(event)" class="focus:outline-none relative p-2 w-9 h-9 flex items-center justify-center bg-[#FDFCF9] dark:bg-[#21211D] border border-[#E5E2DA] dark:border-[#2E2E28] rounded-xl text-[#78756D] hover:text-[#1A1916] dark:hover:text-white transition">
+                    <i class="fa-regular fa-bell text-sm"></i>
+                    <span id="notif-badge" class="absolute top-1.5 right-1.5 flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#BEF264] opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-[#BEF264]"></span>
                     </span>
                 </button>
 
-                <div id="notif-panel" class="hidden absolute right-6 top-16 w-80 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-100 dark:border-slate-800 z-50 overflow-hidden text-slate-800 dark:text-slate-100">
-                    <div class="flex justify-between items-center p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
-                        <h3 class="font-bold text-sm">Notifikasi Terbaru</h3>
-                        <button class="text-xs text-blue-500 font-semibold" onclick="clearNotifications()">Tandai dibaca</button>
+                <div id="notif-panel" class="hidden absolute right-6 top-16 w-80 bg-[#FDFCF9] dark:bg-[#1C1C18] rounded-2xl shadow-xl border border-[#E5E2DA] dark:border-[#262620] z-50 overflow-hidden text-[#1A1916] dark:text-[#EAE8E2]">
+                    <div class="flex justify-between items-center p-4 border-b border-[#E5E2DA] dark:border-[#262620] bg-[#F7F5F0] dark:bg-[#21211D]">
+                        <h3 class="font-bold text-xs uppercase tracking-wider text-[#1A1916] dark:text-white">Notifikasi Terbaru</h3>
+                        <button class="text-[11px] text-[#6366F1] dark:text-[#BEF264] font-semibold hover:underline" onclick="clearNotifications()">Tandai dibaca</button>
                     </div>
                     <div id="notif-list" class="p-4 space-y-3.5 max-h-72 overflow-y-auto hide-scrollbar">
-                        <p class="text-xs text-slate-400 text-center py-4">Memuat notifikasi...</p>
+                        <p class="text-xs text-[#78756D] text-center py-4">Memuat notifikasi...</p>
                     </div>
                 </div>
             </div>
@@ -275,56 +346,56 @@
                      tab Sirkulasi tidak penuh sesak kalau ada banyak pesanan berjalan sekaligus;
                      detail timeline/countdown lengkap baru muncul saat barisnya diklik. -->
                 <template id="circ-order-template">
-                    <div class="circ-order-card bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 overflow-hidden">
-                        <button type="button" class="circ-order-toggle-btn w-full flex items-center justify-between gap-3 p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                    <div class="circ-order-card bg-[#FDFCF9] dark:bg-[#1C1C18] rounded-2xl border border-[#E5E2DA] dark:border-[#262620] overflow-hidden">
+                        <button type="button" class="circ-order-toggle-btn w-full flex items-center justify-between gap-3 p-4 text-left hover:bg-[#F7F5F0] dark:hover:bg-[#21211D] transition-colors">
                             <div class="flex items-center gap-3 min-w-0">
                                 <div class="circ-order-icon-wrap w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0">
                                     <i class="circ-order-icon-el text-base"></i>
                                 </div>
                                 <div class="min-w-0">
-                                    <p class="circ-order-title-el font-bold text-sm text-slate-800 dark:text-white truncate"></p>
-                                    <p class="circ-order-status-label-el text-xs text-slate-400 mt-0.5 truncate"></p>
+                                    <p class="circ-order-title-el font-bold text-sm text-[#1A1916] dark:text-white truncate"></p>
+                                    <p class="circ-order-status-label-el text-xs text-[#78756D] mt-0.5 truncate"></p>
                                 </div>
                             </div>
                             <div class="flex items-center gap-3 flex-shrink-0">
-                                <span class="circ-order-right-el font-mono text-xs font-bold text-slate-600 dark:text-slate-300"></span>
-                                <i class="fa-solid fa-chevron-down circ-order-chevron-el text-slate-400 text-xs transition-transform duration-200"></i>
+                                <span class="circ-order-right-el font-mono text-xs font-bold text-[#1A1916] dark:text-[#EAE8E2]"></span>
+                                <i class="fa-solid fa-chevron-down circ-order-chevron-el text-[#78756D] text-xs transition-transform duration-200"></i>
                             </div>
                         </button>
-                        <div class="circ-order-detail-el hidden border-t border-slate-100 dark:border-slate-800 p-4"></div>
+                        <div class="circ-order-detail-el hidden border-t border-[#E5E2DA] dark:border-[#262620] p-4"></div>
                     </div>
                 </template>
 
-                <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800">
-                    <h4 class="font-bold text-sm mb-4 text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="circ-active-loans">Peminjaman Aktif Saya</h4>
+                <div class="bg-[#FDFCF9] dark:bg-[#1C1C18] p-6 rounded-2xl border border-[#E5E2DA] dark:border-[#262620]">
+                    <h4 class="font-bold text-xs uppercase tracking-wider mb-4 text-[#8A867D]" data-i18n="circ-active-loans">Peminjaman Aktif Saya</h4>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-xs min-w-[500px]">
                             <thead>
-                                <tr class="border-b border-slate-100 dark:border-slate-800 text-slate-400">
-                                    <th class="pb-3 font-semibold" data-i18n="circ-table-title">Judul Buku</th>
-                                    <th class="pb-3 font-semibold" data-i18n="circ-table-loan-date">Tgl Pinjam</th>
-                                    <th class="pb-3 font-semibold" data-i18n="circ-table-due-date">Batas Kembali</th>
+                                <tr class="border-b border-[#E5E2DA] dark:border-[#262620] text-[#78756D]">
+                                    <th class="pb-3 font-semibold uppercase text-[10px] tracking-wider" data-i18n="circ-table-title">Judul Buku</th>
+                                    <th class="pb-3 font-semibold uppercase text-[10px] tracking-wider" data-i18n="circ-table-loan-date">Tgl Pinjam</th>
+                                    <th class="pb-3 font-semibold uppercase text-[10px] tracking-wider" data-i18n="circ-table-due-date">Batas Kembali</th>
                                 </tr>
                             </thead>
-                            <tbody id="active-loans-tbody" class="divide-y divide-slate-100 dark:divide-slate-800 text-slate-600 dark:text-slate-300">
+                            <tbody id="active-loans-tbody" class="divide-y divide-[#E5E2DA] dark:divide-[#262620] text-[#1A1916] dark:text-[#EAE8E2]">
                                 <tr>
-                                    <td colspan="3" class="text-center py-8 text-slate-400 italic">Memuat data peminjaman...</td>
+                                    <td colspan="3" class="text-center py-8 text-[#78756D] italic">Memuat data peminjaman...</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <div id="fine-breakdown-card" class="hidden bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800">
-                    <h4 class="font-bold text-sm mb-4 text-slate-700 dark:text-slate-300 uppercase tracking-wider" data-i18n="circ-fine-breakdown">Rincian Informasi Denda Berjalan</h4>
+                <div id="fine-breakdown-card" class="hidden bg-[#FDFCF9] dark:bg-[#1C1C18] p-6 rounded-2xl border border-[#E5E2DA] dark:border-[#262620]">
+                    <h4 class="font-bold text-xs uppercase tracking-wider mb-4 text-[#8A867D]" data-i18n="circ-fine-breakdown">Rincian Informasi Denda Berjalan</h4>
                     <div id="fine-breakdown-list" class="space-y-3">
                         <!-- Akan diisi secara dinamis -->
                     </div>
                 </div>
 
-                <div id="unpaid-fines-card" class="hidden bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800">
-                    <h4 class="font-bold text-sm mb-1 text-slate-700 dark:text-slate-300 uppercase tracking-wider">Tagihan Denda</h4>
-                    <p class="text-[11px] text-slate-400 mb-4">Denda dari buku yang sudah dikembalikan. Lunasi untuk bisa meminjam lagi.</p>
+                <div id="unpaid-fines-card" class="hidden bg-[#FDFCF9] dark:bg-[#1C1C18] p-6 rounded-2xl border border-[#E5E2DA] dark:border-[#262620]">
+                    <h4 class="font-bold text-xs uppercase tracking-wider mb-1 text-[#8A867D]">Tagihan Denda</h4>
+                    <p class="text-[11px] text-[#78756D] mb-4">Denda dari buku yang sudah dikembalikan. Lunasi untuk bisa meminjam lagi.</p>
                     <div id="unpaid-fines-list" class="space-y-3"></div>
                 </div>
             </div>
@@ -423,20 +494,23 @@
 
             <!-- TAB 5: TOKO ATK -->
             <div id="toko" class="tab-content max-w-4xl mx-auto space-y-5">
-                <!-- Header Toko -->
-                <div class="bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl p-5 text-white shadow-lg shadow-slate-900/30 flex items-center justify-between gap-4">
-                    <div class="flex items-center gap-4">
-                        <div class="text-3xl"><i class="fa-solid fa-store"></i></div>
+                <!-- Header Toko (Northstar Dark Card) -->
+                <div class="bg-[#151512] rounded-2xl p-5 text-white border border-[#262620] flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-10 h-10 rounded-xl bg-[#BEF264] text-[#151512] flex items-center justify-center text-lg font-bold shadow-sm">
+                            <i class="fa-solid fa-store"></i>
+                        </div>
                         <div>
-                            <h4 class="font-bold text-lg">Toko ATK</h4>
-                            <p class="text-sm text-slate-300 mt-0.5">Beli alat tulis & perlengkapan langsung dari perpustakaan.</p>
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-[#8A867D]">Katalog Toko</p>
+                            <h4 class="font-bold text-lg text-white">Toko ATK Perpustakaan</h4>
+                            <p class="text-xs text-[#9C988F] mt-0.5">Beli alat tulis & perlengkapan langsung dari perpustakaan.</p>
                         </div>
                     </div>
                     <!-- Tombol Keranjang -->
-                    <button onclick="toggleCart()" class="relative bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-semibold py-2 px-4 rounded-xl flex items-center gap-2 transition-all border border-white/30">
-                        <i class="fa-solid fa-cart-shopping"></i>
+                    <button onclick="toggleCart()" class="relative bg-[#21211D] hover:bg-[#2A2A24] text-white font-semibold py-2 px-4 rounded-xl flex items-center gap-2 transition border border-[#2E2E28] text-xs">
+                        <i class="fa-solid fa-cart-shopping text-[#BEF264]"></i>
                         <span class="hidden sm:inline">Keranjang</span>
-                        <span id="cart-count-badge" class="hidden bg-rose-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">0</span>
+                        <span id="cart-count-badge" class="hidden bg-[#BEF264] text-[#151512] text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center">0</span>
                     </button>
                 </div>
 
@@ -473,24 +547,24 @@
                 <div id="toko-produk-grid" class="hidden grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
 
                 <!-- Riwayat Pembelian -->
-                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-                    <div class="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800 flex-wrap gap-2">
-                        <h4 class="font-bold text-sm text-slate-800 dark:text-white flex items-center gap-2">
-                            <i class="fa-solid fa-receipt text-slate-500 dark:text-slate-400"></i> Riwayat Pembelian Saya
+                <div class="bg-[#FDFCF9] dark:bg-[#1C1C18] rounded-2xl border border-[#E5E2DA] dark:border-[#262620] overflow-hidden">
+                    <div class="flex items-center justify-between p-4 border-b border-[#E5E2DA] dark:border-[#262620] bg-[#F7F5F0] dark:bg-[#21211D] flex-wrap gap-2">
+                        <h4 class="font-bold text-sm text-[#1A1916] dark:text-white flex items-center gap-2">
+                            <i class="fa-solid fa-receipt text-[#78756D] dark:text-[#A8A49C]"></i> Riwayat Pembelian Saya
                         </h4>
                         <div class="flex items-center gap-2 flex-wrap">
-                            <div class="inline-flex p-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[11px] font-medium text-slate-600 dark:text-slate-300">
-                                <button type="button" onclick="setRiwayatFilter('semua')" id="btn-riwayat-semua" class="px-2.5 py-1 rounded-md bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white font-semibold transition">Semua</button>
-                                <button type="button" onclick="setRiwayatFilter('proses')" id="btn-riwayat-proses" class="px-2.5 py-1 rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">Sedang Dipesan</button>
-                                <button type="button" onclick="setRiwayatFilter('selesai')" id="btn-riwayat-selesai" class="px-2.5 py-1 rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition">Selesai</button>
+                            <div class="inline-flex p-0.5 rounded-lg bg-[#EAE8E1] dark:bg-[#262620] text-[11px] font-medium text-[#78756D] dark:text-[#A8A49C]">
+                                <button type="button" onclick="setRiwayatFilter('semua')" id="btn-riwayat-semua" class="px-2.5 py-1 rounded-md bg-[#FDFCF9] dark:bg-[#151512] shadow-sm text-[#1A1916] dark:text-white font-semibold transition">Semua</button>
+                                <button type="button" onclick="setRiwayatFilter('proses')" id="btn-riwayat-proses" class="px-2.5 py-1 rounded-md text-[#78756D] dark:text-[#A8A49C] hover:text-[#1A1916] dark:hover:text-white transition">Sedang Dipesan</button>
+                                <button type="button" onclick="setRiwayatFilter('selesai')" id="btn-riwayat-selesai" class="px-2.5 py-1 rounded-md text-[#78756D] dark:text-[#A8A49C] hover:text-[#1A1916] dark:hover:text-white transition">Selesai</button>
                             </div>
-                            <button onclick="loadRiwayatPembelian()" class="text-xs text-slate-800 dark:text-slate-200 font-semibold hover:underline ml-1">
+                            <button onclick="loadRiwayatPembelian()" class="text-xs text-[#1A1916] dark:text-white font-semibold hover:underline ml-1">
                                 <i class="fa-solid fa-rotate-right mr-1"></i>Refresh
                             </button>
                         </div>
                     </div>
-                    <div id="riwayat-pembelian-list" class="divide-y divide-slate-100 dark:divide-slate-800 max-h-96 overflow-y-auto hide-scrollbar">
-                        <div class="text-center py-8 text-slate-400 text-xs italic">Memuat riwayat...</div>
+                    <div id="riwayat-pembelian-list" class="divide-y divide-[#E5E2DA] dark:divide-[#262620] max-h-96 overflow-y-auto hide-scrollbar">
+                        <div class="text-center py-8 text-[#78756D] text-xs italic">Memuat riwayat...</div>
                     </div>
                 </div>
             </div>
@@ -507,26 +581,26 @@
         </div>
 
         <!-- BOTTOM NAVIGATION -->
-        <nav id="mobile-bottom-nav" class="md:hidden bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex justify-around items-center absolute bottom-0 w-full z-40 h-16 transition-colors duration-200">
-            <button onclick="switchTab('beranda')" class="nav-btn-mobile flex flex-col items-center p-2 text-blue-600 dark:text-blue-400" data-target="beranda">
-                <i class="fa-solid fa-house text-lg mb-1"></i>
+        <nav id="mobile-bottom-nav" class="md:hidden bg-[#151512] border-t border-[#262620] flex justify-around items-center absolute bottom-0 w-full z-40 h-16 transition-colors duration-200">
+            <button onclick="switchTab('beranda')" class="nav-btn-mobile flex flex-col items-center p-2 text-[#BEF264]" data-target="beranda">
+                <i class="fa-solid fa-house text-base mb-1"></i>
                 <span class="text-[9px] font-semibold">Beranda</span>
             </button>
-            <button onclick="switchTab('buku')" class="nav-btn-mobile flex flex-col items-center p-2 text-slate-400" data-target="buku">
-                <i class="fa-solid fa-magnifying-glass text-lg mb-1"></i>
+            <button onclick="switchTab('buku')" class="nav-btn-mobile flex flex-col items-center p-2 text-[#9C988F] hover:text-white" data-target="buku">
+                <i class="fa-solid fa-magnifying-glass text-base mb-1"></i>
                 <span class="text-[9px] font-semibold">Pustaka</span>
             </button>
-            <button onclick="switchTab('sirkulasi')" class="nav-btn-mobile flex flex-col items-center p-2 text-slate-400" data-target="sirkulasi">
-                <i class="fa-solid fa-arrows-spin text-lg mb-1"></i>
+            <button onclick="switchTab('sirkulasi')" class="nav-btn-mobile flex flex-col items-center p-2 text-[#9C988F] hover:text-white" data-target="sirkulasi">
+                <i class="fa-solid fa-arrows-spin text-base mb-1"></i>
                 <span class="text-[9px] font-semibold">Sirkulasi</span>
             </button>
-            <button onclick="switchTab('toko')" class="nav-btn-mobile flex flex-col items-center p-2 text-slate-400 relative" data-target="toko">
-                <i class="fa-solid fa-store text-lg mb-1"></i>
+            <button onclick="switchTab('toko')" class="nav-btn-mobile flex flex-col items-center p-2 text-[#9C988F] hover:text-white relative" data-target="toko">
+                <i class="fa-solid fa-store text-base mb-1"></i>
                 <span class="text-[9px] font-semibold">Toko ATK</span>
-                <span id="cart-badge-mobile" class="hidden absolute top-1 right-1 bg-slate-800 text-white text-[8px] font-bold rounded-full w-4 h-4 flex items-center justify-center">0</span>
+                <span id="cart-badge-mobile" class="hidden absolute top-1 right-1 bg-[#BEF264] text-[#151512] text-[8px] font-bold rounded-full w-4 h-4 flex items-center justify-center">0</span>
             </button>
-            <button onclick="switchTab('profil')" class="nav-btn-mobile flex flex-col items-center p-2 text-slate-400" data-target="profil">
-                <i class="fa-regular fa-user text-lg mb-1"></i>
+            <button onclick="switchTab('profil')" class="nav-btn-mobile flex flex-col items-center p-2 text-[#9C988F] hover:text-white" data-target="profil">
+                <i class="fa-regular fa-user text-base mb-1"></i>
                 <span class="text-[9px] font-semibold">Profil</span>
             </button>
         </nav>
@@ -823,10 +897,18 @@
             const userStr = localStorage.getItem('libra_user');
             if (!userStr) return null;
             try {
-                return JSON.parse(userStr).id;
+                const u = JSON.parse(userStr);
+                return u.id || u.user_id || null;
             } catch (e) {
                 return null;
             }
+        }
+
+        function getAuthHeaders(extra = {}) {
+            const token = localStorage.getItem('libra_token');
+            const h = { 'Accept': 'application/json', ...extra };
+            if (token) h['Authorization'] = 'Bearer ' + token;
+            return h;
         }
 
         async function loadWishlist() {
@@ -834,7 +916,7 @@
             if (!userId) return;
 
             try {
-                const response = await fetch(`/api/wishlist?user_id=${userId}`);
+                const response = await fetch(`/api/wishlist?user_id=${userId}`, { headers: getAuthHeaders() });
                 if (!response.ok) throw new Error('Gagal mengambil wishlist');
                 const items = await response.json();
                 wishlistItems = items;
@@ -977,17 +1059,17 @@
 
             document.querySelectorAll('.nav-btn').forEach(btn => {
                 if(btn.getAttribute('data-target') === tabId) {
-                    btn.className = "nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-semibold bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 transition-all";
+                    btn.className = "nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left font-semibold bg-[#BEF264] text-[#151512] transition-all";
                 } else {
-                    btn.className = "nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all";
+                    btn.className = "nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left font-medium text-[#9C988F] hover:text-white hover:bg-[#21211D] transition-all";
                 }
             });
 
             document.querySelectorAll('.nav-btn-mobile').forEach(btn => {
                 if(btn.getAttribute('data-target') === tabId) {
-                    btn.className = 'nav-btn-mobile flex flex-col items-center p-2 text-blue-600 dark:text-blue-400';
+                    btn.className = 'nav-btn-mobile flex flex-col items-center p-2 text-[#BEF264]';
                 } else {
-                    btn.className = 'nav-btn-mobile flex flex-col items-center p-2 text-slate-400';
+                    btn.className = 'nav-btn-mobile flex flex-col items-center p-2 text-[#9C988F] hover:text-white';
                 }
             });
 
@@ -1079,7 +1161,7 @@
             const user = JSON.parse(userStr);
 
             try {
-                const response = await fetch(`/api/notifications?user_id=${user.id}`);
+                const response = await fetch(`/api/notifications?user_id=${user.id}`, { headers: getAuthHeaders() });
                 if (!response.ok) throw new Error('Gagal mengambil notifikasi');
                 const notifications = await response.json();
 
@@ -1125,7 +1207,7 @@
             const user = JSON.parse(userStr);
 
             try {
-                await fetch(`/api/notifications/read-all?user_id=${user.id}`, { method: 'PATCH' });
+                await fetch(`/api/notifications/read-all?user_id=${user.id}`, { method: 'PATCH', headers: getAuthHeaders() });
             } catch (err) {
                 console.error('Error marking notifications as read:', err);
             }
@@ -1444,7 +1526,7 @@
                 const url = userId
                     ? `/api/wishlist/queue-info?book_id=${bookId}&user_id=${userId}`
                     : `/api/wishlist/queue-info?book_id=${bookId}`;
-                const res = await fetch(url);
+                const res = await fetch(url, { headers: getAuthHeaders() });
                 if (!res.ok) throw new Error('Gagal memuat info antrian');
                 const info = await res.json();
 
@@ -1568,7 +1650,7 @@
             try {
                 const res = await fetch('/api/wishlist', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ user_id: userId, book_id: bookId })
                 });
                 const data = await res.json();
@@ -1599,7 +1681,7 @@
             if (!userId) return;
 
             try {
-                await fetch(`/api/wishlist?user_id=${userId}&book_id=${bookId}`, { method: 'DELETE' });
+                await fetch(`/api/wishlist?user_id=${userId}&book_id=${bookId}`, { method: 'DELETE', headers: getAuthHeaders() });
                 const idx = wishlistBooks.findIndex(id => id === bookId);
                 if (idx > -1) wishlistBooks.splice(idx, 1);
 
@@ -1687,14 +1769,14 @@
 
             try {
                 if (willRemove) {
-                    await fetch(`/api/wishlist?user_id=${userId}&book_id=${bookId}`, { method: 'DELETE' });
+                    await fetch(`/api/wishlist?user_id=${userId}&book_id=${bookId}`, { method: 'DELETE', headers: getAuthHeaders() });
                     wishlistBooks.splice(idx, 1);
                     showToast(isId ? "Dihapus dari Wishlist" : "Removed from Wishlist",
                         isId ? `Buku "${bookTitle}" berhasil dilepas.` : `Book "${bookTitle}" has been removed.`);
                 } else {
                     await fetch('/api/wishlist', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
                         body: JSON.stringify({ user_id: userId, book_id: bookId })
                     });
                     wishlistBooks.push(bookId);
@@ -1890,6 +1972,7 @@
         // Sekarang setiap booking aktif (status Booking / Diantar Kurir) dirender
         // sebagai kartu terpisah berdasarkan id booking-nya masing-masing.
         const circCountdownIntervals = {};
+        const expiredNotifiedLoans = new Set();
 
         function clearAllCircCountdowns() {
             Object.values(circCountdownIntervals).forEach(id => clearInterval(id));
@@ -1905,23 +1988,23 @@
                 const diffMs = deadlineDate.getTime() - Date.now();
                 if (diffMs <= 0) {
                     timerEl.textContent = '00:00:00';
-                    // Booking sudah kadaluarsa. Penghapusan sebenarnya terjadi
-                    // di backend (lihat PinjamController::cancelExpiredBookings,
-                    // dijalankan tiap kali data peminjaman di-fetch). Di sini
-                    // kita cukup beri tahu pengguna & minta data terbaru supaya
-                    // kartu ini hilang begitu backend selesai menghapusnya.
-                    if (!timerEl.dataset.expiredNotified) {
-                        timerEl.dataset.expiredNotified = '1';
-                        showToast(
-                            'Batas Waktu Habis',
-                            'Booking tidak diambil dalam waktu 2 jam dan telah dibatalkan otomatis.'
-                        );
-                        loadUserLoans();
+                    // Booking sudah kadaluarsa. Penghapusan terjadi di backend.
+                    // Cegah loop tak hingga: hanya panggil reload jika countdown sebelumnya pernah berjalan positif.
+                    if (!expiredNotifiedLoans.has(loanId)) {
+                        expiredNotifiedLoans.add(loanId);
+                        if (timerEl.dataset.started) {
+                            showToast(
+                                'Batas Waktu Habis',
+                                'Booking tidak diambil dalam waktu 2 jam dan telah dibatalkan otomatis.'
+                            );
+                            loadUserLoans();
+                        }
                     }
                     clearInterval(circCountdownIntervals[loanId]);
                     delete circCountdownIntervals[loanId];
                     return;
                 }
+                timerEl.dataset.started = '1';
                 const totalSeconds = Math.floor(diffMs / 1000);
                 const hours = Math.floor(totalSeconds / 3600);
                 const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -1930,7 +2013,9 @@
             };
 
             tick();
-            circCountdownIntervals[loanId] = setInterval(tick, 1000);
+            if (deadlineDate.getTime() > Date.now()) {
+                circCountdownIntervals[loanId] = setInterval(tick, 1000);
+            }
         }
 
         function triggerToast() {
@@ -2014,10 +2099,9 @@
             try {
                 const response = await fetch('/api/complaints', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
+                    headers: getAuthHeaders({
+                        'Content-Type': 'application/json'
+                    }),
                     body: JSON.stringify({
                         peminjam_id: user.id,
                         pesan: `[Kategori: ${category}] ${message}`,
@@ -2108,7 +2192,7 @@
             // Kirim juga ke server supaya kurir di perangkat lain ikut melihat
             fetch('/api/orders', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify(order)
             }).catch(() => { /* server belum siap: cukup localStorage */ });
             return order;
@@ -2223,10 +2307,9 @@
             try {
                 const response = await fetch('/api/pinjam', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
+                    headers: getAuthHeaders({
+                        'Content-Type': 'application/json'
+                    }),
                     body: JSON.stringify({
                         user_id: user.id,
                         book_id: activeBookId,
@@ -2277,14 +2360,14 @@
         let atkOrders = []; // Pesanan Toko ATK milik user yang sedang login (dimuat bareng peminjaman buku)
 
         async function loadAtkOrders() {
-            const userStr = localStorage.getItem('libra_user');
-            if (!userStr) return;
-            const user = JSON.parse(userStr);
+            const userId = getCurrentUserId();
+            if (!userId) return;
 
             try {
-                const response = await fetch(`/api/pembelian-atk?user_id=${user.id}`);
+                const response = await fetch(`/api/pembelian-atk?user_id=${encodeURIComponent(userId)}`, { headers: getAuthHeaders() });
                 if (!response.ok) throw new Error('Gagal mengambil data pesanan ATK');
-                atkOrders = await response.json();
+                const data = await response.json();
+                atkOrders = Array.isArray(data) ? data : (data.data || []);
             } catch (err) {
                 console.error('Error loading ATK orders:', err);
                 atkOrders = [];
@@ -2292,14 +2375,14 @@
         }
 
         async function loadUserLoans() {
-            const userStr = localStorage.getItem('libra_user');
-            if (!userStr) return;
-            const user = JSON.parse(userStr);
+            const userId = getCurrentUserId();
+            if (!userId) return;
 
             try {
-                const response = await fetch(`/api/pinjam?user_id=${user.id}`);
+                const response = await fetch(`/api/pinjam?user_id=${encodeURIComponent(userId)}`, { headers: getAuthHeaders() });
                 if (!response.ok) throw new Error('Gagal mengambil data peminjaman');
-                activeLoans = await response.json();
+                const data = await response.json();
+                activeLoans = Array.isArray(data) ? data : (data.data || []);
 
                 // Pesanan ATK dimuat bersamaan supaya kartu status di Sirkulasi
                 // (buku + ATK) selalu dirender dari data yang sinkron.
@@ -2317,7 +2400,7 @@
 
         async function updateBookStatuses() {
             try {
-                const response = await fetch('/api/pinjam-aktif');
+                const response = await fetch('/api/pinjam-aktif', { headers: getAuthHeaders() });
                 if (!response.ok) throw new Error('Gagal mengambil semua status peminjaman');
 
                 // Daftar ISBN buku yang sedang dipinjam oleh siapa pun
@@ -2429,7 +2512,7 @@
                 await new Promise(r => setTimeout(r, 1800));
                 const res = await fetch(`/api/pinjam/${encodeURIComponent(payFineLoanId)}/bayar-denda`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ user_id: user.id, metode: method })
                 });
                 const data = await res.json();
@@ -2598,16 +2681,19 @@
         // Alias untuk kompatibilitas data lama/legacy yang mungkin masih
         // memakai istilah dummy sebelumnya, supaya tidak tampil kosong.
         const COURIER_STATUS_ALIASES = {
-            'Diantar Kurir': 'Sedang Diantar Kurir'
+            'diantar kurir': 'Sedang Diantar Kurir',
+            'sedang diantar': 'Sedang Diantar Kurir',
+            'sedang dikirim': 'Sedang Diantar Kurir'
         };
 
         function resolveCourierStatusKey(rawStatus) {
-            return COURIER_STATUS_ALIASES[rawStatus] || rawStatus;
+            const s = String(rawStatus || '').toLowerCase().trim();
+            return COURIER_STATUS_ALIASES[s] || rawStatus;
         }
 
         function isCourierTrackedStatus(rawStatus) {
-            const key = resolveCourierStatusKey(rawStatus);
-            return COURIER_FLOW_STEPS.some(step => step.key === key);
+            const key = String(resolveCourierStatusKey(rawStatus) || '').toLowerCase().trim();
+            return COURIER_FLOW_STEPS.some(step => step.key.toLowerCase().trim() === key);
         }
 
         function updateCourierStatusVisibility() {
@@ -2621,9 +2707,10 @@
             container.innerHTML = '';
 
             // --- Peminjaman buku yang masih perlu perhatian (belum dikembalikan) ---
-            const pendingLoans = activeLoans.filter(l =>
-                !l.tanggal_kembali && (l.status === 'Booking' || isCourierTrackedStatus(l.status))
-            );
+            const pendingLoans = (activeLoans || []).filter(l => {
+                const st = String(l.status || '').toLowerCase().trim();
+                return !l.tanggal_kembali && (st === 'booking' || isCourierTrackedStatus(l.status));
+            });
             pendingLoans.forEach(loan => {
                 container.appendChild(buildOrderCard({
                     uid: 'buku-' + loan.id,
@@ -2635,9 +2722,18 @@
             });
 
             // --- Pesanan Toko ATK yang masih berjalan (belum selesai/dibatalkan) ---
-            const pendingAtkOrders = (atkOrders || []).filter(o => !['Selesai', 'Dibatalkan'].includes(o.status));
+            const pendingAtkOrders = (atkOrders || []).filter(o => {
+                const s = String(o.status || '').toLowerCase().trim();
+                return s !== 'selesai' && s !== 'dibatalkan';
+            });
             pendingAtkOrders.forEach(order => {
-                const judul = (order.items || []).map(i => i.nama).join(', ') || 'Pesanan ATK';
+                let items = order.items || [];
+                if (typeof items === 'string') {
+                    try { items = JSON.parse(items); } catch (_) { items = []; }
+                }
+                const judul = Array.isArray(items) && items.length > 0
+                    ? items.map(i => i.nama).filter(Boolean).join(', ')
+                    : 'Pesanan ATK';
                 container.appendChild(buildOrderCard({
                     uid: 'atk-' + order.id,
                     title: judul,
@@ -2670,7 +2766,7 @@
 
             titleEl.textContent = data.title;
 
-            const isPickup = data.status === 'Booking';
+            const isPickup = String(data.status || '').toLowerCase().trim() === 'booking';
             const isCourier = !isPickup && isCourierTrackedStatus(data.status);
 
             if (isPickup) {
@@ -2695,8 +2791,8 @@
                 iconEl.className = 'circ-order-icon-el text-base fa-solid fa-truck';
 
                 const isId = currentLang === 'id';
-                const statusKey = resolveCourierStatusKey(data.status);
-                const stepInfo = COURIER_FLOW_STEPS.find(step => step.key === statusKey);
+                const statusKey = String(resolveCourierStatusKey(data.status) || '').toLowerCase().trim();
+                const stepInfo = COURIER_FLOW_STEPS.find(step => step.key.toLowerCase().trim() === statusKey);
                 statusLabelEl.textContent = stepInfo ? (isId ? stepInfo.titleId : stepInfo.titleEn) : data.status;
                 rightEl.remove(); // tidak ada countdown numerik utk kurir, cukup label status di atas
 
@@ -2721,8 +2817,8 @@
         /** Bangun HTML timeline 4-langkah kurir (dipakai buku maupun pesanan ATK). */
         function buildCourierTimelineHtml(rawStatus) {
             const isId = currentLang === 'id';
-            const statusKey = resolveCourierStatusKey(rawStatus);
-            const currentIndex = COURIER_FLOW_STEPS.findIndex(step => step.key === statusKey);
+            const statusKey = String(resolveCourierStatusKey(rawStatus) || '').toLowerCase().trim();
+            const currentIndex = COURIER_FLOW_STEPS.findIndex(step => step.key.toLowerCase().trim() === statusKey);
 
             const stepsHtml = COURIER_FLOW_STEPS.map((step, idx) => {
                 // done   : tahap sudah dilewati (lebih awal dari status saat ini)
@@ -2873,7 +2969,7 @@
                 await new Promise(r => setTimeout(r, 1800));   // jeda simulasi
                 const res = await fetch(`/api/pembelian-atk/${encodeURIComponent(payAtkOrder.id)}/bayar`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ user_id: userId, metode: method })
                 });
                 const data = await res.json().catch(() => ({}));
@@ -2905,7 +3001,7 @@
             const errBox = document.getElementById('toko-error');
             if (errBox) errBox.classList.add('hidden');
             try {
-                const res = await fetch('/api/produk-atk');
+                const res = await fetch('/api/produk-atk', { headers: getAuthHeaders() });
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const data = await res.json();
                 produkTokoData = Array.isArray(data) ? data : (data.data || []);
@@ -2987,7 +3083,7 @@
                                 ${habis ? 'Stok Habis' : 'Stok: ' + p.stok}
                             </span>
                         </div>
-                        <button onclick="openBeli(${JSON.stringify(p).replace(/"/g, '&quot;')})"
+                        <button onclick="openBeli('${p.id}')"
                             class="mt-2 w-full py-1.5 text-xs font-bold rounded-xl transition-all ${habis ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed' : 'bg-slate-800 hover:bg-slate-900 text-white shadow-sm shadow-slate-900/20'}"
                             ${habis ? 'disabled' : ''}>
                             <i class="fa-solid fa-cart-plus mr-1"></i>${habis ? 'Habis' : 'Beli'}
@@ -3010,7 +3106,11 @@
         }
 
         // Buka modal beli produk
-        function openBeli(produk) {
+        function openBeli(idOrProduk) {
+            const produk = (idOrProduk && typeof idOrProduk === 'object')
+                ? idOrProduk
+                : produkTokoData.find(p => String(p.id) === String(idOrProduk));
+            if (!produk) return;
             produkDipilih = produk;
             document.getElementById('beli-produk-nama').textContent = produk.nama;
             document.getElementById('beli-produk-kode').textContent = produk.kode;
@@ -3167,6 +3267,11 @@
                 ? (document.getElementById('atk-alamat-input')?.value || '').trim()
                 : null;
 
+            if (metodePengiriman === 'antar' && (!alamatKirim || alamatKirim.length === 0)) {
+                showToastToko('Silakan masukkan alamat pengiriman terlebih dahulu!', 'red');
+                return;
+            }
+
             const payEl = document.querySelector('input[name="atk-pay-option"]:checked');
             const metodeBayar = payEl ? payEl.value : 'di_tempat';
 
@@ -3191,7 +3296,7 @@
             try {
                 const res = await fetch('/api/pembelian-atk', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify(payload)
                 });
                 const data = await res.json().catch(() => ({}));
@@ -3200,6 +3305,10 @@
                     showToastToko(data.message || 'Gagal memproses pesanan. Coba lagi.', 'red');
                     if (checkoutBtn) { checkoutBtn.disabled = false; checkoutBtn.innerHTML = originalBtnText; }
                     return;
+                }
+
+                if (data.order) {
+                    simpanRiwayatLokal(data.order);
                 }
 
                 showToastToko(
@@ -3258,10 +3367,16 @@
         }
 
         function simpanRiwayatLokal(payload) {
+            if (!payload) return;
             try {
                 const key = getRiwayatAtkKey();
                 const riwayat = JSON.parse(localStorage.getItem(key) || '[]');
-                riwayat.unshift({ ...payload, id: Date.now(), created_at: new Date().toISOString() });
+                const existIdx = riwayat.findIndex(o => String(o.id) === String(payload.id));
+                if (existIdx >= 0) {
+                    riwayat[existIdx] = { ...riwayat[existIdx], ...payload };
+                } else {
+                    riwayat.unshift({ ...payload, created_at: payload.created_at || new Date().toISOString() });
+                }
                 localStorage.setItem(key, JSON.stringify(riwayat.slice(0, 50)));
             } catch (e) { /* ignore */ }
         }
@@ -3343,10 +3458,14 @@
             container.innerHTML = filtered.map(r => {
                 const status = r.status || 'Booking';
                 const isSelesai = isOrderSelesai(status);
-                const isBatal = String(status).toLowerCase() === 'dibatalkan';
+                const isBatal = String(status).toLowerCase().trim() === 'dibatalkan';
                 const waktuPesan = formatWaktuAtk(r.created_at);
                 const waktuSelesai = r.tanggal_selesai ? formatWaktuAtk(r.tanggal_selesai) : null;
-                const items = r.items || [];
+                let items = r.items || [];
+                if (typeof items === 'string') {
+                    try { items = JSON.parse(items); } catch (_) { items = []; }
+                }
+                if (!Array.isArray(items)) items = [];
                 const metode = r.metode_pengiriman === 'antar' ? 'Diantar ke Rumah' : 'Ambil Sendiri di Sirkulasi';
 
                 // Status pembayaran
@@ -3440,10 +3559,15 @@
             try {
                 const userId = getCurrentUserId();
                 if (userId) {
-                    const res = await fetch(`/api/pembelian-atk?user_id=${encodeURIComponent(userId)}`);
+                    const res = await fetch(`/api/pembelian-atk?user_id=${encodeURIComponent(userId)}`, { headers: getAuthHeaders() });
                     if (res.ok) {
                         const data = await res.json();
                         riwayat = Array.isArray(data) ? data : (data.data || []);
+                        if (riwayat.length > 0) {
+                            try {
+                                localStorage.setItem(getRiwayatAtkKey(), JSON.stringify(riwayat));
+                            } catch (_) {}
+                        }
                     }
                 }
             } catch (e) {
@@ -3535,13 +3659,21 @@
         // (kurir bisa memakai perangkat lain, jadi event 'storage' saja tidak cukup).
         const COURIER_POLL_MS = 15000;
         const COURIER_SEEN_KEY = 'libra_courier_seen';
+        let courierPollInterval = null;
 
         async function pollCourierOrders() {
             if (document.hidden) return;
             const userId = getCurrentUserId();
             if (!userId) return;
             try {
-                const res = await fetch('/api/orders?user_id=' + encodeURIComponent(userId), { headers: { 'Accept': 'application/json' } });
+                const res = await fetch('/api/orders?user_id=' + encodeURIComponent(userId), { headers: getAuthHeaders() });
+                if (res.status === 401) {
+                    if (courierPollInterval) {
+                        clearInterval(courierPollInterval);
+                        courierPollInterval = null;
+                    }
+                    return;
+                }
                 if (!res.ok) return;
                 const orders = await res.json();
                 if (!Array.isArray(orders)) return; // tabel belum dimigrasi
@@ -3577,7 +3709,7 @@
         }
 
         setTimeout(pollCourierOrders, 3000);
-        setInterval(pollCourierOrders, COURIER_POLL_MS);
+        courierPollInterval = setInterval(pollCourierOrders, COURIER_POLL_MS);
         document.addEventListener('visibilitychange', () => { if (!document.hidden) pollCourierOrders(); });
 
         console.log('📚 Sistem Libra siap digunakan dengan Supabase via Blade!');

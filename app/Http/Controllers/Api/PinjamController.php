@@ -194,7 +194,7 @@ class PinjamController extends Controller
 
         // Filter berdasarkan user_id jika dikirimkan oleh frontend
         if ($request->has('user_id')) {
-            $query->where('l.user_id', $request->query('user_id'));
+            $query->whereRaw('l.user_id::text = ?', [(string) $request->query('user_id')]);
         }
 
         $loans = $query->orderBy('l.tanggal_pinjam', 'desc')->get()->map(function ($loan) {
