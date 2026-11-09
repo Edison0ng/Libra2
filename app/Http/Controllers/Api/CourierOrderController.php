@@ -40,12 +40,8 @@ class CourierOrderController extends Controller
             return response()->json($orders);
         }
 
-        // Jika tabel belum ada di database, kembalikan respons kosong / format standar
-        return response()->json([
-            'success' => true,
-            'message' => 'Tabel DB belum dimigrasi, frontend menggunakan sinkronisasi localStorage.',
-            'data'    => []
-        ]);
+        // Jika tabel belum ada di database, kembalikan array kosong
+        return response()->json([]);
     }
 
     /**
@@ -64,10 +60,14 @@ class CourierOrderController extends Controller
             'items'            => 'required|array',
             'total_items'      => 'nullable|numeric',
             'total_pembayaran' => 'required|numeric',
+            'waktu_pemesanan'  => 'nullable|string',
+            'status_bayar'     => 'nullable|string',
+            'metode_bayar'     => 'nullable|string',
         ]);
 
         $orderId = $validated['order_id'] ?? ('ORD-' . date('Ymd') . '-' . strtoupper(Str::random(4)));
-        $now = now()->toISOString();
+        $now = now();
+        $waktuPemesanan = $validated['waktu_pemesanan'] ?? $now->toISOString();
 
         $orderData = [
             'id'                       => $orderId,
@@ -81,17 +81,22 @@ class CourierOrderController extends Controller
             'total_items'              => $validated['total_items'] ?? count($validated['items']),
             'total_pembayaran'         => $validated['total_pembayaran'],
             'status'                   => 'Menunggu',
-            'waktu_pemesanan'          => $now,
+            'waktu_pemesanan'          => $waktuPemesanan,
             'waktu_mulai_pengantaran'   => null,
             'waktu_selesai_pengantaran' => null,
             'durasi_pengantaran_detik' => null,
             'total_durasi'             => null,
+            'status_bayar'             => $validated['status_bayar'] ?? 'Lunas',
+            'metode_bayar'             => $validated['metode_bayar'] ?? 'COD / Di Tempat',
             'created_at'               => $now,
             'updated_at'               => $now,
         ];
 
         if (Schema::hasTable('courier_orders')) {
-            DB::table('courier_orders')->insert($orderData);
+            DB::table('courier_orders')->updateOrInsert(
+                ['id' => $orderId],
+                $orderData
+            );
         }
 
         $orderData['items'] = $validated['items'];
@@ -118,7 +123,7 @@ class CourierOrderController extends Controller
                 ->update([
                     'status'                  => 'Sedang Diantar',
                     'waktu_mulai_pengantaran' => $startTime,
-                    'updated_at'              => $startTime,
+                    'updated_at'              => now(),
                 ]);
         }
 
@@ -149,7 +154,7 @@ class CourierOrderController extends Controller
                     'waktu_selesai_pengantaran' => $endTime,
                     'total_durasi'              => $totalDurasi,
                     'durasi_pengantaran_detik'  => $durasiDetik,
-                    'updated_at'                => $endTime,
+                    'updated_at'                => now(),
                 ]);
         }
 

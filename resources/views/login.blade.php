@@ -540,9 +540,9 @@
       </div>
 
       <form id="loginForm" novalidate>
-        <!-- Input NIM / Username Admin -->
+        <!-- Input NIM / Username Admin / Kurir -->
         <div class="field-group">
-          <label for="username">NIM (Mahasiswa) / Username (Admin)</label>
+          <label for="username">NIM (Mahasiswa) / Username (Admin / Kurir)</label>
           <div class="input-wrap">
             <span class="input-icon">
               <!-- ikon user -->
@@ -551,7 +551,7 @@
                 <path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"></path>
               </svg>
             </span>
-            <input type="text" id="username" name="username" placeholder="Masukkan NIM atau username admin" autocomplete="username">
+            <input type="text" id="username" name="username" placeholder="Masukkan NIM atau username admin/kurir" autocomplete="username">
           </div>
         </div>
 
@@ -692,20 +692,6 @@ try{
     console.log("Response:", data);       // <-- TAMBAHKAN DI SINI
 
     if(!res.ok || !data.success){
-        if (usernameVal.toLowerCase() === 'kurir') {
-            const courierUser = {
-                id: 'courier-01',
-                nama_lengkap: 'Budi Santoso (Kurir)',
-                nim: 'kurir',
-                username: 'kurir',
-                role: 'kurir',
-                fakultas: 'Logistik & Distribusi'
-            };
-            localStorage.setItem('libra_token', 'demo-courier-token');
-            localStorage.setItem('libra_user', JSON.stringify(courierUser));
-            window.location.href = 'kurir.html';
-            return;
-        }
         showError(data.message || 'Username atau kata sandi salah.');
         submitBtn.disabled = false;
         submitBtn.textContent = originalBtnText;
@@ -717,27 +703,13 @@ try{
       localStorage.setItem('libra_user', JSON.stringify(data.user));
 
       // Redirect sesuai role yang dikirim backend (admin / kurir / mahasiswa)
-      if (data.role === 'kurir' || usernameVal.toLowerCase() === 'kurir') {
+      if (data.role === 'kurir' || (data.user && data.user.role === 'kurir')) {
           window.location.href = 'kurir.html';
       } else {
           window.location.href = data.redirect || 'index.html';
       }
 
     } catch (err){
-      if (usernameVal.toLowerCase() === 'kurir') {
-          const courierUser = {
-              id: 'courier-01',
-              nama_lengkap: 'Budi Santoso (Kurir)',
-              nim: 'kurir',
-              username: 'kurir',
-              role: 'kurir',
-              fakultas: 'Logistik & Distribusi'
-          };
-          localStorage.setItem('libra_token', 'demo-courier-token');
-          localStorage.setItem('libra_user', JSON.stringify(courierUser));
-          window.location.href = 'kurir.html';
-          return;
-      }
       console.error('Login error:', err);
       showError('Tidak bisa terhubung ke server. Pastikan backend sedang berjalan.');
       submitBtn.disabled = false;

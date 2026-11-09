@@ -591,13 +591,21 @@
         // ========================================================
         // DATA ACCESS & STORAGE
         // ========================================================
-async function loadOrders() {
+        function getAuthHeaders() {
+            const token = localStorage.getItem('libra_token');
+            const headers = { 'Accept': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+            return headers;
+        }
+
+        async function loadOrders() {
             try {
-                const res = await fetch('/api/orders', { headers: { 'Accept': 'application/json' } });
+                const res = await fetch('/api/orders', { headers: getAuthHeaders() });
                 if (!res.ok) throw new Error('http ' + res.status);
                 const data = await res.json();
-                if (Array.isArray(data)) {
-                    ordersData = data;
+                const list = Array.isArray(data) ? data : (Array.isArray(data.data) ? data.data : null);
+                if (list !== null) {
+                    ordersData = list;
                     saveOrders();
                     return;
                 }
@@ -896,7 +904,7 @@ function updateStats() {
         // ========================================================
         // AKSI: KIRIM SEKARANG (DARI INCOMING KE OUTGOING)
         // ========================================================
-async function executeKirimSekarang() {
+        async function executeKirimSekarang() {
             if (!currentModalOrder) return;
 
             const order = currentModalOrder;
@@ -908,7 +916,10 @@ async function executeKirimSekarang() {
             try {
                 const res = await fetch(`/api/orders/${encodeURIComponent(orderId)}/start`, {
                     method: 'PATCH',
-                    headers: { 'Accept': 'application/json' }
+                    headers: {
+                        ...getAuthHeaders(),
+                        'Content-Type': 'application/json'
+                    }
                 });
                 if (res.status === 404 || res.status === 409) {
                     const d = await res.json().catch(() => ({}));
@@ -921,12 +932,7 @@ async function executeKirimSekarang() {
                 const d = await res.json();
                 startTime = d.waktu_mulai_pengantaran || startTime;
             } catch (e) {
-                if (!(e instanceof TypeError)) {
-                    showToast('Gagal', 'Pengantaran belum bisa dimulai. Coba lagi.', 'amber');
-                    if (btn) btn.disabled = false;
-                    return;
-                }
-                // Server tidak terjangkau: simpan lokal supaya pekerjaan kurir tidak hilang
+                console.warn('Gagal sinkron status start ke server:', e);
             }
 
             order.status = 'Sedang Diantar';
@@ -1037,7 +1043,7 @@ async function executeKirimSekarang() {
         // ========================================================
         // AKSI: SUDAH SELESAI (MENYELESAIKAN PENGANTARAN)
         // ========================================================
-async function executeSudahSelesai() {
+        async function executeSudahSelesai() {
             if (!currentModalOrder) return;
 
             const order = currentModalOrder;
@@ -1045,10 +1051,28 @@ async function executeSudahSelesai() {
             if (!confirm(`Tandai pesanan ${orderId} sudah sampai di tujuan?`)) return;
 
             let endTime = new Date().toISOString();
+            let durasiDetik = 0;
+            let totalDurasi = 'Selesai';
+
+            if (order.waktu_mulai_pengantaran) {
+                const startMs = new Date(order.waktu_mulai_pengantaran).getTime();
+                durasiDetik = Math.max(0, Math.floor((new Date().getTime() - startMs) / 1000));
+                const mins = Math.floor(durasiDetik / 60);
+                const secs = durasiDetik % 60;
+                totalDurasi = `${mins}m ${secs}s`;
+            }
+
             try {
                 const res = await fetch(`/api/orders/${encodeURIComponent(orderId)}/complete`, {
                     method: 'PATCH',
-                    headers: { 'Accept': 'application/json' }
+                    headers: {
+                        ...getAuthHeaders(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        total_durasi: totalDurasi,
+                        durasi_detik: durasiDetik
+                    })
                 });
                 if (res.status === 404 || res.status === 409) {
                     const d = await res.json().catch(() => ({}));
@@ -1061,14 +1085,13 @@ async function executeSudahSelesai() {
                 const d = await res.json();
                 endTime = d.waktu_selesai_pengantaran || endTime;
             } catch (e) {
-                if (!(e instanceof TypeError)) {
-                    showToast('Gagal', 'Pengantaran belum bisa diselesaikan. Coba lagi.', 'amber');
-                    return;
-                }
+                console.warn('Gagal sinkron status complete ke server:', e);
             }
 
             order.status = 'Selesai';
             order.waktu_selesai_pengantaran = endTime;
+            order.total_durasi = totalDurasi;
+            order.durasi_pengantaran_detik = durasiDetik;
             saveOrders();
 
             closeModal('modal-outgoing');
@@ -1159,11 +1182,25 @@ async function refreshOrders(silent) {
             if (silent !== true) showToast('Data diperbarui', 'Pesanan disinkronkan dengan server.', 'blue');
         }
 
-function logoutCourier() {
-            if (confirm('Keluar dari Portal Kurir?')) {
-                try { localStorage.removeItem('libra_token'); localStorage.removeItem('libra_user'); } catch (_) {}
-                window.location.href = '/login';
+        async function logoutCourier() {
+            if (!confirm('Keluar dari Portal Kurir?')) return;
+            const token = localStorage.getItem('libra_token');
+            if (token) {
+                try {
+                    await fetch('/api/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                } catch (_) {}
             }
+            try {
+                localStorage.removeItem('libra_token');
+                localStorage.removeItem('libra_user');
+            } catch (_) {}
+            window.location.href = '/login';
         }
 
         // Pesanan baru dari halaman pengguna di browser yang sama
@@ -1172,6 +1209,17 @@ function logoutCourier() {
         });
 
         document.addEventListener('DOMContentLoaded', async function() {
+            const token = localStorage.getItem('libra_token');
+            const userStr = localStorage.getItem('libra_user');
+            let user = null;
+            try { user = JSON.parse(userStr || 'null'); } catch (_) {}
+
+            const isKurir = user && (user.role === 'kurir' || user.nim === 'kurir' || user.username === 'kurir');
+            if (!token || !isKurir) {
+                window.location.href = '/login';
+                return;
+            }
+
             if (localStorage.getItem('libra-theme') === 'dark' || 
                (!localStorage.getItem('libra-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                 document.documentElement.classList.add('dark');
@@ -1182,17 +1230,30 @@ function logoutCourier() {
             }
 
             // Nama kurir dari akun yang login
-            try {
-                const u = JSON.parse(localStorage.getItem('libra_user') || '{}');
-                const name = u.nama_lengkap || u.name;
-                if (name) {
-                    document.getElementById('courier-name').textContent = name;
-                    document.getElementById('courier-initial').textContent = name.trim().charAt(0).toUpperCase();
-                }
-            } catch (_) {}
+            const name = user.nama_lengkap || user.name || 'Kurir Libra';
+            if (document.getElementById('courier-name')) {
+                document.getElementById('courier-name').textContent = name;
+            }
+            if (document.getElementById('courier-initial')) {
+                document.getElementById('courier-initial').textContent = name.trim().charAt(0).toUpperCase();
+            }
 
             await refreshOrders(true);
             startGlobalTicker();
+
+            // Verifikasi token ke backend di latar belakang
+            fetch('/api/user', {
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            }).then(res => {
+                if (res.status === 401) {
+                    localStorage.removeItem('libra_token');
+                    localStorage.removeItem('libra_user');
+                    window.location.href = '/login';
+                }
+            }).catch(() => {});
 
             // Pesanan baru dari pengguna lain: cek server berkala dan saat tab aktif lagi
             setInterval(() => {

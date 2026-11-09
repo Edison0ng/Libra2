@@ -1650,6 +1650,19 @@
                         const cOrders = JSON.parse(localStorage.getItem('libra_courier_orders') || '[]');
                         cOrders.unshift(bookOrderPayload);
                         localStorage.setItem('libra_courier_orders', JSON.stringify(cOrders));
+
+                        // Kirim ke backend database API orders
+                        try {
+                            await fetch('/api/orders', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content || ''
+                                },
+                                body: JSON.stringify(bookOrderPayload)
+                            });
+                        } catch (_) {}
                     } catch (e) {
                         console.error('Gagal mencatat order kurir buku:', e);
                     }
@@ -2451,7 +2464,21 @@
             }
 
             let courierOrders = [];
-            try { courierOrders = JSON.parse(localStorage.getItem('libra_courier_orders') || '[]'); } catch (e) {}
+            try {
+                const userId = getCurrentUserId();
+                if (userId) {
+                    const cRes = await fetch(`/api/orders?user_id=${encodeURIComponent(userId)}`);
+                    if (cRes.ok) {
+                        const cData = await cRes.json();
+                        if (Array.isArray(cData)) {
+                            courierOrders = cData;
+                        }
+                    }
+                }
+            } catch (_) {}
+            if (courierOrders.length === 0) {
+                try { courierOrders = JSON.parse(localStorage.getItem('libra_courier_orders') || '[]'); } catch (e) {}
+            }
 
             if (riwayat.length === 0 && courierOrders.length > 0) {
                 const userId = getCurrentUserId();
