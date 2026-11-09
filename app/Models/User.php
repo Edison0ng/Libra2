@@ -53,11 +53,23 @@ class User extends Authenticatable implements CanResetPassword
 
     protected $appends = [
         'name',
+        'role',
     ];
 
     public function getNameAttribute()
     {
         return $this->nama_lengkap;
+    }
+
+    public function getRoleAttribute(): string
+    {
+        if ($this->isAdmin()) {
+            return 'admin';
+        }
+        if ($this->isKurir()) {
+            return 'kurir';
+        }
+        return 'mahasiswa';
     }
 
     protected function casts(): array
