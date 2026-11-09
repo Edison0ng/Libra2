@@ -24,7 +24,16 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'nama_lengkap'    => ['required', 'string', 'max:255'],
-            'nim'             => ['required', 'string', 'max:50', 'unique:users,nim'],
+            'nim'             => [
+                'required', 'string', 'max:50', 'unique:users,nim',
+                // NIM khusus untuk akun admin/kurir tidak boleh didaftarkan lewat form umum
+                // (case-insensitive: "Kurir", "KURIR", " kurir " semuanya ditolak).
+                function ($attribute, $value, $fail) {
+                    if (in_array(strtolower(trim((string) $value)), ['admin', 'kurir'], true)) {
+                        $fail('NIM/Username ini dicadangkan dan tidak bisa didaftarkan.');
+                    }
+                },
+            ],
             'email'           => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'fakultas'        => ['nullable', 'string', 'max:255'],
             'no_telepon'      => ['nullable', 'string', 'max:50'],

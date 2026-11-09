@@ -38,12 +38,24 @@ Route::get('/reset-password/{token}', function (string $token) {
 })->name('reset-password.view');
 
 // Route untuk halaman libra (menampilkan daftar buku)
-Route::get('/libra', [BookController::class, 'index']);
-
 // Route untuk entitas Kurir
 Route::get('/kurir', function () {
     return view('kurir');
 })->name('kurir');
+
+Route::get('/libra', [BookController::class, 'index']);
+
+// Fallback route untuk serving static script jika di-proxy lewat Laravel di serverless/Vercel
+Route::get('/js/auth-fetch.js', function () {
+    $path = public_path('js/auth-fetch.js');
+    if (file_exists($path)) {
+        return response()->file($path, [
+            'Content-Type' => 'application/javascript; charset=utf-8',
+            'Cache-Control' => 'public, max-age=3600',
+        ]);
+    }
+    return response('// auth-fetch script not found', 404, ['Content-Type' => 'application/javascript']);
+});
 
 // Route untuk user profile dengan username/NIM
 Route::get('/{username}', [UserController::class, 'showByUsername'])

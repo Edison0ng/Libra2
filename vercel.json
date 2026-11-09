@@ -15,6 +15,14 @@
       "dest": "/public/build/$1"
     },
     {
+      "src": "/js/(.*)",
+      "dest": "/public/js/$1"
+    },
+    {
+      "src": "/uploads/(.*)",
+      "dest": "/public/uploads/$1"
+    },
+    {
       "src": "/favicon.ico",
       "dest": "/public/favicon.ico"
     },
@@ -27,12 +35,12 @@
       "dest": "/public/admin-dashboard.html"
     },
     {
-      "src": "/admin.html",
-      "dest": "/public/admin.html"
-    },
-    {
       "src": "/kurir.html",
       "dest": "/public/kurir.html"
+    },
+    {
+      "src": "/admin.html",
+      "dest": "/public/admin.html"
     },
     {
       "src": "/output.css",

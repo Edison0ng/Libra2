@@ -56,6 +56,121 @@ class PinjamController extends Controller
             ->delete();
     }
 
+    /** Tarif denda keterlambatan per hari (Rupiah). Samakan dengan calculateFines() di libra.blade.php. */
+    private const DENDA_PER_HARI = 2000;
+
+    /**
+     * Cek apakah user punya denda yang menghalangi peminjaman baru.
+     * Return pesan penolakan (string) atau null kalau boleh meminjam.
+     *  1) Denda dari buku yang SUDAH dikembalikan tapi belum dilunasi.
+     *  2) Buku yang masih dipinjam dan sudah lewat tenggat (denda masih berjalan).
+     */
+    private function alasanDilarangMeminjam(string $userId): ?string
+    {
+        $belumLunas = DB::table('pinjam')
+            ->where('user_id', $userId)
+            ->whereNotNull('tanggal_kembali')
+            ->where('denda', '>', 0)
+            ->whereNull('denda_lunas_at')
+            ->sum('denda');
+
+        if ($belumLunas > 0) {
+            return 'Kamu masih punya denda yang belum dibayar sebesar Rp'
+                . number_format($belumLunas, 0, ',', '.')
+                . '. Lunasi dulu di tab Sirkulasi sebelum meminjam buku lagi.';
+        }
+
+        $terlambat = DB::table('pinjam')
+            ->where('user_id', $userId)
+            ->whereNull('tanggal_kembali')
+            ->whereRaw("LOWER(status) <> 'ditolak'")
+            ->whereNotNull('tenggat_waktu')
+            ->whereDate('tenggat_waktu', '<', now()->toDateString())
+            ->exists();
+
+        if ($terlambat) {
+            return 'Kamu masih punya buku yang terlambat dikembalikan, sehingga denda masih berjalan. '
+                . 'Kembalikan bukunya dan lunasi dendanya dulu sebelum meminjam lagi.';
+        }
+
+        return null;
+    }
+
+    /**
+     * Pembayaran denda (SIMULASI -- tidak ada uang sungguhan yang bergerak).
+     * Hanya untuk buku yang sudah dikembalikan. Jumlah selalu diambil dari
+     * database, bukan dari browser.
+     */
+    public function bayarDenda(Request $request, $id)
+    {
+        $request->validate([
+            'user_id' => ['required', 'string'],
+            'metode'  => ['sometimes', 'nullable', 'string', 'max:50'],
+        ]);
+
+        $loan = DB::table('pinjam as l')
+            ->leftJoin('books', 'l.book_id', '=', 'books.ISBN')
+            ->select('l.*', DB::raw('books."Book-Title" as book_title'))
+            ->where('l.id', $id)
+            ->first();
+
+        if (!$loan) {
+            return response()->json(['success' => false, 'message' => 'Data peminjaman tidak ditemukan.'], 404);
+        }
+        if ((string) $loan->user_id !== (string) $request->user_id) {
+            return response()->json(['success' => false, 'message' => 'Denda ini bukan milik akun kamu.'], 403);
+        }
+        if (empty($loan->tanggal_kembali)) {
+            return response()->json(['success' => false, 'message' => 'Denda baru bisa dibayar setelah buku dikembalikan.'], 422);
+        }
+        if (empty($loan->denda) || $loan->denda <= 0) {
+            return response()->json(['success' => false, 'message' => 'Tidak ada denda untuk peminjaman ini.'], 422);
+        }
+        if (!empty($loan->denda_lunas_at)) {
+            return response()->json(['success' => false, 'message' => 'Denda ini sudah lunas.'], 409);
+        }
+
+        DB::table('pinjam')->where('id', $id)->update(['denda_lunas_at' => now()]);
+
+        \App\Services\InvoiceService::catat(
+            'Denda', (string) $id, $loan->user_id,
+            'Denda keterlambatan buku "' . ($loan->book_title ?? $loan->book_id) . '"', (int) $loan->denda, 'Lunas', 'Simulasi',
+            ['book_isbn' => $loan->book_id, 'tanggal_pinjam' => $loan->tanggal_pinjam, 'tanggal_kembali' => $loan->tanggal_kembali]
+        );
+
+        Notification::create([
+            'id'      => (string) Str::uuid(),
+            'user_id' => $loan->user_id,
+            'title'   => 'Denda Lunas',
+            'message' => 'Pembayaran denda Rp' . number_format($loan->denda, 0, ',', '.')
+                . ' untuk buku "' . ($loan->book_title ?? $loan->book_id) . '" berhasil (simulasi). Kamu bisa meminjam buku lagi'
+                . ' selama tidak ada denda lain.',
+            'type'    => 'success',
+            'is_read' => false,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pembayaran denda berhasil (simulasi).',
+            'loan'    => DB::table('pinjam')->where('id', $id)->first(),
+        ]);
+    }
+
+    /**
+     * GET /api/pinjam-aktif
+     * Hanya daftar ISBN buku yang sedang dipinjam siapa pun (tanpa data orangnya),
+     * dipakai halaman Pustaka untuk menandai buku "Dipinjam".
+     */
+    public function bukuSedangDipinjam()
+    {
+        $this->cancelExpiredBookings();
+        $ids = DB::table('pinjam')
+            ->whereNull('tanggal_kembali')
+            ->whereRaw("LOWER(status) <> 'ditolak'")
+            ->pluck('book_id')->unique()->values();
+        return response()->json($ids);
+    }
+
     public function index(Request $request)
     {
         $table = 'pinjam'; 
@@ -65,6 +180,7 @@ class PinjamController extends Controller
         }
 
         $this->cancelExpiredBookings();
+        Wishlist::sweepExpiredHolds();
 
         $query = DB::table($table.' as l')
             ->leftJoin('users', DB::raw('l.user_id::text'), '=', DB::raw('users.id::text'))
@@ -78,7 +194,7 @@ class PinjamController extends Controller
 
         // Filter berdasarkan user_id jika dikirimkan oleh frontend
         if ($request->has('user_id')) {
-            $query->where('l.user_id', $request->query('user_id'));
+            $query->whereRaw('l.user_id::text = ?', [(string) $request->query('user_id')]);
         }
 
         $loans = $query->orderBy('l.tanggal_pinjam', 'desc')->get()->map(function ($loan) {
@@ -113,6 +229,11 @@ class PinjamController extends Controller
 
         if (! $loan) return response()->json(['message' => 'Not Found'], 404);
 
+        $me = request()->user();
+        if ($me && !$me->isAdmin() && !$me->isKurir() && (string) $loan->user_id !== (string) $me->id) {
+            return response()->json(['message' => 'Not Found'], 404);
+        }
+
         if (!empty($loan->created_at)) {
             $loan->created_at = \Carbon\Carbon::parse($loan->created_at, 'UTC')->toISOString();
         }
@@ -145,6 +266,53 @@ class PinjamController extends Controller
             'status' => ['required', 'string'],
         ]);
 
+        // Blokir peminjaman baru kalau user masih punya denda (server-side,
+        // supaya tidak bisa dilewati lewat panggilan API langsung).
+        if ($alasan = $this->alasanDilarangMeminjam((string) $request->user_id)) {
+            return response()->json([
+                'success' => false,
+                'blocked' => true,
+                'message' => $alasan,
+            ], 403);
+        }
+
+        // Pastikan status hold antrian up-to-date dulu (kalau ada yg baru kadaluarsa).
+        Wishlist::sweepExpiredHolds();
+
+        // Kalau buku ini sedang "ditahan" (hold) utk org #1 di antrian, DAN
+        // yang mencoba booking sekarang BUKAN orang itu -> tolak. Ini
+        // pengecekan di level server (bukan cuma UI) supaya tidak bisa
+        // dilewati lewat panggilan API langsung.
+        $hold = Wishlist::activeHold($request->book_id);
+        if ($hold && $hold->user_id !== $request->user_id) {
+            return response()->json([
+                'success'    => false,
+                'locked'     => true,
+                'message'    => 'Buku ini sedang ditahan untuk antrian pertama hingga '
+                    . $hold->holdExpiresAt()?->format('d-m-Y H:i') . '. '
+                    . 'Silakan coba lagi setelah itu, atau daftar ke antrian.',
+                'expires_at' => $hold->holdExpiresAt()?->toIso8601String(),
+            ], 423);
+        }
+
+        // Cegah booking ganda: kalau buku ini masih punya peminjaman aktif
+        // (belum dikembalikan) -- baik oleh user yang sama (klik berkali-kali)
+        // maupun user lain -- tolak.
+        $existingLoan = DB::table('pinjam')
+            ->where('book_id', $request->book_id)
+            ->whereNull('tanggal_kembali')
+            ->whereRaw("LOWER(status) <> 'ditolak'")
+            ->first();
+        if ($existingLoan) {
+            $isSameUser = $existingLoan->user_id === $request->user_id;
+            return response()->json([
+                'success' => false,
+                'message' => $isSameUser
+                    ? 'Kamu sudah membooking buku ini. Cek tab Sirkulasi.'
+                    : 'Buku ini sedang dipinjam orang lain. Silakan masuk antrian.',
+            ], 409);
+        }
+
         // Generate UUID untuk ID peminjaman jika belum ada
         $id = $request->input('id') ?: (string) Str::uuid();
 
@@ -169,6 +337,11 @@ class PinjamController extends Controller
             'created_at' => now(),
         ]);
 
+        // Dia sudah dapat bukunya -- keluarkan dari antrian buku ini (kalau ada).
+        Wishlist::where('book_id', $request->book_id)
+            ->where('user_id', $request->user_id)
+            ->delete();
+
         $newLoan = DB::table('pinjam as l')
             ->leftJoin('books', 'l.book_id', '=', 'books.ISBN')
             ->select(
@@ -178,6 +351,12 @@ class PinjamController extends Controller
             )
             ->where('l.id', $id)
             ->first();
+
+        \App\Services\InvoiceService::catat(
+            'Peminjaman', (string) $id, $request->user_id,
+            'Peminjaman buku "' . ($newLoan->book_title ?? $request->book_id) . '"', 0, 'Dipinjam', null,
+            ['book_isbn' => $request->book_id, 'tanggal_pinjam' => $request->tanggal_pinjam]
+        );
 
         // Buat notifikasi nyata untuk user terkait
         Notification::create([
@@ -206,6 +385,29 @@ class PinjamController extends Controller
         ]);
 
         $data = $request->only(['status', 'tanggal_kembali', 'tenggat_waktu', 'denda']);
+
+        // Saat buku ditandai dikembalikan dan denda belum diisi manual,
+        // hitung otomatis: hari terlambat x tarif per hari.
+        $akanDikembalikan = (isset($data['status']) && strtolower($data['status']) === 'dikembalikan')
+            || !empty($data['tanggal_kembali']);
+        if ($akanDikembalikan) {
+            $existing = DB::table('pinjam')->where('id', $id)->first();
+            if ($existing) {
+                if (empty($data['tanggal_kembali']) && empty($existing->tanggal_kembali)) {
+                    $data['tanggal_kembali'] = now()->toDateString();
+                }
+                $kembali = $data['tanggal_kembali'] ?? $existing->tanggal_kembali;
+                $tenggat = $data['tenggat_waktu'] ?? $existing->tenggat_waktu;
+                $dendaManual = $data['denda'] ?? $existing->denda;
+                if (empty($dendaManual) && $kembali && $tenggat) {
+                    $hari = \Carbon\Carbon::parse($tenggat)->startOfDay()
+                        ->diffInDays(\Carbon\Carbon::parse($kembali)->startOfDay(), false);
+                    if ($hari > 0) {
+                        $data['denda'] = (int) ($hari * self::DENDA_PER_HARI);
+                    }
+                }
+            }
+        }
         
         DB::table('pinjam')->where('id', $id)->update($data);
 
@@ -247,22 +449,32 @@ class PinjamController extends Controller
                 'is_read' => false,
             ]);
 
-            // Beri tahu setiap user yang mewishlist buku ini bahwa buku
-            // sudah tersedia kembali. Wishlist tidak dihapus otomatis di
-            // sini supaya user tetap bisa lihat riwayat wishlist-nya;
-            // mereka bisa lepas sendiri dari sisi frontend.
-            $wishlisters = Wishlist::where('book_id', $loan->book_id)
+            // Mulai hold 24 jam utk orang PALING DEPAN antrian buku ini (kalau
+            // ada yg mengantre). startHoldForBook() sendiri yang mengirim
+            // notifikasi "Giliranmu Tiba!" ke orang itu + mengunci buku ini
+            // khusus utk dia selama 24 jam (lihat PinjamController::store()).
+            $held = Wishlist::startHoldForBook($loan->book_id);
+
+            // Beri tahu SISA antrian (selain yg baru dapat hold) bahwa
+            // antrian bergerak maju, dengan posisi terbaru mereka.
+            $rest = Wishlist::where('book_id', $loan->book_id)
                 ->where('user_id', '!=', $loan->user_id)
+                ->when($held, fn ($q) => $q->where('id', '!=', $held->id))
+                ->orderBy('created_at', 'asc')
                 ->get();
 
-            foreach ($wishlisters as $wish) {
+            foreach ($rest as $index => $wish) {
+                // +2 kalau org #1 sudah dapat hold (posisi 1 sudah terisi dia),
+                // +1 kalau karena suatu hal tidak ada yg dapat hold.
+                $position = $index + ($held ? 2 : 1);
+
                 Notification::create([
                     'id'      => (string) Str::uuid(),
                     'user_id' => $wish->user_id,
-                    'title'   => 'Buku Tersedia Kembali',
+                    'title'   => 'Antrian Bergerak Maju',
                     'message' => 'Buku "' . ($loan->book_title ?? $loan->book_id)
-                        . '" yang ada di wishlist kamu sudah tersedia kembali untuk dipinjam.',
-                    'type'    => 'success',
+                        . '" baru saja dikembalikan. Posisi antrianmu sekarang: ke-' . $position . '.',
+                    'type'    => 'info',
                     'is_read' => false,
                 ]);
             }

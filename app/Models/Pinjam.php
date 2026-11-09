@@ -22,7 +22,8 @@ class Pinjam extends Model
         'tanggal_pinjam',
         'tenggat_waktu',
         'tanggal_kembali',
-        'denda'
+        'denda',
+        'denda_lunas_at'
     ];
 
     public $timestamps = false;

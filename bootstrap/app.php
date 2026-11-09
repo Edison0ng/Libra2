@@ -29,6 +29,8 @@ $app = Application::configure(basePath: dirname(__DIR__))
         // Register middleware alias
         $middleware->alias([
             'username.spaces' => \App\Http\Middleware\HandleUsernameSpaces::class,
+            'role' => \App\Http\Middleware\EnsureRole::class,
+            'owner' => \App\Http\Middleware\ScopeToOwner::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -4,6 +4,52 @@
 <!DOCTYPE html>
 <html lang="id" class="">
 <head>
+    <!-- Interceptor Otentikasi API Otomatis (Bearer Token Sanctum) -->
+    <script>
+    (function () {
+      var PUBLIC = ['/api/login', '/api/register', '/api/forgot-password', '/api/reset-password', '/api/test'];
+      var orig = window.fetch.bind(window);
+      window.fetch = function (input, init) {
+        try {
+          var url = typeof input === 'string' ? input : (input && input.url) || '';
+          var path = url.replace(/^https?:\/\/[^/]+/, '').split('?')[0];
+          if (path && !path.startsWith('/')) path = '/' + path;
+          if (path.indexOf('/api/') === 0 && PUBLIC.indexOf(path) === -1) {
+            init = init || {};
+            var h = new Headers(init.headers || (typeof input !== 'string' && input.headers) || {});
+            var t = localStorage.getItem('libra_token');
+            if (t && !h.has('Authorization')) h.set('Authorization', 'Bearer ' + t);
+            if (!h.has('Accept')) h.set('Accept', 'application/json');
+            init.headers = h;
+            return orig(input, init).then(function (res) {
+              if (res.status === 401) {
+                ['libra_token', 'libra_user', 'libra_remember'].forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
+                try { sessionStorage.removeItem('libra_active'); } catch (e) {}
+                if (location.pathname !== '/login') location.href = '/login';
+              }
+              return res;
+            });
+          }
+        } catch (e) {}
+        return orig(input, init);
+      };
+    })();
+    </script>
+    <script src="/js/auth-fetch.js"></script>
+<script>
+  /* Hanya akun kurir yang boleh membuka halaman ini + aturan "Ingat Saya" */
+  (function(){
+    try{
+      if(localStorage.getItem('libra_remember')!=='1'&&sessionStorage.getItem('libra_active')!=='1'){
+        localStorage.removeItem('libra_token');localStorage.removeItem('libra_user');
+      }
+      var t=localStorage.getItem('libra_token'),u=JSON.parse(localStorage.getItem('libra_user')||'null');
+      var ok=t&&u&&(String(u.role||'').toLowerCase()==='kurir'||String(u.nim||'').toLowerCase()==='kurir'||String(u.username||'').toLowerCase()==='kurir');
+      if(!ok){window.location.replace('/login');}
+    }catch(e){window.location.replace('/login');}
+  })();
+</script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LIBRA — Portal Kurir & Logistik Pengantaran</title>
@@ -409,6 +455,7 @@
                 <div class="bg-slate-900 text-white p-4 rounded-2xl flex items-center justify-between">
                     <div>
                         <p class="text-[10px] text-slate-400 uppercase font-semibold">Total Pembayaran Pengguna</p>
+                        <p id="inc-modal-pay-info" class="text-[11px] font-semibold mt-0.5"></p>
                         <p id="inc-modal-total-items" class="text-[11px] text-blue-400">Total 0 item</p>
                     </div>
                     <div class="text-right">
@@ -524,6 +571,7 @@
                 <div class="bg-slate-900 text-white p-4 rounded-2xl flex items-center justify-between">
                     <div>
                         <p class="text-[10px] text-slate-400 uppercase font-semibold">Total Pembayaran</p>
+                        <p id="out-modal-pay-info" class="text-[11px] font-semibold mt-0.5"></p>
                         <p class="text-[11px] text-slate-400">Sudah termasuk biaya pesanan</p>
                     </div>
                     <div class="text-right">
@@ -566,6 +614,36 @@
         const POLL_MS = 15000;
 
         // Format Angka ke Rupiah
+        // ----- Info pembayaran pesanan (ATK) -----
+        function payInfoOf(o) {
+            if (!o || !o.status_bayar) return null;           // pesanan buku / data lama: tidak ada tagihan
+            if (o.status_bayar === 'Lunas') {
+                return { text: 'Sudah lunas' + (o.metode_bayar && o.metode_bayar !== 'Bayar di Tempat' ? ' via ' + o.metode_bayar : ''), kind: 'paid' };
+            }
+            if (o.metode_bayar === 'Bayar di Tempat') {
+                return { text: 'Tagih tunai ke pengguna saat barang tiba', kind: 'collect' };
+            }
+            return { text: 'Bayar online, belum dibayar pengguna', kind: 'pending' };
+        }
+
+        function setPayInfo(elId, order) {
+            const el = document.getElementById(elId);
+            if (!el) return;
+            const info = payInfoOf(order);
+            if (!info) { el.textContent = ''; return; }
+            el.textContent = info.text;
+            el.className = 'text-[11px] font-semibold mt-0.5 ' + (info.kind === 'paid' ? 'text-emerald-400' : 'text-amber-300');
+        }
+
+        function payBadgeHtml(o) {
+            const info = payInfoOf(o);
+            if (!info) return '';
+            const cls = info.kind === 'paid'
+                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+                : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300';
+            return `<span class="block mt-1 w-fit px-2 py-0.5 rounded-full text-[10px] font-bold font-sans ${cls}">${escapeHtml(info.text)}</span>`;
+        }
+
         function formatRupiah(num) {
             return new Intl.NumberFormat('id-ID', {
                 style: 'currency',
@@ -591,21 +669,13 @@
         // ========================================================
         // DATA ACCESS & STORAGE
         // ========================================================
-        function getAuthHeaders() {
-            const token = localStorage.getItem('libra_token');
-            const headers = { 'Accept': 'application/json' };
-            if (token) headers['Authorization'] = `Bearer ${token}`;
-            return headers;
-        }
-
-        async function loadOrders() {
+async function loadOrders() {
             try {
-                const res = await fetch('/api/orders', { headers: getAuthHeaders() });
+                const res = await fetch('/api/orders', { headers: { 'Accept': 'application/json' } });
                 if (!res.ok) throw new Error('http ' + res.status);
                 const data = await res.json();
-                const list = Array.isArray(data) ? data : (Array.isArray(data.data) ? data.data : null);
-                if (list !== null) {
-                    ordersData = list;
+                if (Array.isArray(data)) {
+                    ordersData = data;
                     saveOrders();
                     return;
                 }
@@ -750,7 +820,7 @@ function updateStats() {
                             ${totalItem} item
                         </td>
                         <td class="py-3.5 px-4 font-bold font-mono text-emerald-600 dark:text-emerald-400">
-                            ${formatRupiah(o.total_pembayaran)}
+                            ${formatRupiah(o.total_pembayaran)}${payBadgeHtml(o)}
                         </td>
                         <td class="py-3.5 px-4 text-slate-500 dark:text-slate-400 text-[11px]">
                             ${formatDateTimeIndo(o.waktu_pemesanan)}
@@ -874,6 +944,7 @@ function updateStats() {
             document.getElementById('inc-modal-total-items-badge').textContent = `${totalItemsCount} Total Item`;
             document.getElementById('inc-modal-total-items').textContent = `Total ${totalItemsCount} item pesanan`;
             document.getElementById('inc-modal-total-pay').textContent = formatRupiah(order.total_pembayaran);
+            setPayInfo('inc-modal-pay-info', order);
 
             const tbody = document.getElementById('inc-modal-items-tbody');
             tbody.innerHTML = items.map(item => `
@@ -904,7 +975,7 @@ function updateStats() {
         // ========================================================
         // AKSI: KIRIM SEKARANG (DARI INCOMING KE OUTGOING)
         // ========================================================
-        async function executeKirimSekarang() {
+async function executeKirimSekarang() {
             if (!currentModalOrder) return;
 
             const order = currentModalOrder;
@@ -916,10 +987,7 @@ function updateStats() {
             try {
                 const res = await fetch(`/api/orders/${encodeURIComponent(orderId)}/start`, {
                     method: 'PATCH',
-                    headers: {
-                        ...getAuthHeaders(),
-                        'Content-Type': 'application/json'
-                    }
+                    headers: { 'Accept': 'application/json' }
                 });
                 if (res.status === 404 || res.status === 409) {
                     const d = await res.json().catch(() => ({}));
@@ -932,7 +1000,12 @@ function updateStats() {
                 const d = await res.json();
                 startTime = d.waktu_mulai_pengantaran || startTime;
             } catch (e) {
-                console.warn('Gagal sinkron status start ke server:', e);
+                if (!(e instanceof TypeError)) {
+                    showToast('Gagal', 'Pengantaran belum bisa dimulai. Coba lagi.', 'amber');
+                    if (btn) btn.disabled = false;
+                    return;
+                }
+                // Server tidak terjangkau: simpan lokal supaya pekerjaan kurir tidak hilang
             }
 
             order.status = 'Sedang Diantar';
@@ -966,6 +1039,7 @@ function updateStats() {
             document.getElementById('out-modal-start-time').textContent = formatDateTimeIndo(order.waktu_mulai_pengantaran);
             document.getElementById('out-modal-address').textContent = order.alamat || '-';
             document.getElementById('out-modal-total-pay').textContent = formatRupiah(order.total_pembayaran);
+            setPayInfo('out-modal-pay-info', order);
 
             const iconWrap = document.getElementById('out-modal-icon-wrap');
             const headerIcon = document.getElementById('out-modal-header-icon');
@@ -1043,7 +1117,7 @@ function updateStats() {
         // ========================================================
         // AKSI: SUDAH SELESAI (MENYELESAIKAN PENGANTARAN)
         // ========================================================
-        async function executeSudahSelesai() {
+async function executeSudahSelesai() {
             if (!currentModalOrder) return;
 
             const order = currentModalOrder;
@@ -1051,28 +1125,10 @@ function updateStats() {
             if (!confirm(`Tandai pesanan ${orderId} sudah sampai di tujuan?`)) return;
 
             let endTime = new Date().toISOString();
-            let durasiDetik = 0;
-            let totalDurasi = 'Selesai';
-
-            if (order.waktu_mulai_pengantaran) {
-                const startMs = new Date(order.waktu_mulai_pengantaran).getTime();
-                durasiDetik = Math.max(0, Math.floor((new Date().getTime() - startMs) / 1000));
-                const mins = Math.floor(durasiDetik / 60);
-                const secs = durasiDetik % 60;
-                totalDurasi = `${mins}m ${secs}s`;
-            }
-
             try {
                 const res = await fetch(`/api/orders/${encodeURIComponent(orderId)}/complete`, {
                     method: 'PATCH',
-                    headers: {
-                        ...getAuthHeaders(),
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        total_durasi: totalDurasi,
-                        durasi_detik: durasiDetik
-                    })
+                    headers: { 'Accept': 'application/json' }
                 });
                 if (res.status === 404 || res.status === 409) {
                     const d = await res.json().catch(() => ({}));
@@ -1085,13 +1141,14 @@ function updateStats() {
                 const d = await res.json();
                 endTime = d.waktu_selesai_pengantaran || endTime;
             } catch (e) {
-                console.warn('Gagal sinkron status complete ke server:', e);
+                if (!(e instanceof TypeError)) {
+                    showToast('Gagal', 'Pengantaran belum bisa diselesaikan. Coba lagi.', 'amber');
+                    return;
+                }
             }
 
             order.status = 'Selesai';
             order.waktu_selesai_pengantaran = endTime;
-            order.total_durasi = totalDurasi;
-            order.durasi_pengantaran_detik = durasiDetik;
             saveOrders();
 
             closeModal('modal-outgoing');
@@ -1182,25 +1239,11 @@ async function refreshOrders(silent) {
             if (silent !== true) showToast('Data diperbarui', 'Pesanan disinkronkan dengan server.', 'blue');
         }
 
-        async function logoutCourier() {
-            if (!confirm('Keluar dari Portal Kurir?')) return;
-            const token = localStorage.getItem('libra_token');
-            if (token) {
-                try {
-                    await fetch('/api/logout', {
-                        method: 'POST',
-                        headers: {
-                            'Accept': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
-                } catch (_) {}
+function logoutCourier() {
+            if (confirm('Keluar dari Portal Kurir?')) {
+                try { localStorage.removeItem('libra_token'); localStorage.removeItem('libra_user'); localStorage.removeItem('libra_remember'); sessionStorage.removeItem('libra_active'); } catch (_) {}
+                window.location.href = '/login';
             }
-            try {
-                localStorage.removeItem('libra_token');
-                localStorage.removeItem('libra_user');
-            } catch (_) {}
-            window.location.href = '/login';
         }
 
         // Pesanan baru dari halaman pengguna di browser yang sama
@@ -1209,17 +1252,6 @@ async function refreshOrders(silent) {
         });
 
         document.addEventListener('DOMContentLoaded', async function() {
-            const token = localStorage.getItem('libra_token');
-            const userStr = localStorage.getItem('libra_user');
-            let user = null;
-            try { user = JSON.parse(userStr || 'null'); } catch (_) {}
-
-            const isKurir = user && (user.role === 'kurir' || user.nim === 'kurir' || user.username === 'kurir');
-            if (!token || !isKurir) {
-                window.location.href = '/login';
-                return;
-            }
-
             if (localStorage.getItem('libra-theme') === 'dark' || 
                (!localStorage.getItem('libra-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                 document.documentElement.classList.add('dark');
@@ -1230,30 +1262,17 @@ async function refreshOrders(silent) {
             }
 
             // Nama kurir dari akun yang login
-            const name = user.nama_lengkap || user.name || 'Kurir Libra';
-            if (document.getElementById('courier-name')) {
-                document.getElementById('courier-name').textContent = name;
-            }
-            if (document.getElementById('courier-initial')) {
-                document.getElementById('courier-initial').textContent = name.trim().charAt(0).toUpperCase();
-            }
+            try {
+                const u = JSON.parse(localStorage.getItem('libra_user') || '{}');
+                const name = u.nama_lengkap || u.name;
+                if (name) {
+                    document.getElementById('courier-name').textContent = name;
+                    document.getElementById('courier-initial').textContent = name.trim().charAt(0).toUpperCase();
+                }
+            } catch (_) {}
 
             await refreshOrders(true);
             startGlobalTicker();
-
-            // Verifikasi token ke backend di latar belakang
-            fetch('/api/user', {
-                headers: {
-                    'Accept': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                }
-            }).then(res => {
-                if (res.status === 401) {
-                    localStorage.removeItem('libra_token');
-                    localStorage.removeItem('libra_user');
-                    window.location.href = '/login';
-                }
-            }).catch(() => {});
 
             // Pesanan baru dari pengguna lain: cek server berkala dan saat tab aktif lagi
             setInterval(() => {

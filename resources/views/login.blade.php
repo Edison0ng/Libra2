@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+<script>
+  /* Ingat Saya: kalau tidak dicentang saat login, sesi hanya berlaku selama browser/tab dibuka */
+  (function(){try{if(localStorage.getItem('libra_remember')!=='1'&&sessionStorage.getItem('libra_active')!=='1'){localStorage.removeItem('libra_token');localStorage.removeItem('libra_user');}}catch(e){}})();
+</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LIBRA — Login</title>
@@ -33,23 +38,23 @@
 <style>
   /* ===================== ROOT DESIGN TOKENS (Proto 4 LIBRA) ===================== */
   :root{
-    --bg: #0A0E17;
-    --panel-solid: #10172A;
-    --panel-2: #151D34;
-    --line: #222B42;
-    --text: #E7EAF2;
-    --muted: #8A92A6;
-    --muted-2: #737F9C; /* kontras ditingkatkan dari #5C657B utk aksesibilitas */
+    --bg: #FFFFFF;
+    --panel-solid: #FFFFFF;
+    --panel-2: #F4F6FA;
+    --line: #E3E7F0;
+    --text: #1A2033;
+    --muted: #6B7280;
+    --muted-2: #8A92A6; /* kontras ditingkatkan dari #AEB4C2 utk aksesibilitas di atas putih */
     --accent: #3D6BFF;
-    --accent-2: #7C9CFF;
-    --danger: #FF5470;
+    --accent-2: #2F56E0;
+    --danger: #E0264F;
     --radius: 14px;
 
     /* turunan warna untuk badge/status, supaya konsisten dgn tema */
-    --success: #3DDC97;
-    --success-bg: rgba(61, 220, 151, 0.12);
-    --danger-bg: rgba(255, 84, 112, 0.12);
-    --accent-bg: rgba(61, 107, 255, 0.12);
+    --success: #18A869;
+    --success-bg: rgba(24, 168, 105, 0.10);
+    --danger-bg: rgba(224, 38, 79, 0.08);
+    --accent-bg: rgba(61, 107, 255, 0.10);
   }
 
   *{ margin:0; padding:0; box-sizing:border-box; }
@@ -69,14 +74,14 @@
   .auth-shell{
     min-height: 100vh;
     display: grid;
-    grid-template-columns: 1.1fr 1fr; /* kiri sedikit lebih lebar utk konten info */
+    grid-template-columns: 1fr; /* panel info di kiri dihapus, tinggal form login */
   }
 
   /* Background sedikit gradasi supaya tidak flat datar */
   .auth-shell{
     background:
-      radial-gradient(900px 500px at 0% 0%, rgba(61,107,255,0.08), transparent 60%),
-      radial-gradient(700px 500px at 100% 100%, rgba(124,156,255,0.06), transparent 60%),
+      radial-gradient(900px 500px at 0% 0%, rgba(61,107,255,0.04), transparent 60%),
+      radial-gradient(700px 500px at 100% 100%, rgba(61,107,255,0.03), transparent 60%),
       var(--bg);
   }
 
@@ -85,6 +90,7 @@
     padding: 56px 64px;
     display:flex;
     flex-direction: column;
+    background: #FAFBFD;
     border-right: 1px solid var(--line);
   }
 
@@ -138,6 +144,7 @@
     background: var(--panel-solid);
     border: 1px solid var(--line);
     border-radius: var(--radius);
+    box-shadow: 0 1px 3px rgba(16, 24, 40, 0.04);
     overflow: hidden;
     display:flex;
     flex-direction: column;
@@ -161,28 +168,6 @@
     letter-spacing: 0.08em;
   }
 
-  .ledger-header .live-dot{
-    display:flex;
-    align-items:center;
-    gap:6px;
-    font-size: 11px;
-    color: var(--success);
-  }
-
-  .live-dot span.dot{
-    width:7px; height:7px;
-    border-radius:50%;
-    background: var(--success);
-    box-shadow: 0 0 0 0 rgba(61,220,151,0.6);
-    animation: pulse 1.8s infinite;
-  }
-
-  @keyframes pulse{
-    0%{ box-shadow: 0 0 0 0 rgba(61,220,151,0.5); }
-    70%{ box-shadow: 0 0 0 6px rgba(61,220,151,0); }
-    100%{ box-shadow: 0 0 0 0 rgba(61,220,151,0); }
-  }
-
   /* ledger-row: satu baris informasi/log */
 .ledger-row{
   display:flex;
@@ -195,7 +180,7 @@
 .ledger-row:last-child{ border-bottom: none; }
 
 .ledger-row:hover{
-  background: rgba(255,255,255,0.015);
+  background: rgba(16,24,40,0.02);
 }
 
 .badge{
@@ -259,6 +244,7 @@
     background: var(--panel-solid);
     border: 1px solid var(--line);
     border-radius: var(--radius);
+    box-shadow: 0 4px 24px rgba(16, 24, 40, 0.06);
     padding: 40px 36px;
   }
 
@@ -462,67 +448,150 @@
       padding: 32px 24px;
     }
   }
+
+  /* ===================== HIASAN: RAK BUKU, PENANDA HALAMAN, LATAR TITIK ===================== */
+  .auth-shell{
+    position: relative;
+    overflow: hidden;
+    padding-bottom: 168px;            /* ruang untuk rak buku di dasar halaman */
+  }
+
+  /* Titik-titik halus di pojok kiri atas, memudar ke tengah */
+  .auth-shell::before{
+    content:'';
+    position:absolute;
+    inset:0;
+    background-image: radial-gradient(rgba(61,107,255,0.22) 1px, transparent 1.3px);
+    background-size: 22px 22px;
+    -webkit-mask-image: radial-gradient(620px 380px at 8% 6%, #000, transparent 72%);
+            mask-image: radial-gradient(620px 380px at 8% 6%, #000, transparent 72%);
+    pointer-events:none;
+  }
+
+  /* Cahaya lembut di balik kartu supaya kartu terasa "terangkat" */
+  .auth-shell::after{
+    content:'';
+    position:absolute;
+    left:50%; top:46%;
+    width: 760px; height: 760px;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(closest-side, rgba(61,107,255,0.08), transparent);
+    pointer-events:none;
+  }
+
+  .form-panel, .login-card{ position: relative; z-index: 1; }
+
+  /* Penanda halaman (bookmark) yang menjuntai dari sisi atas kartu */
+  .login-card::before{
+    content:'';
+    position:absolute;
+    top:-12px;
+    right:30px;
+    width:24px;
+    height:58px;
+    background: linear-gradient(180deg, #F0745F, #E0503A);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%);
+    filter: drop-shadow(0 2px 2px rgba(16,24,40,0.18));
+  }
+
+  /* Rak buku */
+  .shelf{
+    position:absolute;
+    left:0; right:0; bottom:0;
+    height: 150px;
+    z-index: 0;
+    pointer-events:none;
+  }
+
+  .shelf .books{
+    position:absolute;
+    left:0; right:0; bottom:10px;
+    height: calc(100% - 10px);
+    display:flex;
+    align-items:flex-end;
+    padding-left: 6px;
+  }
+
+  .shelf .book{
+    position:relative;
+    flex: 0 0 auto;
+    margin-right: 2px;
+    border-radius: 3px 3px 1px 1px;
+    transform-origin: bottom left;
+    rotate: var(--tilt, 0deg);
+    pointer-events:auto;
+    transition: transform 0.25s ease;
+    animation: shelve 0.65s cubic-bezier(.2,.8,.2,1) backwards;
+    animation-delay: calc(var(--i) * 16ms);
+  }
+
+  .shelf .book::before{        /* dua garis tipis di punggung buku */
+    content:'';
+    position:absolute;
+    left:0; right:0; top:12%;
+    height:6px;
+    border-top:2px solid rgba(255,255,255,0.55);
+    border-bottom:2px solid rgba(255,255,255,0.55);
+  }
+
+  .shelf .book::after{         /* label judul */
+    content:'';
+    position:absolute;
+    left:22%; right:22%; bottom:16%;
+    height:22%;
+    background: rgba(255,255,255,0.30);
+    border-radius:2px;
+  }
+
+  .shelf .book:hover{ transform: translateY(-10px); }
+  .shelf .gap{ flex: 0 0 auto; }
+
+  .shelf.settled .book{ animation: none; }   /* animasi hanya sekali, tidak diulang saat layar diubah ukurannya */
+
+  .shelf .board{
+    position:absolute;
+    left:0; right:0; bottom:0;
+    height:10px;
+    background: linear-gradient(#DCE2F0, #C6CEE3);
+    box-shadow: 0 -1px 0 rgba(16,24,40,0.06);
+  }
+
+  @keyframes shelve{
+    from{ transform: translateY(46px); opacity:0; }
+    to  { transform: translateY(0);    opacity:1; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .shelf .book{ animation: none; transition: none; }
+  }
+
+  @media (max-width: 880px){
+    .auth-shell{ padding-bottom: 128px; }
+    .shelf{ height: 112px; }
+    .login-card::before{ right:22px; }
+  }
+
+  /* ===================== LATAR HALAMAN LOGIN ===================== */
+  /* Lapisan (atas -> bawah): pola ikon buku halus, cahaya hangat di dekat rak,
+     kabut biru di pojok, lalu gradasi langit-ke-krem sebagai dasar. */
+  html, body{ background: #EEF3FF; }
+  .auth-shell{
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140' fill='none' stroke='%233D6BFF' stroke-opacity='0.10' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 30c6-4 13-4 19 0v22c-6-4-13-4-19 0zM37 30c6-4 13-4 19 0v22c-6-4-13-4-19 0z'/%3E%3Cpath d='M96 24h14v26l-7-5-7 5z'/%3E%3Cpath d='M30 100l22-22 8 8-22 22-10 2z'/%3E%3Cpath d='M98 96h22M98 104h22M98 112h14'/%3E%3C/svg%3E"),
+      radial-gradient(800px 420px at 50% 100%, rgba(255, 214, 153, 0.35), transparent 70%),
+      radial-gradient(900px 600px at 0% 0%, rgba(61, 107, 255, 0.14), transparent 65%),
+      radial-gradient(700px 500px at 100% 20%, rgba(124, 92, 255, 0.10), transparent 65%),
+      linear-gradient(180deg, #E6EEFF 0%, #F3F6FF 55%, #FFF7EA 100%);
+    background-size: 140px 140px, auto, auto, auto, auto;
+  }
+  .login-card{
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05), 0 18px 48px rgba(47, 86, 224, 0.14);
+  }
 </style>
 </head>
 <body>
 
 <div class="auth-shell">
-
-  <!-- ===================== KOLOM KIRI: PANEL INFO & SIRKULASI BUKU ===================== -->
-  <section class="info-panel">
-    <div class="brand-row">
-      <div class="logo-mark">L</div>
-      <div class="brand-name">LIBRA</div>
-    </div>
-
-    <!-- h2: konten pendukung, bukan judul utama dokumen -->
-    <h2>Informasi Buku Perpustakaan</h2>
-    <p class="subtitle">Status Koleksi Perpustakaan Kampus.</p>
-
-    <div class="ledger">
-      <div class="ledger-header">
-        <span class="label">Informasi</span>
-        <div class="live-dot"><span class="dot"></span>Live Update</div>
-      </div>
-
-      <!-- Baris 1: Buku Baru -->
-      <div class="ledger-row">
-        <span class="badge new">BUKU BARU</span>
-        <div class="row-content">
-          <p>"Artificial Intelligence: A Modern Approach (Edisi 4)" kini tersedia di Rak Utama.</p>
-          <span class="row-time">2 menit yang lalu</span>
-        </div>
-      </div>
-
-      <!-- Baris 2: Stok Kosong -->
-      <div class="ledger-row">
-        <span class="badge empty">STOK KOSONG</span>
-        <div class="row-content">
-          <p>"Sistem Operasi (Silberschatz)" saat ini kosong karena sedang dipinjam seluruhnya.</p>
-          <span class="row-time">17 menit yang lalu</span>
-        </div>
-      </div>
-
-      <!-- Baris 3: Buku Baru -->
-      <div class="ledger-row">
-        <span class="badge new">BUKU BARU</span>
-        <div class="row-content">
-          <p>"Dasar Pemrograman Python untuk Pemula" telah ditambahkan ke katalog digital.</p>
-          <span class="row-time">1 jam yang lalu</span>
-        </div>
-      </div>
-
-      <!-- Baris 4: Update pengembalian -->
-      <div class="ledger-row">
-        <span class="badge update">DIKEMBALIKAN</span>
-        <div class="row-content">
-          <p>"Database System Concepts (Silberschatz)" baru dikembalikan dan siap dipinjam kembali.</p>
-          <span class="row-time">3 jam yang lalu</span>
-        </div>
-      </div>
-
-    </div>
-  </section>
 
   <!-- ===================== KOLOM KANAN: CARD LOGIN TERPADU ===================== -->
   <section class="form-panel">
@@ -540,9 +609,9 @@
       </div>
 
       <form id="loginForm" novalidate>
-        <!-- Input NIM / Username Admin / Kurir -->
+        <!-- Input NIM / Username Admin -->
         <div class="field-group">
-          <label for="username">NIM (Mahasiswa) / Username (Admin / Kurir)</label>
+          <label for="username">NIM (Mahasiswa) / Username (Admin)</label>
           <div class="input-wrap">
             <span class="input-icon">
               <!-- ikon user -->
@@ -551,7 +620,7 @@
                 <path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"></path>
               </svg>
             </span>
-            <input type="text" id="username" name="username" placeholder="Masukkan NIM atau username admin/kurir" autocomplete="username">
+            <input type="text" id="username" name="username" placeholder="Masukkan NIM atau username admin" autocomplete="username">
           </div>
         </div>
 
@@ -586,7 +655,7 @@
         </div>
 
         <!-- Tombol submit -->
-        <button type="submit" class="btn-primary">Masuk ke Sistem</button>
+        <button type="submit" class="btn-primary">Login</button>
       </form>
 
       <p class="signup-footer">
@@ -595,7 +664,77 @@
     </div>
   </section>
 
+  <!-- Hiasan rak buku (dekoratif, disembunyikan dari pembaca layar) -->
+  <div class="shelf" id="shelf" aria-hidden="true">
+    <div class="books" id="books"></div>
+    <div class="board"></div>
+  </div>
+
 </div>
+
+<script>
+  // ===================== HIASAN RAK BUKU =====================
+  (function () {
+    const shelf = document.getElementById('shelf');
+    const host = document.getElementById('books');
+    if (!shelf || !host) return;
+
+    const palette = ['#1F2A5C', '#3D6BFF', '#1E9E8F', '#F2B134', '#E8604C', '#7A4DA8', '#8DB580', '#2F56E0', '#B8C4EE'];
+
+    // Pengacak tetap (seed), supaya susunan buku sama setiap kali halaman dibuka
+    function rng(seed) {
+      return function () {
+        seed = (seed * 1664525 + 1013904223) % 4294967296;
+        return seed / 4294967296;
+      };
+    }
+
+    function build() {
+      host.innerHTML = '';
+      const rand = rng(11);
+      const width = host.clientWidth || window.innerWidth;
+      const frag = document.createDocumentFragment();
+      let x = 6, i = 0;
+
+      while (x < width) {
+        // sesekali ada celah kosong di rak
+        if (i > 0 && rand() > 0.92) {
+          const gap = document.createElement('span');
+          gap.className = 'gap';
+          const gw = 14 + Math.floor(rand() * 26);
+          gap.style.width = gw + 'px';
+          frag.appendChild(gap);
+          x += gw;
+        }
+
+        const w = 22 + Math.floor(rand() * 20);
+        const h = 48 + Math.floor(rand() * 46);
+        const c = palette[Math.floor(rand() * palette.length)];
+        const book = document.createElement('span');
+        book.className = 'book';
+        book.style.cssText = 'width:' + w + 'px;height:' + h + '%;background:' + c + ';--i:' + i;
+
+        // satu dari sepuluh buku bersandar miring
+        if (rand() > 0.9) book.style.setProperty('--tilt', '-8deg');
+
+        frag.appendChild(book);
+        x += w + 2;
+        i++;
+      }
+      host.appendChild(frag);
+    }
+
+    build();
+    // setelah animasi masuk selesai, jangan diulang ketika ukuran jendela berubah
+    setTimeout(function () { shelf.classList.add('settled'); }, 2200);
+
+    let t;
+    window.addEventListener('resize', function () {
+      clearTimeout(t);
+      t = setTimeout(function () { shelf.classList.add('settled'); build(); }, 150);
+    });
+  })();
+</script>
 
 <script>
   // ===================== AUTO-REDIRECT IF ALREADY LOGGED IN =====================
@@ -607,10 +746,8 @@
         const user = JSON.parse(userStr);
         if (user) {
           const isAdmin = user.nim && user.nim.toLowerCase() === 'admin';
-          const isKurir = (user.role && user.role.toLowerCase() === 'kurir') || (user.nim && user.nim.toLowerCase() === 'kurir') || (user.username && user.username.toLowerCase() === 'kurir');
-          if (isAdmin) window.location.href = 'admin-dashboard.html';
-          else if (isKurir) window.location.href = 'kurir.html';
-          else window.location.href = '/' + (user.username ?? user.nim);
+          const isKurir = (user.role && user.role.toLowerCase() === 'kurir') || (user.nim && user.nim.toLowerCase() === 'kurir');
+          window.location.href = isAdmin ? 'admin-dashboard.html' : (isKurir ? 'kurir.html' : ('/' + (user.username ?? user.nim)));
         }
       } catch (e) {
         console.error('Error auto-redirecting:', e);
@@ -701,13 +838,16 @@ try{
       // Simpan token & data user untuk dipakai halaman lain
       localStorage.setItem('libra_token', data.token);
       localStorage.setItem('libra_user', JSON.stringify(data.user));
+      // "Ingat Saya": dicentang -> tetap login walau browser ditutup
+      try {
+        const remember = document.getElementById('rememberMe');
+        if (remember && remember.checked) localStorage.setItem('libra_remember', '1');
+        else localStorage.removeItem('libra_remember');
+        sessionStorage.setItem('libra_active', '1');
+      } catch (e) {}
 
-      // Redirect sesuai role yang dikirim backend (admin / kurir / mahasiswa)
-      if (data.role === 'kurir' || (data.user && data.user.role === 'kurir')) {
-          window.location.href = 'kurir.html';
-      } else {
-          window.location.href = data.redirect || 'index.html';
-      }
+      // Redirect sesuai role yang dikirim backend (admin / mahasiswa)
+      window.location.href = data.redirect || 'index.html';
 
     } catch (err){
       console.error('Login error:', err);

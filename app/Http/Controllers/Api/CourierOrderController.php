@@ -40,8 +40,12 @@ class CourierOrderController extends Controller
             return response()->json($orders);
         }
 
-        // Jika tabel belum ada di database, kembalikan array kosong
-        return response()->json([]);
+        // Jika tabel belum ada di database, kembalikan respons kosong / format standar
+        return response()->json([
+            'success' => true,
+            'message' => 'Tabel DB belum dimigrasi, frontend menggunakan sinkronisasi localStorage.',
+            'data'    => []
+        ]);
     }
 
     /**
@@ -60,14 +64,12 @@ class CourierOrderController extends Controller
             'items'            => 'required|array',
             'total_items'      => 'nullable|numeric',
             'total_pembayaran' => 'required|numeric',
-            'waktu_pemesanan'  => 'nullable|string',
-            'status_bayar'     => 'nullable|string',
-            'metode_bayar'     => 'nullable|string',
+            'status_bayar'     => 'nullable|string|max:50',
+            'metode_bayar'     => 'nullable|string|max:50',
         ]);
 
         $orderId = $validated['order_id'] ?? ('ORD-' . date('Ymd') . '-' . strtoupper(Str::random(4)));
-        $now = now();
-        $waktuPemesanan = $validated['waktu_pemesanan'] ?? $now->toISOString();
+        $now = now()->toISOString();
 
         $orderData = [
             'id'                       => $orderId,
@@ -81,22 +83,25 @@ class CourierOrderController extends Controller
             'total_items'              => $validated['total_items'] ?? count($validated['items']),
             'total_pembayaran'         => $validated['total_pembayaran'],
             'status'                   => 'Menunggu',
-            'waktu_pemesanan'          => $waktuPemesanan,
+            'waktu_pemesanan'          => $now,
             'waktu_mulai_pengantaran'   => null,
             'waktu_selesai_pengantaran' => null,
             'durasi_pengantaran_detik' => null,
             'total_durasi'             => null,
-            'status_bayar'             => $validated['status_bayar'] ?? 'Lunas',
-            'metode_bayar'             => $validated['metode_bayar'] ?? 'COD / Di Tempat',
-            'created_at'               => $now,
-            'updated_at'               => $now,
+            'status_bayar'             => $validated['status_bayar'] ?? null,
+            'metode_bayar'             => $validated['metode_bayar'] ?? null,
+            'created_at'               => now(),
+            'updated_at'               => now(),
         ];
 
         if (Schema::hasTable('courier_orders')) {
-            DB::table('courier_orders')->updateOrInsert(
-                ['id' => $orderId],
-                $orderData
-            );
+            // Kalau order dengan ID yang sama sudah ada (mis. dikirim ulang), jangan dobel.
+            $exists = DB::table('courier_orders')->where('id', $orderId)->exists();
+            if (!$exists) {
+                // Hanya isi kolom yang benar-benar ada (aman kalau migration pembayaran belum dijalankan).
+                $cols = array_flip(Schema::getColumnListing('courier_orders'));
+                DB::table('courier_orders')->insert(array_intersect_key($orderData, $cols));
+            }
         }
 
         $orderData['items'] = $validated['items'];
@@ -117,15 +122,31 @@ class CourierOrderController extends Controller
         $startTime = now()->toISOString();
 
         if (Schema::hasTable('courier_orders')) {
-            DB::table('courier_orders')
-                ->where('id', $id)
-                ->orWhere('order_id', $id)
-                ->update([
-                    'status'                  => 'Sedang Diantar',
-                    'waktu_mulai_pengantaran' => $startTime,
-                    'updated_at'              => now(),
-                ]);
+            $base = fn () => DB::table('courier_orders')->where(function ($q) use ($id) {
+                $q->where('id', $id)->orWhere('order_id', $id);
+            });
+
+            $order = $base()->first();
+            if (!$order) {
+                return response()->json(['success' => false, 'message' => 'Pesanan tidak ditemukan.'], 404);
+            }
+
+            // Hanya pesanan "Menunggu" yang boleh dikirim (cegah dua kurir mengambil pesanan yang sama).
+            $updated = $base()->where('status', 'Menunggu')->update([
+                'status'                  => 'Sedang Diantar',
+                'waktu_mulai_pengantaran' => $startTime,
+                'updated_at'              => now(),
+            ]);
+
+            if ($updated === 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Pesanan ini sudah diambil kurir lain atau statusnya sudah berubah.',
+                ], 409);
+            }
         }
+
+        $this->syncLinkedStatus($order->order_id ?? $id, 'Sedang Diantar Kurir');
 
         return response()->json([
             'success'                 => true,
@@ -143,20 +164,52 @@ class CourierOrderController extends Controller
     {
         $endTime = now()->toISOString();
         $totalDurasi = $request->input('total_durasi', 'Selesai');
-        $durasiDetik = $request->input('durasi_detik', 0);
+        $durasiDetik = (int) $request->input('durasi_detik', 0);
 
         if (Schema::hasTable('courier_orders')) {
-            DB::table('courier_orders')
-                ->where('id', $id)
-                ->orWhere('order_id', $id)
-                ->update([
-                    'status'                    => 'Selesai',
-                    'waktu_selesai_pengantaran' => $endTime,
-                    'total_durasi'              => $totalDurasi,
-                    'durasi_pengantaran_detik'  => $durasiDetik,
-                    'updated_at'                => now(),
-                ]);
+            $base = fn () => DB::table('courier_orders')->where(function ($q) use ($id) {
+                $q->where('id', $id)->orWhere('order_id', $id);
+            });
+
+            $order = $base()->first();
+            if (!$order) {
+                return response()->json(['success' => false, 'message' => 'Pesanan tidak ditemukan.'], 404);
+            }
+
+            $updated = $base()->where('status', 'Sedang Diantar')->update([
+                'status'                    => 'Selesai',
+                'waktu_selesai_pengantaran' => $endTime,
+                'total_durasi'              => $totalDurasi,
+                'durasi_pengantaran_detik'  => $durasiDetik,
+                'updated_at'                => now(),
+            ]);
+
+            if ($updated === 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Pesanan ini belum sedang diantar atau sudah selesai.',
+                ], 409);
+            }
+
+            // Pesanan ATK yang sampai: tandai selesai di sisi pembelian. Kalau pengguna memilih
+            // "bayar di tempat", tunai yang diterima kurir di rumah pengguna = lunas.
+            $pembelian = \App\Models\PembelianAtk::find($order->order_id ?: $order->id);
+            if ($pembelian && !in_array($pembelian->status, ['Selesai', 'Dibatalkan'])) {
+                $pembelian->status = 'Selesai';
+                $pembelian->tanggal_selesai = now();
+                if (Schema::hasColumn('pembelian_atk', 'status_bayar')
+                    && $pembelian->status_bayar !== 'Lunas' && $pembelian->metode_bayar === 'Bayar di Tempat') {
+                    $pembelian->status_bayar = 'Lunas';
+                    $pembelian->dibayar_at = now();
+                }
+                $pembelian->save();
+            }
+            if (Schema::hasColumn('courier_orders', 'status_bayar') && ($order->metode_bayar ?? null) === 'Bayar di Tempat') {
+                $base()->update(['status_bayar' => 'Lunas']);
+            }
         }
+
+        $this->syncLinkedStatus($order->order_id ?? $id, 'Dipinjam');
 
         return response()->json([
             'success'                   => true,
@@ -166,5 +219,32 @@ class CourierOrderController extends Controller
             'total_durasi'              => $totalDurasi,
             'durasi_detik'              => $durasiDetik,
         ]);
+    }
+
+    /**
+     * Samakan status pinjaman buku yang terhubung (id pesanan kurir = id pinjam)
+     * dengan progres pengantaran. ATK ditangani terpisah (status pembelian).
+     * Pesanan ATK: saat kurir mulai antar, status pembelian = 'Sedang Diantar Kurir'.
+     */
+    private function syncLinkedStatus($linkId, string $loanStatus): void
+    {
+        if (!$linkId) return;
+
+        if (Schema::hasTable('pinjam')) {
+            $q = DB::table('pinjam')->whereRaw('id::text = ?', [(string) $linkId])
+                ->whereNull('tanggal_kembali')
+                ->whereIn('status', ['Booking Dikonfirmasi Admin', 'Sedang Dikemas', 'Menunggu Kurir', 'Sedang Diantar Kurir', 'Diantar Kurir']);
+            if ($q->update(['status' => $loanStatus]) > 0) {
+                return;
+            }
+        }
+
+        if ($loanStatus === 'Sedang Diantar Kurir') {
+            $pembelian = \App\Models\PembelianAtk::find($linkId);
+            if ($pembelian && !in_array($pembelian->status, ['Selesai', 'Dibatalkan'])) {
+                $pembelian->status = 'Sedang Diantar Kurir';
+                $pembelian->save();
+            }
+        }
     }
 }

@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+<script>
+  /* Ingat Saya: kalau tidak dicentang saat login, sesi hanya berlaku selama browser/tab dibuka */
+  (function(){try{if(localStorage.getItem('libra_remember')!=='1'&&sessionStorage.getItem('libra_active')!=='1'){localStorage.removeItem('libra_token');localStorage.removeItem('libra_user');}}catch(e){}})();
+</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LIBRA — Daftar Akun</title>
@@ -11,19 +16,19 @@
 
 <style>
   :root{
-    --bg: #0A0E17;
-    --panel-solid: #10172A;
-    --panel-2: #151D34;
-    --line: #222B42;
-    --text: #E7EAF2;
-    --muted: #8A92A6;
-    --muted-2: #737F9C;
+    --bg: #FFFFFF;
+    --panel-solid: #FFFFFF;
+    --panel-2: #F4F6FA;
+    --line: #E3E7F0;
+    --text: #1A2033;
+    --muted: #6B7280;
+    --muted-2: #8A92A6;
     --accent: #3D6BFF;
-    --accent-2: #7C9CFF;
-    --danger: #FF5470;
+    --accent-2: #2F56E0;
+    --danger: #E0264F;
     --radius: 14px;
-    --success: #3DDC97;
-    --danger-bg: rgba(255, 84, 112, 0.12);
+    --success: #18A869;
+    --danger-bg: rgba(224, 38, 79, 0.08);
   }
 
   *{ margin:0; padding:0; box-sizing:border-box; }
@@ -46,8 +51,8 @@
     justify-content:center;
     padding: 40px 20px;
     background:
-      radial-gradient(900px 500px at 50% 0%, rgba(61,107,255,0.08), transparent 60%),
-      var(--bg);
+      radial-gradient(900px 500px at 50% 0%, rgba(61,107,255,0.06), transparent 60%),
+      #F7F8FC;
   }
 
   .register-card{
@@ -57,6 +62,7 @@
     border: 1px solid var(--line);
     border-radius: var(--radius);
     padding: 44px 40px;
+    box-shadow: 0 10px 30px rgba(16, 24, 40, 0.06);
   }
 
   .card-logo{ text-align:center; margin-bottom: 6px; }
@@ -93,7 +99,7 @@
     align-items:flex-start;
     gap:10px;
     background: var(--danger-bg);
-    border: 1px solid rgba(255, 84, 112, 0.35);
+    border: 1px solid rgba(224, 38, 79, 0.30);
     color: var(--danger);
     border-radius: 10px;
     padding: 12px 14px;
@@ -109,8 +115,8 @@
     display:none;
     align-items:flex-start;
     gap:10px;
-    background: rgba(61, 220, 151, 0.12);
-    border: 1px solid rgba(61, 220, 151, 0.35);
+    background: rgba(24, 168, 105, 0.10);
+    border: 1px solid rgba(24, 168, 105, 0.30);
     color: var(--success);
     border-radius: 10px;
     padding: 12px 14px;
@@ -148,7 +154,7 @@
 
   .input-wrap.input-error{
     border-color: var(--danger);
-    box-shadow: 0 0 0 3px rgba(255,84,112,0.15);
+    box-shadow: 0 0 0 3px rgba(224,38,79,0.15);
   }
 
   .input-wrap .input-icon{
@@ -522,6 +528,10 @@
 
       localStorage.setItem('libra_token', data.token);
       localStorage.setItem('libra_user', JSON.stringify(data.user));
+      try {
+        localStorage.removeItem('libra_remember');
+        sessionStorage.setItem('libra_active', '1');
+      } catch (e) {}
 
       successBanner.classList.add('show');
 

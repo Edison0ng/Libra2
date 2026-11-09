@@ -13,6 +13,7 @@ class Invoice extends Model
         'peminjam_id',
         'tanggal_pinjam',
         'tanggal_kembali',
-        'status'
+        'status',
+        'nomor', 'jenis', 'referensi_id', 'nama_pengguna', 'deskripsi', 'jumlah', 'metode_bayar',
     ];
 }

@@ -12,22 +12,6 @@ class UserSeeder extends Seeder
     {
         $users = [
             [
-                'name' => 'Administrator Sistem',
-                'username' => 'admin',
-                'email' => 'admin@libra.local',
-                'password' => Hash::make('admin'),
-                'nim' => 'admin',
-                'fakultas' => 'Perpustakawan'
-            ],
-            [
-                'name' => 'Kurir Libra',
-                'username' => 'kurir',
-                'email' => 'kurir@libra.local',
-                'password' => Hash::make('kurir'),
-                'nim' => 'kurir',
-                'fakultas' => 'Logistik Perpustakaan'
-            ],
-            [
                 'name' => 'Ahmad Fauzi',
                 'username' => 'ahmadfauzi',
                 'email' => 'ahmad@example.com',

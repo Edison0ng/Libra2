@@ -61,11 +61,6 @@ class User extends Authenticatable implements CanResetPassword
         return $this->nama_lengkap;
     }
 
-    public function isKurir(): bool
-    {
-        return strtolower($this->nim ?? '') === 'kurir' || strtolower($this->username ?? '') === 'kurir';
-    }
-
     public function getRoleAttribute(): string
     {
         if ($this->isAdmin()) {
@@ -117,6 +112,12 @@ class User extends Authenticatable implements CanResetPassword
     public function isAdmin(): bool
     {
         return strtolower($this->nim) === 'admin';
+    }
+
+    public function isKurir(): bool
+    {
+        return strtolower((string) $this->nim) === 'kurir'
+            || strtolower((string) $this->username) === 'kurir';
     }
 
     /**

@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'supabase' => [
+        'url'    => rtrim(env('SUPABASE_URL', ''), '/'),
+        'key'    => env('SUPABASE_KEY'),
+        'bucket' => env('SUPABASE_STORAGE_BUCKET', 'produk-atk'),
+    ],
+
 ];
