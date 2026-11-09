@@ -1140,10 +1140,10 @@
                         class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200">
                         <option value="Booking">Booking (Ambil Sendiri)</option>
                         <option value="Diantar Kurir">Diantar Kurir</option>
-                        <option value="dipinjam">Dipinjam</option>
-                        <option value="dikembalikan">Dikembalikan</option>
+                        <option value="Dipinjam">Dipinjam</option>
+                        <option value="Dikembalikan">Dikembalikan</option>
                         <option value="Terlambat">Terlambat</option>
-                        <option value="ditolak">Booking Ditolak</option>
+                        <option value="Ditolak">Booking Ditolak</option>
                         <option value="Menunggu Kurir">Menunggu Kurir</option>
                     </select></div>
             </form>
@@ -1378,7 +1378,14 @@
         // tidak pernah hilang/kosong saat form disubmit.
         function setSelectValueSafe(selectEl, value, fallback = '') {
             const v = (value === null || value === undefined || value === '') ? fallback : String(value);
-            const exists = Array.from(selectEl.options).some(opt => opt.value === v);
+            // Cocokkan TANPA membedakan huruf besar/kecil: data lama di database bisa
+            // tersimpan "Dipinjam" atau "dipinjam". Tanpa ini, option duplikat ikut dibuat.
+            const match = Array.from(selectEl.options).find(opt => opt.value.toLowerCase() === v.toLowerCase());
+            if (match) {
+                selectEl.value = match.value;
+                return;
+            }
+            const exists = false;
             if (!exists && v !== '') {
                 const opt = document.createElement('option');
                 opt.value = v;
@@ -1427,7 +1434,7 @@
                         document.getElementById('peminjam-book').value = item?.book_id ?? item?.id_buku ?? '';
                         document.getElementById('peminjam-borrow').value = toDateInputValue(item?.borrow_date || item?.tanggal_pinjam);
                         document.getElementById('peminjam-return').value = toDateInputValue(item?.return_date || item?.tanggal_kembali);
-                        document.getElementById('peminjam-status') && setSelectValueSafe(document.getElementById('peminjam-status'), item?.status, 'dipinjam');
+                        document.getElementById('peminjam-status') && setSelectValueSafe(document.getElementById('peminjam-status'), item?.status, 'Dipinjam');
                     } else if (type === 'invoice') {
                         document.getElementById('invoice-peminjam').value = item?.peminjam_id ?? item?.id_peminjam ?? '';
                         document.getElementById('invoice-isbn').value = item?.book_isbn ?? '';
