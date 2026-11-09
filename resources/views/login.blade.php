@@ -290,6 +290,33 @@
 
   .err-banner.show{ display:flex; }
 
+  .info-banner{
+    display:none; align-items:flex-start; gap:10px;
+    background: rgba(61, 220, 151, 0.12);
+    border: 1px solid rgba(61, 220, 151, 0.35);
+    color: #3DDC97; border-radius:10px; padding:12px 14px;
+    font-size:13px; line-height:1.4; margin-bottom:20px;
+  }
+  .info-banner.show{ display:flex; }
+
+  .verify-box{
+    display:none; margin-bottom:20px; padding:14px;
+    border:1px solid var(--line, #222B42); border-radius:10px;
+    background: rgba(255,255,255,0.03); font-size:13px; line-height:1.5;
+  }
+  .verify-box.show{ display:block; }
+  .verify-box input{
+    width:100%; margin:10px 0; padding:10px 12px; border-radius:8px;
+    border:1px solid var(--line, #222B42); background:transparent;
+    color:inherit; font-size:13px;
+  }
+  .verify-box button{
+    padding:9px 14px; border-radius:8px; border:0; cursor:pointer;
+    background:#3D6BFF; color:#fff; font-weight:600; font-size:13px;
+  }
+  .verify-box button:disabled{ opacity:.6; cursor:default; }
+  #verifyMsg{ margin-top:10px; }
+
   .err-banner .err-icon{
     flex-shrink:0;
     font-weight:700;
@@ -608,6 +635,20 @@
         <span id="errBannerText">NIM/Username dan kata sandi wajib diisi.</span>
       </div>
 
+      <div class="info-banner" id="infoBanner">
+        <span class="err-icon">✓</span>
+        <span id="infoBannerText"></span>
+      </div>
+
+      <!-- Muncul jika login ditolak karena email belum diverifikasi -->
+      <div class="verify-box" id="verifyBox">
+        <strong>Email belum diverifikasi.</strong>
+        <div>Salah ketik email saat mendaftar? Isi email yang benar di bawah. Jika sudah benar, kosongkan saja.</div>
+        <input type="email" id="verifyEmail" placeholder="Email baru (opsional)" autocomplete="email">
+        <button type="button" id="verifyResendBtn">Kirim ulang verifikasi</button>
+        <div id="verifyMsg"></div>
+      </div>
+
       <form id="loginForm" novalidate>
         <!-- Input NIM / Username Admin -->
         <div class="field-group">
@@ -828,6 +869,15 @@ try{
 
     console.log("Response:", data);       // <-- TAMBAHKAN DI SINI
 
+    if(data.code === 'email_not_verified'){
+        showError(data.message);
+        document.getElementById('verifyBox').classList.add('show');
+        document.getElementById('verifyEmail').placeholder = 'Email baru (saat ini: ' + (data.email || '-') + ')';
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalBtnText;
+        return;
+    }
+
     if(!res.ok || !data.success){
         showError(data.message || 'Username atau kata sandi salah.');
         submitBtn.disabled = false;
@@ -855,6 +905,39 @@ try{
       submitBtn.disabled = false;
       submitBtn.textContent = originalBtnText;
     }
+  });
+
+  // ===================== VERIFIKASI EMAIL =====================
+  try {
+    if(new URLSearchParams(location.search).get('registered') === '1'){
+      document.getElementById('infoBannerText').textContent =
+        'Pendaftaran berhasil! Buka email Anda dan klik tautan verifikasi sebelum login.';
+      document.getElementById('infoBanner').classList.add('show');
+    }
+  } catch(e){}
+
+  document.getElementById('verifyResendBtn').addEventListener('click', async function(){
+    const btn = this;
+    const msg = document.getElementById('verifyMsg');
+    const nim = usernameInput.value.trim();
+    const pwd = passwordInput.value.trim();
+    if(!nim || !pwd){ msg.textContent = 'Isi NIM dan kata sandi di form login terlebih dahulu.'; return; }
+
+    btn.disabled = true;
+    msg.textContent = 'Mengirim...';
+    try{
+      const res = await fetch(`${API_BASE_URL}/email/resend`, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','Accept':'application/json'},
+        body: JSON.stringify({ nim: nim, password: pwd, email: document.getElementById('verifyEmail').value.trim() })
+      });
+      const data = await res.json();
+      msg.textContent = data.message || (res.ok ? 'Terkirim.' : 'Gagal mengirim.');
+      if(res.status === 429){ msg.textContent = 'Terlalu banyak percobaan. Coba lagi sebentar.'; }
+    }catch(e){
+      msg.textContent = 'Tidak bisa terhubung ke server.';
+    }
+    btn.disabled = false;
   });
 
   // ===================== REAL-TIME CLEAR ERROR SAAT MENGETIK =====================

@@ -253,7 +253,7 @@
 
     <div class="success-banner" id="successBanner">
       <span class="err-icon">✓</span>
-      <span>Pendaftaran berhasil! Mengarahkan ke halaman login...</span>
+      <span id="successBannerText">Pendaftaran berhasil! Mengarahkan ke halaman login...</span>
     </div>
 
     <form id="registerForm" novalidate>
@@ -526,18 +526,15 @@
         return;
       }
 
-      localStorage.setItem('libra_token', data.token);
-      localStorage.setItem('libra_user', JSON.stringify(data.user));
-      try {
-        localStorage.removeItem('libra_remember');
-        sessionStorage.setItem('libra_active', '1');
-      } catch (e) {}
-
+      // Akun belum aktif sampai email diverifikasi, jadi tidak ada token / auto-login.
+      document.getElementById('successBannerText').textContent =
+        data.message || 'Pendaftaran berhasil! Cek email Anda untuk verifikasi.';
       successBanner.classList.add('show');
+      submitBtn.textContent = 'Terdaftar';
 
       setTimeout(() => {
-        window.location.href = '{{ route('login') }}';
-      }, 1200);
+        window.location.href = '{{ route('login') }}?registered=1';
+      }, 4000);
 
     } catch (err){
       console.error('Register error:', err);

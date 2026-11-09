@@ -35,11 +35,21 @@ Route::post('/register', [AuthController::class, 'register']);
 // Login user
 Route::post('/login', [AuthController::class, 'login']);
 
+// Kirim ulang email verifikasi (opsional ganti email jika salah ketik)
+Route::post('/email/resend', [AuthController::class, 'resendVerification'])->middleware('throttle:5,1');
+
 // Lupa password: kirim link reset ke email
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 
 // Reset password: submit token + password baru
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+
+// ===================== DATA REFERENSI PUBLIK =====================
+// Katalog buku, detail buku, produk ATK, dan status buku dipinjam dapat diakses tanpa wajib login
+Route::get('books', [BookController::class, 'index']);
+Route::get('books/{book}', [BookController::class, 'show']);
+Route::get('produk-atk', [ProdukAtkController::class, 'index']);
+Route::get('pinjam-aktif', [PinjamController::class, 'bukuSedangDipinjam']);
 
 
 // ===================== RUTE TERPROTEKSI =====================
@@ -72,13 +82,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/orders', [CourierOrderController::class, 'index']);
         Route::post('/orders', [CourierOrderController::class, 'store']);
     });
-
-    Route::get('pinjam-aktif', [PinjamController::class, 'bukuSedangDipinjam']);
-
-    // ---------- Data referensi (semua yang sudah login boleh baca) ----------
-    Route::get('books', [BookController::class, 'index']);
-    Route::get('books/{book}', [BookController::class, 'show']);
-    Route::get('produk-atk', [ProdukAtkController::class, 'index']);
 
     // ---------- Kurir & admin ----------
     Route::middleware('role:admin,kurir')->group(function () {

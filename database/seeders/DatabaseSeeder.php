@@ -25,6 +25,9 @@ class DatabaseSeeder extends Seeder
 
         // 3. Impor Pinjam
         $this->importLoans();
+
+        // 4. Akun hasil seed dianggap sudah terverifikasi (login tanpa email verifikasi)
+        DB::table('users')->whereNull('email_verified_at')->update(['email_verified_at' => now()]);
     }
 
     private function importBooks() {

@@ -37,6 +37,25 @@ Route::get('/reset-password/{token}', function (string $token) {
     ]);
 })->name('reset-password.view');
 
+// Tautan verifikasi email dari email pendaftaran (signed URL, kedaluwarsa 60 menit).
+Route::get('/verify-email/{id}/{hash}', function (\Illuminate\Http\Request $request, string $id, string $hash) {
+    if (! $request->hasValidSignature()) {
+        return view('verify-email', ['status' => 'expired']);
+    }
+
+    $user = \App\Models\User::find($id);
+    if (! $user || ! hash_equals(sha1((string) $user->getEmailForVerification()), $hash)) {
+        return view('verify-email', ['status' => 'invalid']);
+    }
+
+    if ($user->hasVerifiedEmail()) {
+        return view('verify-email', ['status' => 'already']);
+    }
+
+    $user->markEmailAsVerified();
+    return view('verify-email', ['status' => 'success']);
+})->name('verification.verify');
+
 // Route untuk halaman libra (menampilkan daftar buku)
 // Route untuk entitas Kurir
 Route::get('/kurir', function () {
@@ -44,6 +63,18 @@ Route::get('/kurir', function () {
 })->name('kurir');
 
 Route::get('/libra', [BookController::class, 'index']);
+
+// Fallback route untuk serving static script jika di-proxy lewat Laravel di serverless/Vercel
+Route::get('/js/auth-fetch.js', function () {
+    $path = public_path('js/auth-fetch.js');
+    if (file_exists($path)) {
+        return response()->file($path, [
+            'Content-Type' => 'application/javascript; charset=utf-8',
+            'Cache-Control' => 'public, max-age=3600',
+        ]);
+    }
+    return response('// auth-fetch script not found', 404, ['Content-Type' => 'application/javascript']);
+});
 
 // Route untuk user profile dengan username/NIM
 Route::get('/{username}', [UserController::class, 'showByUsername'])

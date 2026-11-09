@@ -3,17 +3,20 @@
 namespace App\Models;
 
 use App\Notifications\LibraResetPasswordNotification;
+use App\Notifications\LibraVerifyEmailNotification;
+use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
 use Illuminate\Auth\Passwords\CanResetPassword as CanResetPasswordTrait;
 use Illuminate\Contracts\Auth\CanResetPassword;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable implements CanResetPassword
+class User extends Authenticatable implements CanResetPassword, MustVerifyEmail
 {
-    use HasApiTokens, HasFactory, Notifiable, CanResetPasswordTrait;
+    use HasApiTokens, HasFactory, Notifiable, CanResetPasswordTrait, MustVerifyEmailTrait;
 
     protected $table = 'users';
 
@@ -53,11 +56,23 @@ class User extends Authenticatable implements CanResetPassword
 
     protected $appends = [
         'name',
+        'role',
     ];
 
     public function getNameAttribute()
     {
         return $this->nama_lengkap;
+    }
+
+    public function getRoleAttribute(): string
+    {
+        if ($this->isAdmin()) {
+            return 'admin';
+        }
+        if ($this->isKurir()) {
+            return 'kurir';
+        }
+        return 'mahasiswa';
     }
 
     protected function casts(): array
@@ -91,6 +106,24 @@ class User extends Authenticatable implements CanResetPassword
     public function sendPasswordResetNotification($token): void
     {
         $this->notify(new LibraResetPasswordNotification($token));
+    }
+
+    /**
+     * Kirim email verifikasi (tautan bertanda tangan) memakai template LIBRA.
+     * Dipanggil manual dari AuthController saat register / kirim ulang.
+     */
+    public function sendEmailVerificationNotification(): void
+    {
+        $this->notify(new LibraVerifyEmailNotification());
+    }
+
+    /**
+     * Hanya akun mahasiswa yang wajib verifikasi email sebelum login.
+     * Admin & kurir dibuat internal, jadi dikecualikan.
+     */
+    public function mustVerifyEmailBeforeLogin(): bool
+    {
+        return $this->role === 'mahasiswa' && ! $this->hasVerifiedEmail();
     }
 
     /**
