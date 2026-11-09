@@ -375,6 +375,7 @@
                                     <th class="pb-3 font-semibold uppercase text-[10px] tracking-wider" data-i18n="circ-table-title">Judul Buku</th>
                                     <th class="pb-3 font-semibold uppercase text-[10px] tracking-wider" data-i18n="circ-table-loan-date">Tgl Pinjam</th>
                                     <th class="pb-3 font-semibold uppercase text-[10px] tracking-wider" data-i18n="circ-table-due-date">Batas Kembali</th>
+                                    <th class="pb-3 font-semibold uppercase text-[10px] tracking-wider" data-i18n="circ-table-action">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="active-loans-tbody" class="divide-y divide-[#E5E2DA] dark:divide-[#262620] text-[#1A1916] dark:text-[#EAE8E2]">
@@ -981,6 +982,7 @@
                 'circ-table-title': 'Judul Buku',
                 'circ-table-loan-date': 'Tgl Pinjam',
                 'circ-table-due-date': 'Batas Kembali',
+                'circ-table-action': 'Aksi',
                 'circ-loan-date-1': '22 Juni 2026',
                 'circ-due-date-1': '29 Juni 2026 (Hari Ini)',
                 'circ-loan-date-2': '15 Juni 2026',
@@ -1018,6 +1020,7 @@
                 'circ-table-title': 'Book Title',
                 'circ-table-loan-date': 'Loan Date',
                 'circ-table-due-date': 'Due Date',
+                'circ-table-action': 'Action',
                 'circ-loan-date-1': '22 June 2026',
                 'circ-due-date-1': '29 June 2026 (Today)',
                 'circ-loan-date-2': '15 June 2026',
@@ -2600,6 +2603,40 @@
             return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
         }
 
+        // Perpanjang peminjaman: maksimal 3 hari, hanya sekali (dicek ulang di server).
+        async function extendLoan(loanId, btn) {
+            const isId = currentLang === 'id';
+            const userStr = localStorage.getItem('libra_user');
+            if (!userStr) { window.location.href = '/login'; return; }
+            const user = JSON.parse(userStr);
+            const sel = document.getElementById('ext-days-' + loanId);
+            const hari = sel ? parseInt(sel.value, 10) : 3;
+
+            const ok = confirm(isId
+                ? `Perpanjang peminjaman ${hari} hari? Perpanjangan hanya bisa dilakukan SEKALI dan tidak bisa dibatalkan.`
+                : `Extend this loan by ${hari} day(s)? You can only extend ONCE and it cannot be undone.`);
+            if (!ok) return;
+
+            const original = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = isId ? 'Memproses...' : 'Processing...';
+            try {
+                const res = await fetch(`/api/pinjam/${encodeURIComponent(loanId)}/perpanjang`, {
+                    method: 'POST',
+                    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({ user_id: user.id, hari })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.success) throw new Error(data.message || (isId ? 'Perpanjangan gagal.' : 'Extension failed.'));
+                showToast(isId ? 'Perpanjangan Berhasil' : 'Loan Extended', data.message);
+                await loadUserLoans();
+            } catch (err) {
+                alert(err.message);
+                btn.disabled = false;
+                btn.textContent = original;
+            }
+        }
+
         function renderActiveLoans() {
             const tbody = document.getElementById('active-loans-tbody');
             if (!tbody) return;
@@ -2613,7 +2650,7 @@
             if (stillActiveLoans.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="3" class="text-center py-8 text-slate-400 italic">
+                        <td colspan="4" class="text-center py-8 text-slate-400 italic">
                             Belum ada peminjaman aktif.
                         </td>
                     </tr>
@@ -2625,6 +2662,27 @@
                 const isOverdue = new Date(loan.tenggat_waktu) < new Date() && !loan.tanggal_kembali;
                 const dateClass = isOverdue ? 'text-rose-500 font-semibold' : 'text-slate-500 dark:text-slate-400';
                 const dateSuffix = isOverdue ? ' (Terlambat)' : '';
+                const isId = currentLang === 'id';
+                const sudahDiperpanjang = !!loan.diperpanjang_at;
+                const bisaPerpanjang = String(loan.status || '').toLowerCase().trim() === 'dipinjam'
+                    && !sudahDiperpanjang && !isOverdue;
+                let aksi = '<span class="text-slate-300">-</span>';
+                if (sudahDiperpanjang) {
+                    aksi = `<span class="text-[11px] text-slate-400">${isId ? 'Sudah diperpanjang' : 'Extended'} (+${Number(loan.perpanjangan_hari) || 0} ${isId ? 'hari' : 'days'})</span>`;
+                } else if (bisaPerpanjang) {
+                    aksi = `
+                        <div class="flex items-center gap-1.5">
+                            <select id="ext-days-${loan.id}" class="text-[11px] rounded-md border border-[#E5E2DA] dark:border-[#262620] bg-transparent px-1.5 py-1">
+                                <option value="1">1 ${isId ? 'hari' : 'day'}</option>
+                                <option value="2">2 ${isId ? 'hari' : 'days'}</option>
+                                <option value="3" selected>3 ${isId ? 'hari' : 'days'}</option>
+                            </select>
+                            <button type="button" onclick="extendLoan('${loan.id}', this)"
+                                class="text-[11px] font-semibold px-2.5 py-1 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
+                                ${isId ? 'Perpanjang' : 'Extend'}
+                            </button>
+                        </div>`;
+                }
                 return `
                     <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
                         <td class="py-3.5 font-semibold text-slate-800 dark:text-white pr-4">
@@ -2636,6 +2694,7 @@
                         <td class="py-3.5 ${dateClass}">
                             ${formatDateIndo(loan.tenggat_waktu)}${dateSuffix}
                         </td>
+                        <td class="py-3.5">${aksi}</td>
                     </tr>
                 `;
             }).join('');

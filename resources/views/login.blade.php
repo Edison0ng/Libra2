@@ -652,7 +652,7 @@
       <form id="loginForm" novalidate>
         <!-- Input NIM / Username Admin -->
         <div class="field-group">
-          <label for="username">NIM (Mahasiswa) / Username (Admin)</label>
+          <label for="username">Username</label>
           <div class="input-wrap">
             <span class="input-icon">
               <!-- ikon user -->

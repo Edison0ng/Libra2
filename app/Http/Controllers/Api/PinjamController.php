@@ -156,6 +156,88 @@ class PinjamController extends Controller
         ]);
     }
 
+    /** Perpanjangan: maksimal tambahan hari, dan hanya boleh 1 kali per peminjaman. */
+    private const MAX_PERPANJANGAN_HARI = 3;
+
+    /**
+     * POST /api/pinjam/{id}/perpanjang
+     * Body: hari (1-3)
+     *
+     * Aturan:
+     *  - Hanya pemilik peminjaman.
+     *  - Hanya buku yang sedang dipinjam (status "Dipinjam"), belum dikembalikan.
+     *  - Tidak boleh kalau sudah lewat tenggat (sudah terlambat/kena denda).
+     *  - Maksimal 3 hari, dan hanya SEKALI per peminjaman.
+     */
+    public function perpanjang(Request $request, $id)
+    {
+        $request->validate([
+            'user_id' => ['required', 'string'],
+            'hari'    => ['required', 'integer', 'between:1,' . self::MAX_PERPANJANGAN_HARI],
+        ], [
+            'hari.between' => 'Perpanjangan maksimal ' . self::MAX_PERPANJANGAN_HARI . ' hari.',
+        ]);
+
+        $loan = DB::table('pinjam as l')
+            ->leftJoin('books', 'l.book_id', '=', 'books.ISBN')
+            ->select('l.*', DB::raw('books."Book-Title" as book_title'))
+            ->where('l.id', $id)
+            ->first();
+
+        if (! $loan) {
+            return response()->json(['success' => false, 'message' => 'Data peminjaman tidak ditemukan.'], 404);
+        }
+        if ((string) $loan->user_id !== (string) $request->user_id) {
+            return response()->json(['success' => false, 'message' => 'Peminjaman ini bukan milik akun kamu.'], 403);
+        }
+        if (! empty($loan->tanggal_kembali)) {
+            return response()->json(['success' => false, 'message' => 'Buku ini sudah dikembalikan.'], 422);
+        }
+        if (strtolower(trim((string) $loan->status)) !== 'dipinjam') {
+            return response()->json(['success' => false, 'message' => 'Hanya buku yang sedang dipinjam yang bisa diperpanjang.'], 422);
+        }
+        if (! empty($loan->diperpanjang_at)) {
+            return response()->json(['success' => false, 'message' => 'Peminjaman ini sudah pernah diperpanjang. Perpanjangan hanya bisa dilakukan satu kali.'], 409);
+        }
+        if (empty($loan->tenggat_waktu) || \Carbon\Carbon::parse($loan->tenggat_waktu)->startOfDay()->lt(now()->startOfDay())) {
+            return response()->json(['success' => false, 'message' => 'Peminjaman sudah melewati batas kembali dan tidak bisa diperpanjang. Kembalikan bukunya dan lunasi denda.'], 422);
+        }
+
+        $hari       = (int) $request->hari;
+        $tenggatBaru = \Carbon\Carbon::parse($loan->tenggat_waktu)->addDays($hari)->toDateString();
+
+        // whereNull('diperpanjang_at') ikut di UPDATE supaya dua klik/request
+        // bersamaan tidak bisa sama-sama lolos (cek "sekali saja" bersifat atomik).
+        $updated = DB::table('pinjam')
+            ->where('id', $id)
+            ->whereNull('diperpanjang_at')
+            ->update([
+                'tenggat_waktu'     => $tenggatBaru,
+                'diperpanjang_at'   => now(),
+                'perpanjangan_hari' => $hari,
+            ]);
+
+        if ($updated === 0) {
+            return response()->json(['success' => false, 'message' => 'Peminjaman ini sudah pernah diperpanjang. Perpanjangan hanya bisa dilakukan satu kali.'], 409);
+        }
+
+        Notification::create([
+            'id'      => (string) Str::uuid(),
+            'user_id' => $loan->user_id,
+            'title'   => 'Perpanjangan Berhasil',
+            'message' => 'Peminjaman buku "' . ($loan->book_title ?? $loan->book_id) . '" diperpanjang ' . $hari
+                . ' hari. Batas pengembalian baru: ' . $tenggatBaru . '. Perpanjangan tidak bisa dilakukan lagi untuk peminjaman ini.',
+            'type'    => 'success',
+            'is_read' => false,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Peminjaman diperpanjang ' . $hari . ' hari. Batas kembali baru: ' . $tenggatBaru . '.',
+            'loan'    => DB::table('pinjam')->where('id', $id)->first(),
+        ]);
+    }
+
     /**
      * GET /api/pinjam-aktif
      * Hanya daftar ISBN buku yang sedang dipinjam siapa pun (tanpa data orangnya),
