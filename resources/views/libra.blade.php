@@ -1,6 +1,37 @@
 <!DOCTYPE html>
 <html lang="id" class="">
 <head>
+    <!-- Interceptor Otentikasi API Otomatis (Bearer Token Sanctum) -->
+    <script>
+    (function () {
+      var PUBLIC = ['/api/login', '/api/register', '/api/forgot-password', '/api/reset-password', '/api/test'];
+      var orig = window.fetch.bind(window);
+      window.fetch = function (input, init) {
+        try {
+          var url = typeof input === 'string' ? input : (input && input.url) || '';
+          var path = url.replace(/^https?:\/\/[^/]+/, '').split('?')[0];
+          if (path && !path.startsWith('/')) path = '/' + path;
+          if (path.indexOf('/api/') === 0 && PUBLIC.indexOf(path) === -1) {
+            init = init || {};
+            var h = new Headers(init.headers || (typeof input !== 'string' && input.headers) || {});
+            var t = localStorage.getItem('libra_token');
+            if (t && !h.has('Authorization')) h.set('Authorization', 'Bearer ' + t);
+            if (!h.has('Accept')) h.set('Accept', 'application/json');
+            init.headers = h;
+            return orig(input, init).then(function (res) {
+              if (res.status === 401) {
+                ['libra_token', 'libra_user', 'libra_remember'].forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
+                try { sessionStorage.removeItem('libra_active'); } catch (e) {}
+                if (location.pathname !== '/login') location.href = '/login';
+              }
+              return res;
+            });
+          }
+        } catch (e) {}
+        return orig(input, init);
+      };
+    })();
+    </script>
     <script src="/js/auth-fetch.js"></script>
 <script>
   /* Ingat Saya: kalau tidak dicentang saat login, sesi hanya berlaku selama browser/tab dibuka */
@@ -873,12 +904,19 @@
             }
         }
 
+        function getAuthHeaders(extra = {}) {
+            const token = localStorage.getItem('libra_token');
+            const h = { 'Accept': 'application/json', ...extra };
+            if (token) h['Authorization'] = 'Bearer ' + token;
+            return h;
+        }
+
         async function loadWishlist() {
             const userId = getCurrentUserId();
             if (!userId) return;
 
             try {
-                const response = await fetch(`/api/wishlist?user_id=${userId}`);
+                const response = await fetch(`/api/wishlist?user_id=${userId}`, { headers: getAuthHeaders() });
                 if (!response.ok) throw new Error('Gagal mengambil wishlist');
                 const items = await response.json();
                 wishlistItems = items;
@@ -1123,7 +1161,7 @@
             const user = JSON.parse(userStr);
 
             try {
-                const response = await fetch(`/api/notifications?user_id=${user.id}`);
+                const response = await fetch(`/api/notifications?user_id=${user.id}`, { headers: getAuthHeaders() });
                 if (!response.ok) throw new Error('Gagal mengambil notifikasi');
                 const notifications = await response.json();
 
@@ -1169,7 +1207,7 @@
             const user = JSON.parse(userStr);
 
             try {
-                await fetch(`/api/notifications/read-all?user_id=${user.id}`, { method: 'PATCH' });
+                await fetch(`/api/notifications/read-all?user_id=${user.id}`, { method: 'PATCH', headers: getAuthHeaders() });
             } catch (err) {
                 console.error('Error marking notifications as read:', err);
             }
@@ -1488,7 +1526,7 @@
                 const url = userId
                     ? `/api/wishlist/queue-info?book_id=${bookId}&user_id=${userId}`
                     : `/api/wishlist/queue-info?book_id=${bookId}`;
-                const res = await fetch(url);
+                const res = await fetch(url, { headers: getAuthHeaders() });
                 if (!res.ok) throw new Error('Gagal memuat info antrian');
                 const info = await res.json();
 
@@ -1612,7 +1650,7 @@
             try {
                 const res = await fetch('/api/wishlist', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ user_id: userId, book_id: bookId })
                 });
                 const data = await res.json();
@@ -1643,7 +1681,7 @@
             if (!userId) return;
 
             try {
-                await fetch(`/api/wishlist?user_id=${userId}&book_id=${bookId}`, { method: 'DELETE' });
+                await fetch(`/api/wishlist?user_id=${userId}&book_id=${bookId}`, { method: 'DELETE', headers: getAuthHeaders() });
                 const idx = wishlistBooks.findIndex(id => id === bookId);
                 if (idx > -1) wishlistBooks.splice(idx, 1);
 
@@ -1731,14 +1769,14 @@
 
             try {
                 if (willRemove) {
-                    await fetch(`/api/wishlist?user_id=${userId}&book_id=${bookId}`, { method: 'DELETE' });
+                    await fetch(`/api/wishlist?user_id=${userId}&book_id=${bookId}`, { method: 'DELETE', headers: getAuthHeaders() });
                     wishlistBooks.splice(idx, 1);
                     showToast(isId ? "Dihapus dari Wishlist" : "Removed from Wishlist",
                         isId ? `Buku "${bookTitle}" berhasil dilepas.` : `Book "${bookTitle}" has been removed.`);
                 } else {
                     await fetch('/api/wishlist', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
                         body: JSON.stringify({ user_id: userId, book_id: bookId })
                     });
                     wishlistBooks.push(bookId);
@@ -2061,10 +2099,9 @@
             try {
                 const response = await fetch('/api/complaints', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
+                    headers: getAuthHeaders({
+                        'Content-Type': 'application/json'
+                    }),
                     body: JSON.stringify({
                         peminjam_id: user.id,
                         pesan: `[Kategori: ${category}] ${message}`,
@@ -2155,7 +2192,7 @@
             // Kirim juga ke server supaya kurir di perangkat lain ikut melihat
             fetch('/api/orders', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify(order)
             }).catch(() => { /* server belum siap: cukup localStorage */ });
             return order;
@@ -2270,10 +2307,9 @@
             try {
                 const response = await fetch('/api/pinjam', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
+                    headers: getAuthHeaders({
+                        'Content-Type': 'application/json'
+                    }),
                     body: JSON.stringify({
                         user_id: user.id,
                         book_id: activeBookId,
@@ -2328,7 +2364,7 @@
             if (!userId) return;
 
             try {
-                const response = await fetch(`/api/pembelian-atk?user_id=${encodeURIComponent(userId)}`);
+                const response = await fetch(`/api/pembelian-atk?user_id=${encodeURIComponent(userId)}`, { headers: getAuthHeaders() });
                 if (!response.ok) throw new Error('Gagal mengambil data pesanan ATK');
                 const data = await response.json();
                 atkOrders = Array.isArray(data) ? data : (data.data || []);
@@ -2343,7 +2379,7 @@
             if (!userId) return;
 
             try {
-                const response = await fetch(`/api/pinjam?user_id=${encodeURIComponent(userId)}`);
+                const response = await fetch(`/api/pinjam?user_id=${encodeURIComponent(userId)}`, { headers: getAuthHeaders() });
                 if (!response.ok) throw new Error('Gagal mengambil data peminjaman');
                 const data = await response.json();
                 activeLoans = Array.isArray(data) ? data : (data.data || []);
@@ -2364,7 +2400,7 @@
 
         async function updateBookStatuses() {
             try {
-                const response = await fetch('/api/pinjam-aktif');
+                const response = await fetch('/api/pinjam-aktif', { headers: getAuthHeaders() });
                 if (!response.ok) throw new Error('Gagal mengambil semua status peminjaman');
 
                 // Daftar ISBN buku yang sedang dipinjam oleh siapa pun
@@ -2476,7 +2512,7 @@
                 await new Promise(r => setTimeout(r, 1800));
                 const res = await fetch(`/api/pinjam/${encodeURIComponent(payFineLoanId)}/bayar-denda`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ user_id: user.id, metode: method })
                 });
                 const data = await res.json();
@@ -2933,7 +2969,7 @@
                 await new Promise(r => setTimeout(r, 1800));   // jeda simulasi
                 const res = await fetch(`/api/pembelian-atk/${encodeURIComponent(payAtkOrder.id)}/bayar`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify({ user_id: userId, metode: method })
                 });
                 const data = await res.json().catch(() => ({}));
@@ -2965,7 +3001,7 @@
             const errBox = document.getElementById('toko-error');
             if (errBox) errBox.classList.add('hidden');
             try {
-                const res = await fetch('/api/produk-atk');
+                const res = await fetch('/api/produk-atk', { headers: getAuthHeaders() });
                 if (!res.ok) throw new Error('HTTP ' + res.status);
                 const data = await res.json();
                 produkTokoData = Array.isArray(data) ? data : (data.data || []);
@@ -3260,7 +3296,7 @@
             try {
                 const res = await fetch('/api/pembelian-atk', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
                     body: JSON.stringify(payload)
                 });
                 const data = await res.json().catch(() => ({}));
@@ -3523,7 +3559,7 @@
             try {
                 const userId = getCurrentUserId();
                 if (userId) {
-                    const res = await fetch(`/api/pembelian-atk?user_id=${encodeURIComponent(userId)}`);
+                    const res = await fetch(`/api/pembelian-atk?user_id=${encodeURIComponent(userId)}`, { headers: getAuthHeaders() });
                     if (res.ok) {
                         const data = await res.json();
                         riwayat = Array.isArray(data) ? data : (data.data || []);
@@ -3623,13 +3659,21 @@
         // (kurir bisa memakai perangkat lain, jadi event 'storage' saja tidak cukup).
         const COURIER_POLL_MS = 15000;
         const COURIER_SEEN_KEY = 'libra_courier_seen';
+        let courierPollInterval = null;
 
         async function pollCourierOrders() {
             if (document.hidden) return;
             const userId = getCurrentUserId();
             if (!userId) return;
             try {
-                const res = await fetch('/api/orders?user_id=' + encodeURIComponent(userId), { headers: { 'Accept': 'application/json' } });
+                const res = await fetch('/api/orders?user_id=' + encodeURIComponent(userId), { headers: getAuthHeaders() });
+                if (res.status === 401) {
+                    if (courierPollInterval) {
+                        clearInterval(courierPollInterval);
+                        courierPollInterval = null;
+                    }
+                    return;
+                }
                 if (!res.ok) return;
                 const orders = await res.json();
                 if (!Array.isArray(orders)) return; // tabel belum dimigrasi
@@ -3665,7 +3709,7 @@
         }
 
         setTimeout(pollCourierOrders, 3000);
-        setInterval(pollCourierOrders, COURIER_POLL_MS);
+        courierPollInterval = setInterval(pollCourierOrders, COURIER_POLL_MS);
         document.addEventListener('visibilitychange', () => { if (!document.hidden) pollCourierOrders(); });
 
         console.log('📚 Sistem Libra siap digunakan dengan Supabase via Blade!');
