@@ -2343,19 +2343,23 @@
             if (!userId) return;
 
             try {
-                const response = await fetch(`/api/pinjam?user_id=${encodeURIComponent(userId)}`);
-                if (!response.ok) throw new Error('Gagal mengambil data peminjaman');
-                const data = await response.json();
+                // Muat pinjaman buku & pesanan ATK secara paralel (Promise.all) agar load tab sirkulasi 2x lebih cepat
+                const [pinjamRes, _] = await Promise.all([
+                    fetch(`/api/pinjam?user_id=${encodeURIComponent(userId)}`),
+                    loadAtkOrders()
+                ]);
+
+                if (!pinjamRes.ok) throw new Error('Gagal mengambil data peminjaman');
+                const data = await pinjamRes.json();
                 activeLoans = Array.isArray(data) ? data : (data.data || []);
 
-                // Pesanan ATK dimuat bersamaan supaya kartu status di Sirkulasi
-                // (buku + ATK) selalu dirender dari data yang sinkron.
-                await loadAtkOrders();
-
+                // Render konten Sirkulasi langsung tanpa menunda
                 renderActiveLoans();
                 calculateFines();
                 updateCourierStatusVisibility();
-                await updateBookStatuses();
+
+                // Sinkronkan status buku & wishlist secara non-blocking di background
+                updateBookStatuses();
                 syncWishlistUI();
             } catch (err) {
                 console.error('Error loading loans:', err);
@@ -3517,9 +3521,18 @@
             const container = document.getElementById('riwayat-pembelian-list');
             if (!container) return;
 
+            // 1. Tampilkan data dari localStorage seketika (0ms) agar pengguna tidak melihat loading lama
+            try {
+                const cached = JSON.parse(localStorage.getItem(getRiwayatAtkKey()) || '[]');
+                if (cached.length > 0 && (!riwayatAtkData || riwayatAtkData.length === 0)) {
+                    riwayatAtkData = cached;
+                    renderRiwayatPembelianList();
+                }
+            } catch (_) {}
+
             let riwayat = [];
 
-            // Coba dari API dulu
+            // 2. Ambil data terbaru dari API secara asynchronous
             try {
                 const userId = getCurrentUserId();
                 if (userId) {

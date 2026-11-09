@@ -13,7 +13,31 @@
     <title>Admin LIBRA - Pro Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="manifest" href="manifest.json">
-    <link href="./output.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        north: {
+                            bg: '#F1EFEA',
+                            card: '#FDFCF9',
+                            dark: '#151512',
+                            darkHover: '#23231F',
+                            border: '#E5E2DA',
+                            borderDark: '#262620',
+                            lime: '#BEF264',
+                            limeActive: '#C4F56B',
+                            indigo: '#6366F1',
+                            text: '#1A1916',
+                            muted: '#78756D',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -1421,7 +1445,7 @@
         }
 
         // --- Core API Functions ---
-        async function fetchAPI(endpoint) {
+        async function fetchAPI(endpoint, retries = 1) {
             try {
                 const res = await fetch(`${API}/${endpoint}`, {
                     headers: { 'Accept': 'application/json' }
@@ -1443,6 +1467,10 @@
 
                 return data;
             } catch (err) {
+                if (retries > 0) {
+                    await new Promise(r => setTimeout(r, 600));
+                    return fetchAPI(endpoint, retries - 1);
+                }
                 console.error("Gagal mengambil data dari endpoint:", endpoint, err);
                 triggerToast(`Gagal memuat ${endpoint}`, 'red');
                 return [];
