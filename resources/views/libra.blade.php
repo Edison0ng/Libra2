@@ -2604,20 +2604,43 @@
         }
 
         // Perpanjang peminjaman: maksimal 3 hari, hanya sekali (dicek ulang di server).
-        async function extendLoan(loanId, btn) {
+        // Menu pilihan durasi (1/2/3 hari) ada di dalam tombol Perpanjang.
+        function closeExtendMenus() {
+            document.querySelectorAll('.ext-menu').forEach(m => m.classList.add('hidden'));
+        }
+        function toggleExtendMenu(loanId, btn) {
+            const menu = document.getElementById('ext-menu-' + loanId);
+            if (!menu) return;
+            const wasOpen = !menu.classList.contains('hidden');
+            closeExtendMenus();
+            if (wasOpen) return;
+            // position: fixed supaya tidak terpotong overflow tabel/kartu
+            const r = btn.getBoundingClientRect();
+            menu.classList.remove('hidden');
+            menu.style.top = (r.bottom + 4) + 'px';
+            menu.style.left = Math.max(8, Math.min(r.left, window.innerWidth - menu.offsetWidth - 8)) + 'px';
+        }
+        document.addEventListener('click', e => {
+            if (!e.target.closest('.ext-wrap')) closeExtendMenus();
+        });
+        window.addEventListener('scroll', closeExtendMenus, true);
+        window.addEventListener('resize', closeExtendMenus);
+
+        async function extendLoan(loanId, hari) {
+            closeExtendMenus();
+            const btn = document.getElementById('ext-btn-' + loanId);
             const isId = currentLang === 'id';
             const userStr = localStorage.getItem('libra_user');
             if (!userStr) { window.location.href = '/login'; return; }
             const user = JSON.parse(userStr);
-            const sel = document.getElementById('ext-days-' + loanId);
-            const hari = sel ? parseInt(sel.value, 10) : 3;
+            hari = parseInt(hari, 10);
 
             const ok = confirm(isId
                 ? `Perpanjang peminjaman ${hari} hari? Perpanjangan hanya bisa dilakukan SEKALI dan tidak bisa dibatalkan.`
                 : `Extend this loan by ${hari} day(s)? You can only extend ONCE and it cannot be undone.`);
             if (!ok) return;
 
-            const original = btn.textContent;
+            const original = btn.innerHTML;
             btn.disabled = true;
             btn.textContent = isId ? 'Memproses...' : 'Processing...';
             try {
@@ -2633,7 +2656,7 @@
             } catch (err) {
                 alert(err.message);
                 btn.disabled = false;
-                btn.textContent = original;
+                btn.innerHTML = original;
             }
         }
 
@@ -2670,17 +2693,21 @@
                 if (sudahDiperpanjang) {
                     aksi = `<span class="text-[11px] text-slate-400">${isId ? 'Sudah diperpanjang' : 'Extended'} (+${Number(loan.perpanjangan_hari) || 0} ${isId ? 'hari' : 'days'})</span>`;
                 } else if (bisaPerpanjang) {
+                    const opt = n => `
+                                <button type="button" onclick="extendLoan('${loan.id}', ${n})"
+                                    class="block w-full text-left text-[12px] px-3 py-1.5 hover:bg-emerald-50 dark:hover:bg-slate-800 transition-colors">
+                                    +${n} ${isId ? 'hari' : (n === 1 ? 'day' : 'days')}
+                                </button>`;
                     aksi = `
-                        <div class="flex items-center gap-1.5">
-                            <select id="ext-days-${loan.id}" class="text-[11px] rounded-md border border-[#E5E2DA] dark:border-[#262620] bg-transparent px-1.5 py-1">
-                                <option value="1">1 ${isId ? 'hari' : 'day'}</option>
-                                <option value="2">2 ${isId ? 'hari' : 'days'}</option>
-                                <option value="3" selected>3 ${isId ? 'hari' : 'days'}</option>
-                            </select>
-                            <button type="button" onclick="extendLoan('${loan.id}', this)"
-                                class="text-[11px] font-semibold px-2.5 py-1 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
+                        <div class="ext-wrap inline-block">
+                            <button type="button" id="ext-btn-${loan.id}" onclick="toggleExtendMenu('${loan.id}', this)"
+                                class="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-md bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
                                 ${isId ? 'Perpanjang' : 'Extend'}
+                                <svg class="w-3 h-3" viewBox="0 0 20 20" fill="currentColor"><path d="M5.5 7.5l4.5 4.5 4.5-4.5z"/></svg>
                             </button>
+                            <div id="ext-menu-${loan.id}" class="ext-menu hidden fixed z-50 min-w-[110px] py-1 rounded-lg border border-[#E5E2DA] dark:border-[#262620] bg-white dark:bg-[#161612] shadow-lg text-slate-700 dark:text-slate-200">
+                                ${opt(1)}${opt(2)}${opt(3)}
+                            </div>
                         </div>`;
                 }
                 return `

@@ -70,6 +70,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/wishlist', [WishlistController::class, 'destroy']);
 
         Route::post('pinjam/{id}/bayar-denda', [PinjamController::class, 'bayarDenda']);
+        Route::post('pinjam/{id}/perpanjang', [PinjamController::class, 'perpanjang']);
         Route::get('pinjam', [PinjamController::class, 'index']);
         Route::post('pinjam', [PinjamController::class, 'store']);
         Route::get('pinjam/{pinjam}', [PinjamController::class, 'show']);
