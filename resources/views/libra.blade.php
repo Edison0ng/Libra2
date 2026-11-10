@@ -122,8 +122,9 @@
             height: 100dvh;
             height: var(--app-height, 100dvh);
         }
+        html { height: 100%; }
         #mobile-bottom-nav {
-            height: calc(4rem + env(safe-area-inset-bottom, 0px));
+            min-height: calc(4rem + env(safe-area-inset-bottom, 0px));
             padding-bottom: env(safe-area-inset-bottom, 0px);
         }
         #detail-modal {
@@ -166,7 +167,7 @@
         })();
     </script>
 </head>
-<body class="bg-[#F1EFEA] text-[#1A1916] dark:bg-[#151512] dark:text-[#EAE8E2] flex h-screen overflow-hidden transition-colors duration-200">
+<body class="bg-[#F1EFEA] text-[#1A1916] dark:bg-[#151512] dark:text-[#EAE8E2] flex overflow-hidden transition-colors duration-200">
 
     <!-- SIDEBAR -->
     <aside class="hidden md:flex flex-col w-60 bg-[#151512] border-r border-[#262620] h-full transition-colors duration-200 select-none text-[#9C988F]">
@@ -252,7 +253,7 @@
         </header>
 
         <!-- KONTEN HALAMAN -->
-        <div class="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 pb-24 md:pb-8">
+        <div class="flex-1 overflow-y-auto p-4 md:p-8 space-y-8 pb-6 md:pb-8">
             
             <!-- TAB 1: BERANDA -->
             <div id="beranda" class="tab-content active max-w-5xl mx-auto space-y-6">
@@ -572,7 +573,7 @@
         </div>
 
         <!-- FLOATING BUTTON DENDA -->
-        <div id="fine-widget" class="hidden fixed bottom-20 md:bottom-6 left-6 bg-rose-600 text-white py-3 px-4 rounded-xl shadow-lg shadow-rose-600/20 flex items-center gap-4 cursor-pointer hover:bg-rose-700 active:scale-95 transition-all z-30" onclick="showFineDetails()">
+        <div id="fine-widget" class="hidden w-full flex-shrink-0 justify-center md:justify-start md:w-auto md:fixed md:bottom-6 md:left-6 bg-rose-600 text-white py-2 px-4 md:py-3 md:rounded-xl md:shadow-lg md:shadow-rose-600/20 flex items-center gap-3 md:gap-4 cursor-pointer hover:bg-rose-700 active:scale-95 transition-all z-30" onclick="showFineDetails()">
             <i class="fa-solid fa-triangle-exclamation text-base animate-pulse"></i>
             <div class="text-left font-sans">
                 <p class="text-[9px] font-bold uppercase tracking-wider opacity-80">Total Denda</p>
@@ -582,27 +583,27 @@
         </div>
 
         <!-- BOTTOM NAVIGATION -->
-        <nav id="mobile-bottom-nav" class="md:hidden bg-[#151512] border-t border-[#262620] flex justify-around items-center absolute bottom-0 w-full z-40 h-16 transition-colors duration-200">
-            <button onclick="switchTab('beranda')" class="nav-btn-mobile flex flex-col items-center p-2 text-[#BEF264]" data-target="beranda">
-                <i class="fa-solid fa-house text-base mb-1"></i>
-                <span class="text-[9px] font-semibold">Beranda</span>
+        <nav id="mobile-bottom-nav" class="md:hidden bg-[#151512] border-t border-[#262620] flex justify-around items-stretch flex-shrink-0 relative w-full z-40 transition-colors duration-200">
+            <button onclick="switchTab('beranda')" class="nav-btn-mobile flex-1 flex flex-col items-center justify-center py-2 text-[#BEF264]" data-target="beranda">
+                <i class="fa-solid fa-house text-xl mb-1"></i>
+                <span class="text-[10px] font-semibold">Beranda</span>
             </button>
-            <button onclick="switchTab('buku')" class="nav-btn-mobile flex flex-col items-center p-2 text-[#9C988F] hover:text-white" data-target="buku">
-                <i class="fa-solid fa-magnifying-glass text-base mb-1"></i>
-                <span class="text-[9px] font-semibold">Pustaka</span>
+            <button onclick="switchTab('buku')" class="nav-btn-mobile flex-1 flex flex-col items-center justify-center py-2 text-[#9C988F] hover:text-white" data-target="buku">
+                <i class="fa-solid fa-magnifying-glass text-xl mb-1"></i>
+                <span class="text-[10px] font-semibold">Pustaka</span>
             </button>
-            <button onclick="switchTab('sirkulasi')" class="nav-btn-mobile flex flex-col items-center p-2 text-[#9C988F] hover:text-white" data-target="sirkulasi">
-                <i class="fa-solid fa-arrows-spin text-base mb-1"></i>
-                <span class="text-[9px] font-semibold">Sirkulasi</span>
+            <button onclick="switchTab('sirkulasi')" class="nav-btn-mobile flex-1 flex flex-col items-center justify-center py-2 text-[#9C988F] hover:text-white" data-target="sirkulasi">
+                <i class="fa-solid fa-arrows-spin text-xl mb-1"></i>
+                <span class="text-[10px] font-semibold">Sirkulasi</span>
             </button>
-            <button onclick="switchTab('toko')" class="nav-btn-mobile flex flex-col items-center p-2 text-[#9C988F] hover:text-white relative" data-target="toko">
-                <i class="fa-solid fa-store text-base mb-1"></i>
-                <span class="text-[9px] font-semibold">Toko ATK</span>
-                <span id="cart-badge-mobile" class="hidden absolute top-1 right-1 bg-[#BEF264] text-[#151512] text-[8px] font-bold rounded-full w-4 h-4 flex items-center justify-center">0</span>
+            <button onclick="switchTab('toko')" class="nav-btn-mobile flex-1 flex flex-col items-center justify-center py-2 text-[#9C988F] hover:text-white relative" data-target="toko">
+                <i class="fa-solid fa-store text-xl mb-1"></i>
+                <span class="text-[10px] font-semibold">Toko ATK</span>
+                <span id="cart-badge-mobile" class="hidden absolute top-1.5 right-[22%] bg-[#BEF264] text-[#151512] text-[8px] font-bold rounded-full w-4 h-4 flex items-center justify-center">0</span>
             </button>
-            <button onclick="switchTab('profil')" class="nav-btn-mobile flex flex-col items-center p-2 text-[#9C988F] hover:text-white" data-target="profil">
-                <i class="fa-regular fa-user text-base mb-1"></i>
-                <span class="text-[9px] font-semibold">Profil</span>
+            <button onclick="switchTab('profil')" class="nav-btn-mobile flex-1 flex flex-col items-center justify-center py-2 text-[#9C988F] hover:text-white" data-target="profil">
+                <i class="fa-regular fa-user text-xl mb-1"></i>
+                <span class="text-[10px] font-semibold">Profil</span>
             </button>
         </nav>
     </main>
@@ -1091,9 +1092,9 @@
 
             document.querySelectorAll('.nav-btn-mobile').forEach(btn => {
                 if(btn.getAttribute('data-target') === tabId) {
-                    btn.className = 'nav-btn-mobile flex flex-col items-center p-2 text-[#BEF264]';
+                    btn.className = 'nav-btn-mobile flex-1 flex flex-col items-center justify-center py-2 text-[#BEF264]';
                 } else {
-                    btn.className = 'nav-btn-mobile flex flex-col items-center p-2 text-[#9C988F] hover:text-white';
+                    btn.className = 'nav-btn-mobile flex-1 flex flex-col items-center justify-center py-2 text-[#9C988F] hover:text-white';
                 }
             });
 
