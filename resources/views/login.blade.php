@@ -661,7 +661,7 @@
                 <path d="M4 20c0-4 3.5-7 8-7s8 3 8 7"></path>
               </svg>
             </span>
-            <input type="text" id="username" name="username" placeholder="Masukkan NIM atau username admin" autocomplete="username">
+            <input type="text" id="username" name="username" placeholder="Username" autocomplete="username">
           </div>
         </div>
 
@@ -676,7 +676,7 @@
                 <path d="M8 11V7a4 4 0 0 1 8 0v4"></path>
               </svg>
             </span>
-            <input type="password" id="password" name="password" placeholder="Masukkan kata sandi" autocomplete="current-password">
+            <input type="password" id="password" name="password" placeholder="Kata Sandi" autocomplete="current-password">
             <button type="button" class="toggle-eye" id="togglePassword" aria-label="Tampilkan/sembunyikan kata sandi">
               <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                 <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path>

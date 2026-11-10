@@ -1106,6 +1106,10 @@
                 const searchInput = document.getElementById('search-input');
                 if (searchInput) searchInput.value = '';
                 liveSearch();
+                updateBookStatuses();          // ambil status terbaru begitu tab Pustaka dibuka
+                startPustakaAutoRefresh();
+            } else {
+                stopPustakaAutoRefresh();
             }
             if (tabId === 'beranda') {
                 renderWishlist();
@@ -1141,6 +1145,37 @@
                 }
             }, 30000); // 30 detik
         }
+
+        // ============================================================
+        // AUTO-REFRESH STATUS BUKU DI TAB PUSTAKA
+        // Status "Tersedia/Dipinjam" dihitung dari endpoint ringan /api/pinjam-aktif.
+        // Sebelumnya endpoint itu hanya dipanggil saat halaman dimuat atau saat tab
+        // Sirkulasi aktif, sehingga pengguna lain yang sedang membuka Pustaka baru
+        // melihat status "Dipinjam" setelah reload. Sekarang di-poll tiap 10 detik
+        // selama tab Pustaka terlihat, dan langsung saat tab browser kembali aktif.
+        // ============================================================
+        let pustakaAutoRefreshInterval = null;
+        let pustakaRefreshBusy = false;
+        const PUSTAKA_POLL_MS = 10000;
+
+        async function refreshPustakaStatuses() {
+            if (pustakaRefreshBusy || document.hidden || activeTabId !== 'buku') return;
+            pustakaRefreshBusy = true;
+            try { await updateBookStatuses(); } finally { pustakaRefreshBusy = false; }
+        }
+        function startPustakaAutoRefresh() {
+            stopPustakaAutoRefresh();
+            pustakaAutoRefreshInterval = setInterval(refreshPustakaStatuses, PUSTAKA_POLL_MS);
+        }
+        function stopPustakaAutoRefresh() {
+            if (pustakaAutoRefreshInterval) {
+                clearInterval(pustakaAutoRefreshInterval);
+                pustakaAutoRefreshInterval = null;
+            }
+        }
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && activeTabId === 'buku') refreshPustakaStatuses();
+        });
 
         function stopSirkulasiAutoRefresh() {
             if (sirkulasiAutoRefreshInterval) {
