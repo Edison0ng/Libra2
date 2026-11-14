@@ -239,6 +239,84 @@ class PinjamController extends Controller
     }
 
     /**
+     * POST /api/pinjam/{id}/batal
+     *
+     * Pengguna membatalkan booking buku yang dia pilih "Ambil Sendiri"
+     * (status masih 'Booking', belum diambil di meja sirkulasi).
+     *
+     * Aturan:
+     *  - Hanya pemilik booking.
+     *  - Hanya status 'Booking' (ambil sendiri, belum diambil). Booking yang
+     *    sudah diproses admin / alur kurir ('Booking Dikonfirmasi Admin',
+     *    'Sedang Dikemas', dst.) dan buku yang sudah 'Dipinjam' TIDAK bisa
+     *    dibatalkan lewat sini.
+     *
+     * Sama seperti pembatalan otomatis (cancelExpiredBookings), barisnya
+     * dihapus supaya buku langsung tersedia lagi. Bedanya, kalau ada yang
+     * mengantre buku ini, giliran antrian ikut dimajukan.
+     */
+    public function batalkan(Request $request, $id)
+    {
+        $request->validate([
+            'user_id' => ['required', 'string'],
+        ]);
+
+        $loan = DB::table('pinjam as l')
+            ->leftJoin('books', 'l.book_id', '=', 'books.ISBN')
+            ->select('l.*', DB::raw('books."Book-Title" as book_title'))
+            ->where('l.id', $id)
+            ->first();
+
+        if (! $loan) {
+            return response()->json(['success' => false, 'message' => 'Data booking tidak ditemukan.'], 404);
+        }
+        if ((string) $loan->user_id !== (string) $request->user_id) {
+            return response()->json(['success' => false, 'message' => 'Booking ini bukan milik akun kamu.'], 403);
+        }
+        if (strtolower(trim((string) $loan->status)) !== 'booking' || ! empty($loan->tanggal_kembali)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Hanya booking ambil sendiri yang belum diambil yang bisa dibatalkan.',
+            ], 422);
+        }
+
+        // Kondisi status ikut di DELETE supaya atomik: kalau di saat yang sama
+        // admin sudah memproses booking ini (status berubah), pembatalan gagal
+        // dan tidak ada data yang terhapus salah.
+        $deleted = DB::table('pinjam')
+            ->where('id', $id)
+            ->whereRaw("LOWER(TRIM(status)) = 'booking'")
+            ->whereNull('tanggal_kembali')
+            ->delete();
+
+        if ($deleted === 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Booking ini sudah berubah status dan tidak bisa dibatalkan lagi. Muat ulang halaman.',
+            ], 409);
+        }
+
+        $judul = $loan->book_title ?? $loan->book_id;
+
+        Notification::create([
+            'id'      => (string) Str::uuid(),
+            'user_id' => $loan->user_id,
+            'title'   => 'Booking Dibatalkan',
+            'message' => 'Booking buku "' . $judul . '" berhasil kamu batalkan.',
+            'type'    => 'info',
+            'is_read' => false,
+        ]);
+
+        // Buku sudah bebas -- majukan antrian (kalau ada yang mengantre).
+        Wishlist::startHoldForBook((string) $loan->book_id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Booking buku "' . $judul . '" berhasil dibatalkan.',
+        ]);
+    }
+
+    /**
      * GET /api/pinjam-aktif
      * Hanya daftar ISBN buku yang sedang dipinjam siapa pun (tanpa data orangnya),
      * dipakai halaman Pustaka untuk menandai buku "Dipinjam".

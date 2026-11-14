@@ -235,6 +235,73 @@ class PembelianAtkController extends Controller
     }
 
     /**
+     * POST /api/pembelian-atk/{id}/batal
+     * body: { user_id }
+     *
+     * Pengguna membatalkan pesanan ATK "ambil sendiri" yang masih berstatus
+     * 'Booking' (belum diambil). Stok dikembalikan, status jadi 'Dibatalkan'
+     * (riwayat tetap ada, sama seperti pembatalan otomatis).
+     *
+     * Pesanan yang sudah dibayar online (Lunas) tidak bisa dibatalkan di sini,
+     * karena belum ada alur pengembalian dana -- pengguna diarahkan ke admin.
+     */
+    public function batalkan(Request $request, string $id)
+    {
+        $data = $request->validate([
+            'user_id' => ['required', 'string'],
+        ]);
+
+        $result = DB::transaction(function () use ($id, $data) {
+            // Kunci barisnya supaya pembatalan ganda / bentrok dengan admin
+            // atau pembatalan otomatis tidak mengembalikan stok dua kali.
+            $order = PembelianAtk::where('id', $id)->lockForUpdate()->first();
+
+            if (! $order) {
+                return ['code' => 404, 'message' => 'Pesanan tidak ditemukan.'];
+            }
+            if ((string) $order->user_id !== (string) $data['user_id']) {
+                return ['code' => 403, 'message' => 'Pesanan ini bukan milik akun kamu.'];
+            }
+            if ($order->metode_pengiriman !== 'ambil_sendiri' || $order->status !== 'Booking') {
+                return ['code' => 422, 'message' => 'Hanya pesanan ambil sendiri yang belum diambil yang bisa dibatalkan.'];
+            }
+            if ($order->status_bayar === 'Lunas') {
+                return ['code' => 422, 'message' => 'Pesanan ini sudah dibayar sehingga tidak bisa dibatalkan sendiri. Silakan hubungi admin perpustakaan.'];
+            }
+
+            foreach (($order->items ?? []) as $item) {
+                if (! empty($item['produk_id'])) {
+                    ProdukAtk::where('id', $item['produk_id'])->increment('stok', (int) ($item['qty'] ?? 0));
+                }
+            }
+
+            $order->status = 'Dibatalkan';
+            $order->save();
+
+            Notification::create([
+                'id'      => (string) Str::uuid(),
+                'user_id' => $order->user_id,
+                'title'   => 'Pesanan ATK Dibatalkan',
+                'message' => 'Pesanan Toko ATK kamu berhasil dibatalkan. Stok produk sudah dikembalikan.',
+                'type'    => 'info',
+                'is_read' => false,
+            ]);
+
+            return ['code' => 200, 'order' => $order];
+        });
+
+        if ($result['code'] !== 200) {
+            return response()->json(['success' => false, 'message' => $result['message']], $result['code']);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Pesanan ATK berhasil dibatalkan.',
+            'order'   => $result['order'],
+        ]);
+    }
+
+    /**
      * POST /api/pembelian-atk/{id}/bayar   (SIMULASI -- tidak ada uang sungguhan)
      * body: { user_id, metode: 'QRIS'|'Transfer Bank'|'E-Wallet' }
      * Jumlah selalu diambil dari database, bukan dari browser.

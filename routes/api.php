@@ -71,11 +71,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::post('pinjam/{id}/bayar-denda', [PinjamController::class, 'bayarDenda']);
         Route::post('pinjam/{id}/perpanjang', [PinjamController::class, 'perpanjang']);
+        Route::post('pinjam/{id}/batal', [PinjamController::class, 'batalkan']);
         Route::get('pinjam', [PinjamController::class, 'index']);
         Route::post('pinjam', [PinjamController::class, 'store']);
         Route::get('pinjam/{pinjam}', [PinjamController::class, 'show']);
 
         Route::post('/pembelian-atk/{id}/bayar', [PembelianAtkController::class, 'bayar']);
+        Route::post('/pembelian-atk/{id}/batal', [PembelianAtkController::class, 'batalkan']);
         Route::get('pembelian-atk', [PembelianAtkController::class, 'index']);
         Route::post('pembelian-atk', [PembelianAtkController::class, 'store']);
 

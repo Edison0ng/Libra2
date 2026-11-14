@@ -2717,6 +2717,45 @@
             }
         }
 
+        // Batalkan booking "ambil sendiri" (buku atau pesanan ATK) yang belum diambil.
+        // Aturan sebenarnya dicek ulang di server (status harus masih 'Booking').
+        async function cancelPickupBooking(type, id, title, btn) {
+            const isId = currentLang === 'id';
+            const isAtk = type === 'atk';
+            const userStr = localStorage.getItem('libra_user');
+            if (!userStr) { window.location.href = '/login'; return; }
+            const user = JSON.parse(userStr);
+
+            const ok = confirm(isId
+                ? `Batalkan ${isAtk ? 'pesanan' : 'booking'} "${title}"? Tindakan ini tidak bisa dibatalkan.`
+                : `Cancel ${isAtk ? 'order' : 'booking'} "${title}"? This cannot be undone.`);
+            if (!ok) return;
+
+            const original = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = isId ? 'Membatalkan...' : 'Cancelling...';
+            try {
+                const url = isAtk
+                    ? `/api/pembelian-atk/${encodeURIComponent(id)}/batal`
+                    : `/api/pinjam/${encodeURIComponent(id)}/batal`;
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({ user_id: user.id })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok || !data.success) throw new Error(data.message || (isId ? 'Pembatalan gagal.' : 'Cancellation failed.'));
+                showToast(isId ? 'Booking Dibatalkan' : 'Booking Cancelled', data.message);
+                await loadUserLoans();
+                // Stok ATK bertambah lagi -- segarkan katalog toko kalau sudah pernah dimuat.
+                if (isAtk && typeof loadProdukToko === 'function') loadProdukToko();
+            } catch (err) {
+                alert(err.message);
+                btn.disabled = false;
+                btn.textContent = original;
+            }
+        }
+
         function renderActiveLoans() {
             const tbody = document.getElementById('active-loans-tbody');
             if (!tbody) return;
@@ -2857,6 +2896,7 @@
             pendingLoans.forEach(loan => {
                 container.appendChild(buildOrderCard({
                     uid: 'buku-' + loan.id,
+                    id: loan.id,
                     title: loan.book_title || 'Buku',
                     status: loan.status,
                     createdAt: loan.created_at,
@@ -2879,6 +2919,7 @@
                     : 'Pesanan ATK';
                 container.appendChild(buildOrderCard({
                     uid: 'atk-' + order.id,
+                    id: order.id,
                     title: judul,
                     status: order.status,
                     createdAt: order.created_at,
@@ -2928,6 +2969,17 @@
                     <p class="text-xs text-slate-500 dark:text-slate-400">
                         ${data.type === 'atk' ? 'Ambil pesananmu' : 'Ambil buku'} langsung di meja sirkulasi perpustakaan sebelum batas waktu di atas habis.
                     </p>`;
+
+                // Tombol batal: hanya untuk booking "ambil sendiri" (status Booking).
+                // Dibuat lewat DOM (bukan string HTML) supaya id tidak disisipkan ke atribut.
+                if (data.id) {
+                    const cancelBtn = document.createElement('button');
+                    cancelBtn.type = 'button';
+                    cancelBtn.className = 'circ-cancel-btn mt-3 inline-flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded-md border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+                    cancelBtn.textContent = data.type === 'atk' ? 'Batalkan Pesanan' : 'Batalkan Booking';
+                    cancelBtn.addEventListener('click', () => cancelPickupBooking(data.type, data.id, data.title, cancelBtn));
+                    detailEl.appendChild(cancelBtn);
+                }
             } else if (isCourier) {
                 // --- Sedang dalam proses pengiriman kurir: badge biru + nama tahap saat ini ---
                 iconWrap.className = 'circ-order-icon-wrap w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-400';
@@ -4005,6 +4057,9 @@
             'Pesanan ATK — ambil sendiri': 'ATK Order — self pickup',
             'Pesanan ATK': 'ATK Order',
             'Ambil pesananmu': 'Pick up your order',
+            'Batalkan Booking': 'Cancel Booking',
+            'Batalkan Pesanan': 'Cancel Order',
+            'Membatalkan...': 'Cancelling...',
             'Sesi habis. Silakan login kembali.': 'Session expired. Please log in again.',
             'Mohon isi tanggal pinjam dan batas pengembalian!': 'Please fill in the loan date and return deadline!',
             'Batas pengembalian harus setelah tanggal pinjam!': 'The return deadline must be after the loan date!',
