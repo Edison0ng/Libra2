@@ -26,7 +26,7 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'nama_lengkap'    => ['required', 'string', 'max:255'],
             'nim'             => [
-                'required', 'string', 'max:50', 'unique:users,nim',
+                'required', 'string', 'max:50', 'regex:/^[0-9]+$/', 'unique:users,nim',
                 // NIM khusus untuk akun admin/kurir tidak boleh didaftarkan lewat form umum
                 // (case-insensitive: "Kurir", "KURIR", " kurir " semuanya ditolak).
                 function ($attribute, $value, $fail) {
@@ -37,12 +37,14 @@ class AuthController extends Controller
             ],
             'email'           => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'fakultas'        => ['nullable', 'string', 'max:255'],
-            'no_telepon'      => ['nullable', 'string', 'max:50'],
+            'no_telepon'      => ['nullable', 'string', 'max:50', 'regex:/^[0-9]+$/'],
             'alamat_kirim'    => ['nullable', 'string', 'max:500'],
             'password'        => ['required', 'string', 'min:6'],
             'confirmPassword' => ['required', 'same:password'],
         ], [
             'nim.unique'            => 'NIM/Username ini sudah terdaftar.',
+            'nim.regex'             => 'NIM hanya boleh berisi angka.',
+            'no_telepon.regex'      => 'Nomor telepon hanya boleh berisi angka.',
             'email.unique'          => 'Email ini sudah terdaftar.',
             'email.email'           => 'Format email tidak valid.',
             'confirmPassword.same'  => 'Kata sandi tidak cocok!',

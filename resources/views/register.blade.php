@@ -282,7 +282,7 @@
               <path d="M7 9h10M7 13h6"></path>
             </svg>
           </span>
-          <input type="text" id="nim" name="nim" placeholder="Contoh: 220194851" autocomplete="username">
+          <input type="text" id="nim" name="nim" placeholder="Contoh: 220194851" autocomplete="username" inputmode="numeric" pattern="[0-9]*">
         </div>
         <p class="field-hint">NIM ini akan dipakai untuk login.</p>
       </div>
@@ -325,7 +325,7 @@
               <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.68 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.32 1.85.55 2.81.68A2 2 0 0 1 22 16.92z"></path>
             </svg>
           </span>
-          <input type="text" id="noTelepon" name="noTelepon" placeholder="Contoh: 081234567890" autocomplete="tel">
+          <input type="text" id="noTelepon" name="noTelepon" placeholder="Contoh: 081234567890" autocomplete="tel" inputmode="numeric" pattern="[0-9]*">
         </div>
       </div>
 
@@ -488,6 +488,16 @@
       return;
     }
 
+    if(!/^[0-9]+$/.test(nimVal)){
+      showError('NIM hanya boleh berisi angka.');
+      return;
+    }
+
+    if(noTeleponVal && !/^[0-9]+$/.test(noTeleponVal)){
+      showError('Nomor telepon hanya boleh berisi angka.');
+      return;
+    }
+
     if(passwordVal !== confirmPasswordVal){
       passwordWrap.classList.add('input-error');
       confirmPasswordWrap.classList.add('input-error');
@@ -550,6 +560,16 @@
     input.addEventListener('input', () => {
       if(errBanner.classList.contains('show')){
         hideError();
+      }
+    });
+  });
+
+  // NIM & No. Telepon hanya angka: huruf/simbol (termasuk hasil paste) dibuang otomatis.
+  [nimInput, noTeleponInput].forEach((input) => {
+    input.addEventListener('input', () => {
+      const digitsOnly = input.value.replace(/\D/g, '');
+      if(input.value !== digitsOnly){
+        input.value = digitsOnly;
       }
     });
   });
