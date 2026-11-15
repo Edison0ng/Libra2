@@ -419,10 +419,12 @@
     const input = document.getElementById(inputId);
     const icon = document.getElementById(eyeIconId);
 
+    icon.innerHTML = EYE_CLOSED; // awal: sandi tersembunyi -> ikon disilang
     btn.addEventListener('click', () => {
       const isPassword = input.type === 'password';
       input.type = isPassword ? 'text' : 'password';
-      icon.innerHTML = isPassword ? EYE_CLOSED : EYE_OPEN;
+      // Disilang = sandi tersembunyi, mata terbuka = sandi terlihat.
+      icon.innerHTML = isPassword ? EYE_OPEN : EYE_CLOSED;
     });
   }
 
