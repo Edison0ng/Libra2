@@ -546,6 +546,26 @@ class PinjamController extends Controller
 
         $data = $request->only(['status', 'tanggal_kembali', 'tenggat_waktu', 'denda']);
 
+        // Buku hanya bisa ditandai "Dikembalikan" kalau memang sudah diterima
+        // peminjam (Dipinjam / Terlambat). Booking yang belum diambil atau
+        // masih dalam proses pengantaran kurir belum bisa dikembalikan --
+        // kalau dibiarkan, pengguna mendapat notifikasi pengembalian palsu,
+        // antrian buku maju, dan pesanan kurir tetap berjalan.
+        if (isset($data['status']) && strtolower(trim($data['status'])) === 'dikembalikan') {
+            $current = DB::table('pinjam')->where('id', $id)->first();
+            if (! $current) {
+                return response()->json(['success' => false, 'message' => 'Data peminjaman tidak ditemukan.'], 404);
+            }
+            $statusSaatIni = strtolower(trim((string) $current->status));
+            if (! in_array($statusSaatIni, ['dipinjam', 'terlambat', 'dikembalikan'], true)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Buku belum diterima peminjam (status saat ini: "' . $current->status
+                        . '"), jadi belum bisa ditandai Dikembalikan.',
+                ], 422);
+            }
+        }
+
         // Saat buku ditandai dikembalikan dan denda belum diisi manual,
         // hitung otomatis: hari terlambat x tarif per hari.
         $akanDikembalikan = (isset($data['status']) && strtolower($data['status']) === 'dikembalikan')
@@ -576,6 +596,12 @@ class PinjamController extends Controller
             ->select('pinjam.*', DB::raw('books."Book-Title" as book_title'))
             ->where('pinjam.id', $id)
             ->first();
+
+        // Booking ditolak -> pesanan kurir (kalau ada) ikut dibatalkan supaya
+        // kurir tidak mengantar buku yang sudah ditolak.
+        if (isset($data['status']) && strtolower(trim($data['status'])) === 'ditolak') {
+            $this->batalkanPesananKurir($id);
+        }
 
         // Buat notifikasi saat admin menolak booking.
         // Booking yang ditolak TIDAK dihapus dari database (beda dengan
@@ -643,8 +669,28 @@ class PinjamController extends Controller
         return response()->json($loan);
     }
 
+    /**
+     * Tandai pesanan kurir yang terhubung dengan pinjaman ini sebagai
+     * 'Dibatalkan' (id pesanan kurir = id pinjam). Hanya yang belum selesai.
+     * Status 'Dibatalkan' otomatis hilang dari daftar Incoming/Outgoing kurir.
+     */
+    private function batalkanPesananKurir($loanId): void
+    {
+        if (! Schema::hasTable('courier_orders')) {
+            return;
+        }
+
+        DB::table('courier_orders')
+            ->where(function ($q) use ($loanId) {
+                $q->where('id', (string) $loanId)->orWhere('order_id', (string) $loanId);
+            })
+            ->whereIn('status', ['Menunggu', 'Sedang Diantar'])
+            ->update(['status' => 'Dibatalkan', 'updated_at' => now()]);
+    }
+
     public function destroy($id)
     {
+        $this->batalkanPesananKurir($id);
         DB::table('pinjam')->where('id', $id)->delete();
 
         return response()->json([

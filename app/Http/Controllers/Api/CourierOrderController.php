@@ -141,7 +141,7 @@ class CourierOrderController extends Controller
             if ($updated === 0) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Pesanan ini sudah diambil kurir lain atau statusnya sudah berubah.',
+                    'message' => 'Pesanan ini sudah diambil kurir lain, dibatalkan, atau statusnya sudah berubah.',
                 ], 409);
             }
         }
@@ -187,7 +187,7 @@ class CourierOrderController extends Controller
             if ($updated === 0) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Pesanan ini belum sedang diantar atau sudah selesai.',
+                    'message' => 'Pesanan ini belum sedang diantar, sudah selesai, atau telah dibatalkan.',
                 ], 409);
             }
 
