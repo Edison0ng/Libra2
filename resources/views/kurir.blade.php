@@ -452,7 +452,7 @@
                 </div>
 
                 <!-- Total Pembayaran -->
-                <div class="bg-slate-900 text-white p-4 rounded-2xl flex items-center justify-between">
+                <div id="inc-modal-total-box" class="bg-slate-900 text-white p-4 rounded-2xl flex items-center justify-between">
                     <div>
                         <p class="text-[10px] text-slate-400 uppercase font-semibold">Total Pembayaran Pengguna</p>
                         <p id="inc-modal-pay-info" class="text-[11px] font-semibold mt-0.5"></p>
@@ -568,7 +568,7 @@
                 </div>
 
                 <!-- Total Pembayaran -->
-                <div class="bg-slate-900 text-white p-4 rounded-2xl flex items-center justify-between">
+                <div id="out-modal-total-box" class="bg-slate-900 text-white p-4 rounded-2xl flex items-center justify-between">
                     <div>
                         <p class="text-[10px] text-slate-400 uppercase font-semibold">Total Pembayaran</p>
                         <p id="out-modal-pay-info" class="text-[11px] font-semibold mt-0.5"></p>
@@ -650,6 +650,22 @@
                 currency: 'IDR',
                 maximumFractionDigits: 0
             }).format(num || 0);
+        }
+
+        // Pesanan yang isinya buku pinjaman saja: harga & subtotal tidak
+        // ditampilkan ke kurir (buku dipinjam, bukan dibeli).
+        function isBukuOnly(order) {
+            const items = (order && order.items) || [];
+            return items.length > 0 && items.every(i => i.tipe === 'Buku');
+        }
+
+        // Sembunyikan/tampilkan kolom Harga (ke-3) & Subtotal (ke-5) serta kotak total di modal.
+        function applyHargaVisibility(tbodyId, totalBoxId, bukuOnly) {
+            const table = document.getElementById(tbodyId).closest('table');
+            table.querySelectorAll('thead th').forEach((th, i) => {
+                if (i === 2 || i === 4) th.style.display = bukuOnly ? 'none' : '';
+            });
+            document.getElementById(totalBoxId).style.display = bukuOnly ? 'none' : '';
         }
 
         // Format Tanggal dan Jam Indonesia
@@ -820,7 +836,7 @@ function updateStats() {
                             ${totalItem} item
                         </td>
                         <td class="py-3.5 px-4 font-bold font-mono text-emerald-600 dark:text-emerald-400">
-                            ${formatRupiah(o.total_pembayaran)}${payBadgeHtml(o)}
+                            ${isBukuOnly(o) ? '<span class="font-normal text-slate-400">-</span>' : formatRupiah(o.total_pembayaran) + payBadgeHtml(o)}
                         </td>
                         <td class="py-3.5 px-4 text-slate-500 dark:text-slate-400 text-[11px]">
                             ${formatDateTimeIndo(o.waktu_pemesanan)}
@@ -946,6 +962,9 @@ function updateStats() {
             document.getElementById('inc-modal-total-pay').textContent = formatRupiah(order.total_pembayaran);
             setPayInfo('inc-modal-pay-info', order);
 
+            const bukuOnly = isBukuOnly(order);
+            applyHargaVisibility('inc-modal-items-tbody', 'inc-modal-total-box', bukuOnly);
+
             const tbody = document.getElementById('inc-modal-items-tbody');
             tbody.innerHTML = items.map(item => `
                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
@@ -957,14 +976,14 @@ function updateStats() {
                             ${escapeHtml(item.tipe || 'ATK')}
                         </span>
                     </td>
-                    <td class="py-2.5 px-3 text-right font-mono text-slate-600 dark:text-slate-300">
-                        ${formatRupiah(item.harga)}
+                    <td class="py-2.5 px-3 text-right font-mono text-slate-600 dark:text-slate-300"${bukuOnly ? ' style="display:none"' : ''}>
+                        ${item.tipe === 'Buku' ? '-' : formatRupiah(item.harga)}
                     </td>
                     <td class="py-2.5 px-3 text-center font-bold text-slate-800 dark:text-white">
                         ${item.qty || 1}
                     </td>
-                    <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-900 dark:text-white">
-                        ${formatRupiah(item.subtotal || (item.harga * (item.qty || 1)))}
+                    <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-900 dark:text-white"${bukuOnly ? ' style="display:none"' : ''}>
+                        ${item.tipe === 'Buku' ? '-' : formatRupiah(item.subtotal || (item.harga * (item.qty || 1)))}
                     </td>
                 </tr>
             `).join('');
@@ -1088,6 +1107,9 @@ async function executeKirimSekarang() {
             }
 
             const items = order.items || [];
+            const bukuOnly = isBukuOnly(order);
+            applyHargaVisibility('out-modal-items-tbody', 'out-modal-total-box', bukuOnly);
+
             const tbody = document.getElementById('out-modal-items-tbody');
             tbody.innerHTML = items.map(item => `
                 <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
@@ -1099,14 +1121,14 @@ async function executeKirimSekarang() {
                             ${escapeHtml(item.tipe || 'ATK')}
                         </span>
                     </td>
-                    <td class="py-2.5 px-3 text-right font-mono text-slate-600 dark:text-slate-300">
-                        ${formatRupiah(item.harga)}
+                    <td class="py-2.5 px-3 text-right font-mono text-slate-600 dark:text-slate-300"${bukuOnly ? ' style="display:none"' : ''}>
+                        ${item.tipe === 'Buku' ? '-' : formatRupiah(item.harga)}
                     </td>
                     <td class="py-2.5 px-3 text-center font-bold text-slate-800 dark:text-white">
                         ${item.qty || 1}
                     </td>
-                    <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-900 dark:text-white">
-                        ${formatRupiah(item.subtotal || (item.harga * (item.qty || 1)))}
+                    <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-900 dark:text-white"${bukuOnly ? ' style="display:none"' : ''}>
+                        ${item.tipe === 'Buku' ? '-' : formatRupiah(item.subtotal || (item.harga * (item.qty || 1)))}
                     </td>
                 </tr>
             `).join('');
