@@ -59,6 +59,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'me']);
     Route::patch('/profil/alamat', [UserController::class, 'updateAlamat']);
+    Route::patch('/profil', [UserController::class, 'updateProfil']);
+    Route::post('/profil/email', [UserController::class, 'changeEmail']);
+    Route::post('/profil/password', [UserController::class, 'changePassword']);
 
     // ---------- Pengguna biasa (dibatasi ke data miliknya sendiri) ----------
     Route::middleware('owner')->group(function () {

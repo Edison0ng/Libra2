@@ -56,6 +56,31 @@ Route::get('/verify-email/{id}/{hash}', function (\Illuminate\Http\Request $requ
     return view('verify-email', ['status' => 'success']);
 })->name('verification.verify');
 
+// Tautan konfirmasi GANTI email dari halaman Profil (signed URL, 60 menit).
+// Email lama tetap aktif sampai tautan ini diklik.
+Route::get('/verify-email-change/{id}/{hash}', function (\Illuminate\Http\Request $request, string $id, string $hash) {
+    if (! $request->hasValidSignature()) {
+        return view('verify-email', ['status' => 'expired']);
+    }
+
+    $user = \App\Models\User::find($id);
+    if (! $user || ! $user->pending_email || ! hash_equals(sha1((string) $user->pending_email), $hash)) {
+        return view('verify-email', ['status' => 'invalid']);
+    }
+
+    // Email baru bisa saja sudah dipakai akun lain selama menunggu.
+    if (\App\Models\User::where('email', $user->pending_email)->where('id', '!=', $user->id)->exists()) {
+        return view('verify-email', ['status' => 'invalid']);
+    }
+
+    $user->email = $user->pending_email;
+    $user->pending_email = null;
+    $user->email_verified_at = now();
+    $user->save();
+
+    return view('verify-email', ['status' => 'email_changed']);
+})->name('email.change.verify');
+
 // Route untuk halaman libra (menampilkan daftar buku)
 // Route untuk entitas Kurir
 Route::get('/kurir', function () {

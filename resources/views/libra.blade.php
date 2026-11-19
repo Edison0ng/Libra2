@@ -414,14 +414,11 @@
                     <span id="profile-card-fakultas" class="inline-block bg-white/10 text-[10px] font-medium px-3 py-1 rounded-full mt-3 border border-white/10">-</span>
                 </div>
 
-                <!-- Alamat Pengantaran -->
-                <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 p-4 text-sm">
-                    <div class="flex items-center gap-3 font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                        <i class="fa-solid fa-location-dot text-lg text-rose-500"></i> <span>Alamat Pengantaran</span>
-                    </div>
-                    <p class="text-[11px] text-slate-400 mb-2.5">Dipakai sebagai alamat awal saat memilih pengantaran buku atau ATK. Perbarui kalau kamu pindah rumah atau kos.</p>
-                    <textarea id="profile-alamat-input" rows="3" maxlength="500" placeholder="Tulis alamat lengkap (jalan, nomor, RT/RW, kelurahan, kota)..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-xs text-slate-800 dark:text-white resize-none"></textarea>
-                    <button type="button" id="profile-alamat-btn" onclick="simpanAlamatProfil()" class="mt-3 w-full py-2.5 bg-blue-600 text-white text-xs font-semibold rounded-xl shadow-sm hover:bg-blue-700 transition-colors">Simpan Alamat</button>
+                <!-- Profil Saya (gaya form: label kiri, nilai kanan, tombol Ubah) -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 p-5 text-sm">
+                    <h4 class="font-bold text-base text-slate-800 dark:text-white">Profil Saya</h4>
+                    <p class="text-[11px] text-slate-400 mt-0.5 pb-4 mb-5 border-b border-slate-100 dark:border-slate-800">Kelola informasi profil Anda untuk mengontrol dan mengamankan akun</p>
+                    <div id="profil-rows" class="space-y-5"></div>
                 </div>
 
                 <!-- Pengaturan & Fitur -->
@@ -936,8 +933,6 @@
             set('profile-card-name', u.nama_lengkap || u.name || u.username || '');
             set('profile-card-nim', u.nim || '-');
             set('profile-card-fakultas', u.fakultas || '-');
-            const alamatProfilEl = document.getElementById('profile-alamat-input');
-            if (alamatProfilEl) alamatProfilEl.value = u.alamat_kirim || '';
             const av = document.getElementById('profile-card-avatar');
             if (av) av.src = u.avatar_url || ('https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent(u.username || u.name || 'libra'));
         })();
@@ -2308,36 +2303,269 @@
                 const u = JSON.parse(localStorage.getItem('libra_user') || '{}');
                 u.alamat_kirim = (data.user && data.user.alamat_kirim) ? data.user.alamat_kirim : alamat;
                 localStorage.setItem('libra_user', JSON.stringify(u));
-                const el = document.getElementById('profile-alamat-input');
-                if (el) el.value = u.alamat_kirim;
+                if (typeof renderProfilForm === 'function') renderProfilForm();
                 return { ok: true };
             } catch (err) {
                 return { ok: false, message: err.message };
             }
         }
 
-        async function simpanAlamatProfil() {
-            const isId = currentLang === 'id';
-            const input = document.getElementById('profile-alamat-input');
-            const btn = document.getElementById('profile-alamat-btn');
-            const alamat = input.value.trim();
-            if (alamat.length < MIN_ALAMAT) {
-                alert(isId ? 'Alamat terlalu pendek, tulis alamat selengkapnya.' : 'Address is too short, please write the full address.');
-                return;
-            }
-            const original = btn.textContent;
-            btn.disabled = true;
-            btn.textContent = isId ? 'Menyimpan...' : 'Saving...';
-            const r = await simpanAlamatUtama(alamat);
-            btn.disabled = false;
-            btn.textContent = original;
-            if (r.ok) {
-                showToast(isId ? 'Alamat Diperbarui' : 'Address Updated',
-                          isId ? 'Alamat pengantaranmu berhasil disimpan.' : 'Your delivery address has been saved.');
-            } else {
-                alert(r.message);
+        // ============================================================
+        // PROFIL SAYA: form gaya "label kiri, nilai kanan, tombol Ubah"
+        // ============================================================
+        const PROFIL_ROWS = [
+            { key: 'nim',          label: 'NIM',                readonly: true },
+            { key: 'fakultas',     label: 'Fakultas',           readonly: true },
+            { key: 'nama_lengkap', label: 'Nama Lengkap' },
+            { key: 'email',        label: 'Email' },
+            { key: 'no_telepon',   label: 'Nomor Telepon' },
+            { key: 'alamat_kirim', label: 'Alamat Pengantaran' },
+            { key: 'password',     label: 'Password' }
+        ];
+        const P_INPUT = 'w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-sm text-slate-800 dark:text-white';
+        const P_BTN_PRIMARY = 'px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+        const P_BTN_GHOST = 'px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl border border-slate-200/60 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors';
+        let profilEditKey = null; // baris yang sedang diedit (hanya satu pada satu waktu)
+
+        function getLibraUser() {
+            try { return JSON.parse(localStorage.getItem('libra_user') || '{}') || {}; } catch (_) { return {}; }
+        }
+        function setLibraUser(patch) {
+            const u = Object.assign({}, getLibraUser(), patch);
+            localStorage.setItem('libra_user', JSON.stringify(u));
+            return u;
+        }
+        function maskEmail(e) {
+            if (!e) return '';
+            const at = String(e).indexOf('@');
+            if (at < 1) return String(e);
+            const name = e.slice(0, at);
+            return name.slice(0, 2) + '*'.repeat(Math.max(name.length - 2, 3)) + e.slice(at);
+        }
+        function maskPhone(t) {
+            if (!t) return '';
+            const str = String(t);
+            return '*'.repeat(Math.max(str.length - 2, 0)) + str.slice(-2);
+        }
+        function pEl(tag, cls, text) {
+            const e = document.createElement(tag);
+            if (cls) e.className = cls;
+            if (text !== undefined) e.textContent = text;
+            return e;
+        }
+        // Kolom password dengan ikon mata: disilang = tersembunyi, terbuka = terlihat.
+        function pPasswordField(placeholder) {
+            const wrap = pEl('div', 'relative');
+            const input = pEl('input', P_INPUT + ' pr-10');
+            input.type = 'password';
+            input.placeholder = placeholder;
+            input.autocomplete = 'off';
+            const btn = pEl('button', 'absolute inset-y-0 right-0 px-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200');
+            btn.type = 'button';
+            btn.tabIndex = -1;
+            const icon = pEl('i', 'fa-solid fa-eye-slash');
+            btn.appendChild(icon);
+            btn.addEventListener('click', () => {
+                const show = input.type === 'password';
+                input.type = show ? 'text' : 'password';
+                icon.className = show ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash';
+            });
+            wrap.append(input, btn);
+            return { wrap, input };
+        }
+
+        async function profilRequest(method, url, body) {
+            try {
+                const res = await fetch(url, {
+                    method,
+                    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok || data.success === false) {
+                    const fieldErr = data.errors ? Object.values(data.errors)[0]?.[0] : null;
+                    return { ok: false, message: fieldErr || data.message || 'Terjadi kesalahan. Coba lagi.' };
+                }
+                return { ok: true, data };
+            } catch (err) {
+                return { ok: false, message: err.message };
             }
         }
+
+        function profilDisplayValue(row, u) {
+            switch (row.key) {
+                case 'email': return maskEmail(u.email);
+                case 'no_telepon': return maskPhone(u.no_telepon);
+                case 'password': return '••••••••';
+                default: return u[row.key] || '';
+            }
+        }
+
+        function buildProfilView(row, u, cell) {
+            const line = pEl('div', 'flex items-start gap-3 sm:pt-2.5 text-sm text-slate-800 dark:text-slate-200');
+            const val = profilDisplayValue(row, u);
+            line.appendChild(pEl('span', 'min-w-0 flex-1 break-words' + (val ? '' : ' text-slate-400 italic'), val || (row.readonly ? '-' : 'Belum diisi')));
+            if (!row.readonly) {
+                const edit = pEl('button', 'flex-shrink-0 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline', 'Ubah');
+                edit.type = 'button';
+                edit.addEventListener('click', () => { profilEditKey = row.key; renderProfilForm(); });
+                line.appendChild(edit);
+            }
+            cell.appendChild(line);
+            if (row.key === 'email' && u.pending_email) {
+                cell.appendChild(pEl('p', 'text-[11px] text-amber-600 dark:text-amber-400 mt-1',
+                    'Menunggu verifikasi: ' + maskEmail(u.pending_email) + '. Cek kotak masuk email baru; email lama tetap dipakai sampai dikonfirmasi.'));
+            }
+        }
+
+        function buildProfilEditor(row, u, cell) {
+            const box = pEl('div', 'space-y-2.5');
+            const msg = pEl('p', 'hidden text-[11px] text-rose-500');
+            const showErr = (t) => { msg.textContent = t; msg.classList.remove('hidden'); };
+            const save = pEl('button', P_BTN_PRIMARY, 'Simpan');
+            save.type = 'button';
+            const cancel = pEl('button', P_BTN_GHOST, 'Batal');
+            cancel.type = 'button';
+            cancel.addEventListener('click', () => { profilEditKey = null; renderProfilForm(); });
+
+            if (row.key === 'email') {
+                const email = pEl('input', P_INPUT);
+                email.type = 'email';
+                email.placeholder = 'Email baru';
+                email.autocomplete = 'off';
+                const pw = pPasswordField('Password saat ini (untuk konfirmasi)');
+                box.append(email, pw.wrap, pEl('p', 'text-[11px] text-slate-400', 'Tautan verifikasi dikirim ke email baru. Email lama tetap dipakai sampai email baru dikonfirmasi.'));
+                save.textContent = 'Kirim Verifikasi';
+                save.addEventListener('click', () => submitEmailChange(email.value.trim(), pw.input.value, save, showErr));
+            } else if (row.key === 'password') {
+                const lama = pPasswordField('Password saat ini');
+                const baru = pPasswordField('Password baru (minimal 6 karakter)');
+                const konf = pPasswordField('Ulangi password baru');
+                box.append(lama.wrap, baru.wrap, konf.wrap);
+                save.addEventListener('click', () => submitPasswordChange(lama.input.value, baru.input.value, konf.input.value, save, showErr));
+            } else {
+                const field = row.key === 'alamat_kirim' ? pEl('textarea', P_INPUT + ' resize-none') : pEl('input', P_INPUT);
+                if (row.key === 'alamat_kirim') { field.rows = 3; field.maxLength = 500; field.placeholder = 'Tulis alamat lengkap (jalan, nomor, RT/RW, kelurahan, kota)...'; }
+                if (row.key === 'nama_lengkap') { field.type = 'text'; field.maxLength = 255; }
+                if (row.key === 'no_telepon') {
+                    field.type = 'text';
+                    field.inputMode = 'numeric';
+                    field.maxLength = 50;
+                    field.placeholder = 'Contoh: 081234567890';
+                    field.addEventListener('input', () => { field.value = field.value.replace(/\D/g, ''); });
+                }
+                field.value = u[row.key] || '';
+                box.appendChild(field);
+                save.addEventListener('click', () => saveProfilField(row.key, field.value, save, showErr));
+            }
+
+            const actions = pEl('div', 'flex gap-2 pt-1');
+            actions.append(save, cancel);
+            box.append(msg, actions);
+            cell.appendChild(box);
+            setTimeout(() => { const f = box.querySelector('input, textarea'); if (f) f.focus(); }, 0);
+        }
+
+        function buildProfilRow(row, u) {
+            const wrap = pEl('div', 'grid sm:grid-cols-[150px_1fr] gap-x-6 gap-y-1.5 items-start');
+            wrap.appendChild(pEl('div', 'text-xs font-medium text-slate-500 dark:text-slate-400 sm:text-right sm:pt-3', row.label));
+            const cell = pEl('div', 'min-w-0');
+            if (profilEditKey === row.key) buildProfilEditor(row, u, cell);
+            else buildProfilView(row, u, cell);
+            wrap.appendChild(cell);
+            return wrap;
+        }
+
+        function renderProfilForm() {
+            const host = document.getElementById('profil-rows');
+            if (!host) return;
+            const u = getLibraUser();
+            host.innerHTML = '';
+            PROFIL_ROWS.forEach(row => host.appendChild(buildProfilRow(row, u)));
+        }
+
+        function syncProfilHeader() {
+            const u = getLibraUser();
+            const nameEl = document.getElementById('profile-card-name');
+            if (nameEl) nameEl.textContent = u.nama_lengkap || u.name || u.username || '';
+        }
+
+        async function profilWithBusy(btn, label, fn) {
+            const original = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = label;
+            try { await fn(); }
+            finally {
+                // tombol bisa sudah hilang kalau form dirender ulang setelah sukses
+                btn.disabled = false;
+                btn.textContent = original;
+            }
+        }
+
+        async function saveProfilField(key, value, btn, showErr) {
+            const v = (value || '').trim();
+            if (key === 'nama_lengkap' && !v) return showErr('Nama tidak boleh kosong.');
+            if (key === 'no_telepon' && !/^[0-9]{8,}$/.test(v)) return showErr('Nomor telepon hanya boleh angka, minimal 8 digit.');
+            if (key === 'alamat_kirim' && v.length < MIN_ALAMAT) return showErr('Alamat terlalu pendek, tulis alamat selengkapnya.');
+
+            await profilWithBusy(btn, 'Menyimpan...', async () => {
+                const r = await profilRequest('PATCH', '/api/profil', { [key]: v });
+                if (!r.ok) { showErr(r.message); return; }
+                const fresh = (r.data && r.data.user) ? r.data.user[key] : undefined;
+                setLibraUser({ [key]: fresh !== undefined ? fresh : v });
+                profilEditKey = null;
+                renderProfilForm();
+                syncProfilHeader();
+                showToast('Profil Diperbarui', 'Perubahan berhasil disimpan.');
+            });
+        }
+
+        async function submitEmailChange(email, password, btn, showErr) {
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showErr('Format email tidak valid.');
+            if (!password) return showErr('Masukkan password saat ini untuk konfirmasi.');
+            await profilWithBusy(btn, 'Mengirim...', async () => {
+                const r = await profilRequest('POST', '/api/profil/email', { email, password });
+                if (!r.ok) { showErr(r.message); return; }
+                setLibraUser({ pending_email: (r.data && r.data.pending_email) || email });
+                profilEditKey = null;
+                renderProfilForm();
+                showToast('Verifikasi Dikirim', 'Cek kotak masuk ' + email + ' lalu klik tautan konfirmasi. Email berubah setelah dikonfirmasi.');
+            });
+        }
+
+        async function submitPasswordChange(lama, baru, konf, btn, showErr) {
+            if (!lama) return showErr('Password saat ini wajib diisi.');
+            if (baru.length < 6) return showErr('Password baru minimal 6 karakter.');
+            if (baru === lama) return showErr('Password baru harus berbeda dari password saat ini.');
+            if (baru !== konf) return showErr('Konfirmasi password tidak cocok.');
+            await profilWithBusy(btn, 'Menyimpan...', async () => {
+                const r = await profilRequest('POST', '/api/profil/password', {
+                    password_lama: lama, password_baru: baru, konfirmasi_password: konf
+                });
+                if (!r.ok) { showErr(r.message); return; }
+                profilEditKey = null;
+                renderProfilForm();
+                showToast('Password Diubah', 'Password berhasil diperbarui. Sesi di perangkat lain otomatis keluar.');
+            });
+        }
+
+        // Ambil data terbaru dari server (email bisa berubah setelah tautan verifikasi diklik di tempat lain)
+        async function refreshProfilFromServer() {
+            if (!localStorage.getItem('libra_token')) return;
+            try {
+                const res = await fetch('/api/user', { headers: getAuthHeaders() });
+                if (!res.ok) return;
+                const d = await res.json();
+                if (d && d.user) {
+                    setLibraUser(d.user);
+                    if (!profilEditKey) renderProfilForm();
+                    syncProfilHeader();
+                }
+            } catch (_) { /* abaikan: pakai data lokal */ }
+        }
+
+        renderProfilForm();
+        refreshProfilFromServer();
 
         // Tampilkan kolom alamat di form booking hanya untuk Jasa Pengantaran
         function toggleLoanAlamatField() {
@@ -4198,9 +4426,8 @@
             'Ambil pesananmu': 'Pick up your order',
             'Alamat Pengantaran': 'Delivery Address',
             'Simpan sebagai alamat utama': 'Save as my main address',
-            'Simpan Alamat': 'Save Address',
-            'Dipakai sebagai alamat awal saat memilih pengantaran buku atau ATK. Perbarui kalau kamu pindah rumah atau kos.': 'Used as the default address when choosing book or stationery delivery. Update it if you move house or boarding room.',
-            'Tulis alamat lengkap (jalan, nomor, RT/RW, kelurahan, kota)...': 'Write the full address (street, number, neighborhood, city)...',
+            'Profil Saya': 'My Profile',
+            'Kelola informasi profil Anda untuk mengontrol dan mengamankan akun': 'Manage your profile information to control and secure your account',
             'Tulis alamat lengkap tujuan pengantaran...': 'Write the full delivery address...',
             'Batalkan Booking': 'Cancel Booking',
             'Batalkan Pesanan': 'Cancel Order',

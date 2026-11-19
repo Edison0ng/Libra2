@@ -63,7 +63,8 @@ class AuthController extends Controller
             'nim'          => $request->nim,
             'email'        => $request->email,
             'fakultas'     => $request->fakultas,
-            'no_telepon'   => $request->no_telepon,
+            // Kolom DB NOT NULL: pakai '' (bukan null) kalau telepon dikosongkan.
+            'no_telepon'   => $request->no_telepon ?? '',
             // Alamat opsional; '' (bukan null) supaya aman walau kolom DB masih NOT NULL.
             'alamat_kirim' => $request->alamat_kirim ?? '',
             'password'     => Hash::make($request->password),

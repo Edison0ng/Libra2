@@ -30,6 +30,7 @@
 @php
   $content = [
     'success' => ['ok',  '✓', 'Email berhasil diverifikasi', 'Akun LIBRA Anda sudah aktif. Silakan login untuk mulai menggunakan layanan.'],
+    'email_changed' => ['ok', '✓', 'Email berhasil diganti', 'Email akun LIBRA Anda sudah diperbarui. Email baru ini dipakai untuk pemulihan kata sandi.'],
     'already' => ['ok',  '✓', 'Email sudah terverifikasi', 'Akun Anda sudah aktif sebelumnya. Silakan login.'],
     'expired' => ['bad', '!', 'Tautan kedaluwarsa atau tidak valid', 'Tautan verifikasi sudah tidak berlaku. Login dengan NIM dan kata sandi Anda, lalu pilih "Kirim ulang verifikasi" untuk mendapat tautan baru.'],
     'invalid' => ['bad', '!', 'Tautan tidak cocok dengan akun', 'Email akun mungkin sudah diganti atau akun tidak ditemukan. Login lalu minta tautan verifikasi baru.'],
