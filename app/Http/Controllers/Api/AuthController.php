@@ -38,13 +38,15 @@ class AuthController extends Controller
             'email'           => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'fakultas'        => ['nullable', 'string', 'max:255'],
             'no_telepon'      => ['nullable', 'string', 'max:50', 'regex:/^[0-9]+$/'],
-            'alamat_kirim'    => ['nullable', 'string', 'max:500'],
+            'alamat_kirim'    => ['required', 'string', 'min:10', 'max:500'],
             'password'        => ['required', 'string', 'min:6'],
             'confirmPassword' => ['required', 'same:password'],
         ], [
             'nim.unique'            => 'NIM/Username ini sudah terdaftar.',
             'nim.regex'             => 'NIM hanya boleh berisi angka.',
             'no_telepon.regex'      => 'Nomor telepon hanya boleh berisi angka.',
+            'alamat_kirim.required' => 'Alamat pengiriman wajib diisi.',
+            'alamat_kirim.min'      => 'Alamat terlalu pendek, tulis alamat selengkapnya (minimal 10 karakter).',
             'email.unique'          => 'Email ini sudah terdaftar.',
             'email.email'           => 'Format email tidak valid.',
             'confirmPassword.same'  => 'Kata sandi tidak cocok!',
@@ -65,8 +67,8 @@ class AuthController extends Controller
             'fakultas'     => $request->fakultas,
             // Kolom DB NOT NULL: pakai '' (bukan null) kalau telepon dikosongkan.
             'no_telepon'   => $request->no_telepon ?? '',
-            // Alamat opsional; '' (bukan null) supaya aman walau kolom DB masih NOT NULL.
-            'alamat_kirim' => $request->alamat_kirim ?? '',
+            // Alamat wajib diisi saat pendaftaran (divalidasi di atas).
+            'alamat_kirim' => trim($request->alamat_kirim),
             'password'     => Hash::make($request->password),
         ]);
 

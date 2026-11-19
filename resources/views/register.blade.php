@@ -329,7 +329,7 @@
 
       <!-- Alamat Kirim -->
       <div class="field-group">
-        <label for="alamatKirim">Alamat Pengiriman</label>
+        <label for="alamatKirim">Alamat Pengiriman <span style="color:#dc2626">*</span></label>
         <div class="input-wrap">
           <span class="input-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -337,7 +337,7 @@
               <circle cx="12" cy="10" r="3"></circle>
             </svg>
           </span>
-          <input type="text" id="alamatKirim" name="alamatKirim" placeholder="Alamat untuk pengiriman buku" autocomplete="street-address">
+          <input type="text" id="alamatKirim" name="alamatKirim" placeholder="Alamat lengkap (jalan, nomor, RT/RW, kelurahan, kota)" autocomplete="street-address" required minlength="10" maxlength="500">
         </div>
       </div>
 
@@ -483,9 +483,14 @@
     const passwordVal = passwordInput.value;
     const confirmPasswordVal = confirmPasswordInput.value;
 
-    // Field wajib: nama lengkap, NIM, email, password, konfirmasi password
-    if(!namaLengkapVal || !nimVal || !emailVal || !passwordVal || !confirmPasswordVal){
-      showError('Nama lengkap, NIM, email, dan kata sandi wajib diisi.');
+    // Field wajib: nama lengkap, NIM, email, alamat, password, konfirmasi password
+    if(!namaLengkapVal || !nimVal || !emailVal || !alamatKirimVal || !passwordVal || !confirmPasswordVal){
+      showError('Nama lengkap, NIM, email, alamat pengiriman, dan kata sandi wajib diisi.');
+      return;
+    }
+
+    if(alamatKirimVal.length < 10){
+      showError('Alamat terlalu pendek, tulis alamat selengkapnya (minimal 10 karakter).');
       return;
     }
 

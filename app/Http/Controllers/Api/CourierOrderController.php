@@ -28,6 +28,24 @@ class CourierOrderController extends Controller
             }
             if ($userId) {
                 $query->where('user_id', $userId);
+            } else {
+                // Portal kurir (tanpa user_id): pesanan yang masih "Menunggu" hanya tampil
+                // jika data terhubungnya (pinjam buku / pembelian ATK) sudah berstatus
+                // "Menunggu Kurir". Pesanan "Sedang Diantar" dan "Selesai" tetap tampil.
+                $query->where(function ($q) {
+                    $q->where('status', '!=', 'Menunggu');
+
+                    if (Schema::hasTable('pinjam')) {
+                        $q->orWhereIn('order_id', function ($sub) {
+                            $sub->selectRaw('id::text')->from('pinjam')->where('status', 'Menunggu Kurir');
+                        });
+                    }
+                    if (Schema::hasTable('pembelian_atk')) {
+                        $q->orWhereIn('order_id', function ($sub) {
+                            $sub->select('id')->from('pembelian_atk')->where('status', 'Menunggu Kurir');
+                        });
+                    }
+                });
             }
 
             $orders = $query->get()->map(function ($order) {

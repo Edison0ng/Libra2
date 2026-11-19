@@ -698,26 +698,16 @@
                     <label class="block text-slate-500 dark:text-slate-400 mb-1.5 font-semibold">Opsi Pengambilan</label>
                     <div class="grid grid-cols-2 gap-3">
                         <label class="flex items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300">
-                            <input type="radio" name="pickup-option" value="Booking" checked class="accent-blue-500" onchange="toggleLoanAlamatField()">
+                            <input type="radio" name="pickup-option" value="Booking" checked class="accent-blue-500">
                             <span>Ambil Sendiri</span>
                         </label>
                         <label class="flex items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300">
-                            <input type="radio" name="pickup-option" value="Booking Dikonfirmasi Admin" class="accent-blue-500" onchange="toggleLoanAlamatField()">
+                            <input type="radio" name="pickup-option" value="Booking Dikonfirmasi Admin" class="accent-blue-500">
                             <span>Jasa Pengantaran</span>
                         </label>
                     </div>
                 </div>
                 
-                <!-- Alamat pengantaran: hanya muncul kalau memilih Jasa Pengantaran -->
-                <div id="loan-alamat-wrap" class="hidden">
-                    <label class="block text-slate-500 dark:text-slate-400 mb-1.5 font-semibold">Alamat Pengantaran</label>
-                    <textarea id="loan-alamat-input" rows="2" maxlength="500" placeholder="Tulis alamat lengkap tujuan pengantaran..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-xs text-slate-800 dark:text-white resize-none"></textarea>
-                    <label class="flex items-center gap-2 mt-2 text-slate-600 dark:text-slate-400 cursor-pointer">
-                        <input type="checkbox" id="loan-alamat-simpan" class="accent-blue-500">
-                        <span>Simpan sebagai alamat utama</span>
-                    </label>
-                </div>
-
                 <div class="flex gap-2 pt-2">
                     <button type="button" onclick="cancelBookingForm()" class="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold py-2.5 rounded-xl border border-slate-200/60 dark:border-slate-700 hover:bg-slate-200 transition-all">Batal</button>
                     <button type="button" onclick="submitBookingForm()" class="flex-1 bg-blue-600 text-white font-semibold py-2.5 rounded-xl hover:bg-blue-700 transition-all shadow-md">Konfirmasi</button>
@@ -746,23 +736,14 @@
                 <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">Metode Pengiriman</label>
                 <div class="grid grid-cols-2 gap-3">
                     <label class="flex items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300 text-sm">
-                        <input type="radio" name="atk-delivery-option" value="ambil_sendiri" checked class="accent-slate-800" onchange="toggleAtkAlamatField()">
+                        <input type="radio" name="atk-delivery-option" value="ambil_sendiri" checked class="accent-slate-800" onchange="updateAtkPayHint()">
                         <span>Ambil Sendiri</span>
                     </label>
                     <label class="flex items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300 text-sm">
-                        <input type="radio" name="atk-delivery-option" value="antar" class="accent-slate-800" onchange="toggleAtkAlamatField()">
+                        <input type="radio" name="atk-delivery-option" value="antar" class="accent-slate-800" onchange="updateAtkPayHint()">
                         <span>Diantar ke Rumah</span>
                     </label>
                 </div>
-                <div id="atk-alamat-wrap" class="hidden mt-3">
-                    <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">Alamat Pengiriman</label>
-                    <textarea id="atk-alamat-input" rows="2" placeholder="Tulis alamat lengkap tujuan pengiriman..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-slate-500 text-sm text-slate-800 dark:text-white resize-none"></textarea>
-                    <label class="flex items-center gap-2 mt-2 text-xs text-slate-600 dark:text-slate-400 cursor-pointer">
-                        <input type="checkbox" id="atk-alamat-simpan" class="accent-slate-800">
-                        <span>Simpan sebagai alamat utama</span>
-                    </label>
-                </div>
-
                 <div class="mt-4">
                     <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">Metode Pembayaran</label>
                     <div class="grid grid-cols-2 gap-3">
@@ -2307,28 +2288,6 @@
             catch (_) { return ''; }
         }
 
-        // Simpan alamat utama ke akun + perbarui salinan di browser.
-        async function simpanAlamatUtama(alamat) {
-            try {
-                const res = await fetch('/api/profil/alamat', {
-                    method: 'PATCH',
-                    headers: getAuthHeaders({ 'Content-Type': 'application/json', 'Accept': 'application/json' }),
-                    body: JSON.stringify({ alamat_kirim: alamat })
-                });
-                const data = await res.json().catch(() => ({}));
-                if (!res.ok || !data.success) {
-                    const fieldErr = data.errors ? Object.values(data.errors)[0]?.[0] : null;
-                    throw new Error(fieldErr || data.message || 'Gagal menyimpan alamat.');
-                }
-                const u = JSON.parse(localStorage.getItem('libra_user') || '{}');
-                u.alamat_kirim = (data.user && data.user.alamat_kirim) ? data.user.alamat_kirim : alamat;
-                localStorage.setItem('libra_user', JSON.stringify(u));
-                return { ok: true };
-            } catch (err) {
-                return { ok: false, message: err.message };
-            }
-        }
-
         // ============================================================
         // PROFIL SAYA: form gaya "label kiri, nilai kanan, tombol Ubah"
         // ============================================================
@@ -2610,22 +2569,6 @@
         }
         window.addEventListener('popstate', () => closeProfilEdit(true));
 
-        // Tampilkan kolom alamat di form booking hanya untuk Jasa Pengantaran
-        function toggleLoanAlamatField() {
-            const sel = document.querySelector('input[name="pickup-option"]:checked');
-            const wrap = document.getElementById('loan-alamat-wrap');
-            if (!wrap) return;
-            const antar = !!sel && sel.value === 'Booking Dikonfirmasi Admin';
-            wrap.classList.toggle('hidden', !antar);
-            if (antar) {
-                const input = document.getElementById('loan-alamat-input');
-                const saved = getSavedAlamat();
-                if (!input.value.trim()) input.value = saved;
-                const chk = document.getElementById('loan-alamat-simpan');
-                if (chk && !saved) chk.checked = true; // belum punya alamat tersimpan -> sarankan menyimpan
-            }
-        }
-
         function openBookingForm() {
             // Pengguna yang masih punya denda tidak boleh meminjam (server juga menolak).
             if (userFine > 0) {
@@ -2652,13 +2595,6 @@
             // Batas maksimal peminjaman: 1 bulan dari tanggal pinjam
             updateDueDateLimit(startStr);
             
-            // Alamat pengantaran terisi otomatis dari alamat tersimpan (bisa diedit untuk pesanan ini)
-            const loanAlamat = document.getElementById('loan-alamat-input');
-            if (loanAlamat) loanAlamat.value = getSavedAlamat();
-            const loanSimpan = document.getElementById('loan-alamat-simpan');
-            if (loanSimpan) loanSimpan.checked = false;
-            toggleLoanAlamatField();
-
             // Tampilkan form peminjaman
             document.getElementById('booking-form-section').classList.remove('hidden');
         }
@@ -2733,14 +2669,14 @@
                 return;
             }
 
-            // Jasa Pengantaran: alamat wajib diisi lengkap (kurir butuh tujuan yang jelas)
+            // Jasa Pengantaran: alamat diambil dari alamat akun (diisi saat pendaftaran)
             let alamatAntar = '';
             if (statusVal === 'Booking Dikonfirmasi Admin') {
-                alamatAntar = (document.getElementById('loan-alamat-input').value || '').trim();
+                alamatAntar = getSavedAlamat();
                 if (alamatAntar.length < MIN_ALAMAT) {
                     alert(currentLang === 'id'
-                        ? 'Alamat pengantaran wajib diisi lengkap (minimal 10 karakter).'
-                        : 'Please enter the full delivery address (at least 10 characters).');
+                        ? 'Alamat akun Anda belum lengkap. Lengkapi alamat di menu Edit Profil terlebih dahulu.'
+                        : 'Your account address is incomplete. Please complete it in Edit Profile first.');
                     return;
                 }
             }
@@ -2784,13 +2720,6 @@
                         items: [{ id: activeBookId, nama: bookTitle, tipe: 'Buku', harga: 0, qty: 1, subtotal: 0 }],
                         total: 0
                     });
-
-                    // Centang "Simpan sebagai alamat utama" -> perbarui alamat di akun
-                    const simpanChk = document.getElementById('loan-alamat-simpan');
-                    if (simpanChk && simpanChk.checked && alamatAntar !== getSavedAlamat()) {
-                        const r = await simpanAlamatUtama(alamatAntar);
-                        if (!r.ok) console.warn('Alamat utama tidak tersimpan:', r.message);
-                    }
                 }
 
                 // Sukses
@@ -3490,22 +3419,6 @@
             return 'Rp ' + Number(angka).toLocaleString('id-ID');
         }
 
-        // Tampilkan/sembunyikan input alamat sesuai metode pengiriman yang dipilih di keranjang
-        function toggleAtkAlamatField() {
-            const selected = document.querySelector('input[name="atk-delivery-option"]:checked');
-            const wrap = document.getElementById('atk-alamat-wrap');
-            if (!wrap) return;
-            wrap.classList.toggle('hidden', !selected || selected.value !== 'antar');
-            if (selected && selected.value === 'antar') {
-                const input = document.getElementById('atk-alamat-input');
-                const saved = getSavedAlamat();
-                if (input && !input.value.trim()) input.value = saved;
-                const chk = document.getElementById('atk-alamat-simpan');
-                if (chk && !saved) chk.checked = true;
-            }
-            updateAtkPayHint();
-        }
-
         // Keterangan di bawah pilihan pembayaran: menyesuaikan metode pengambilan
         function updateAtkPayHint() {
             const hint = document.getElementById('atk-pay-hint');
@@ -3859,12 +3772,11 @@
 
             const metodeEl = document.querySelector('input[name="atk-delivery-option"]:checked');
             const metodePengiriman = metodeEl ? metodeEl.value : 'ambil_sendiri';
-            const alamatKirim = metodePengiriman === 'antar'
-                ? (document.getElementById('atk-alamat-input')?.value || '').trim()
-                : null;
+            // Pengiriman memakai alamat akun (diisi saat pendaftaran)
+            const alamatKirim = metodePengiriman === 'antar' ? getSavedAlamat() : null;
 
             if (metodePengiriman === 'antar' && (!alamatKirim || alamatKirim.length < MIN_ALAMAT)) {
-                showToastToko('Alamat pengiriman wajib diisi lengkap (minimal 10 karakter)!', 'red');
+                showToastToko('Alamat akun Anda belum lengkap. Lengkapi di menu Edit Profil terlebih dahulu.', 'red');
                 return;
             }
 
@@ -3928,13 +3840,6 @@
                             harga: k.harga, qty: k.qty, subtotal: k.harga * k.qty
                         }))
                     });
-
-                    // Centang "Simpan sebagai alamat utama" -> perbarui alamat di akun
-                    const simpanAtk = document.getElementById('atk-alamat-simpan');
-                    if (simpanAtk && simpanAtk.checked && alamatKirim !== getSavedAlamat()) {
-                        const r = await simpanAlamatUtama(alamatKirim);
-                        if (!r.ok) console.warn('Alamat utama tidak tersimpan:', r.message);
-                    }
                 }
 
                 keranjang = [];
@@ -3942,10 +3847,6 @@
                 document.getElementById('cart-modal').classList.add('hidden');
                 // Reset pilihan form keranjang utk pesanan berikutnya
                 document.querySelector('input[name="atk-delivery-option"][value="ambil_sendiri"]').checked = true;
-                toggleAtkAlamatField();
-                if (document.getElementById('atk-alamat-input')) document.getElementById('atk-alamat-input').value = '';
-                const atkSimpanReset = document.getElementById('atk-alamat-simpan');
-                if (atkSimpanReset) atkSimpanReset.checked = false;
                 const payDefault = document.querySelector('input[name="atk-pay-option"][value="di_tempat"]');
                 if (payDefault) payDefault.checked = true;
                 updateAtkPayHint();
