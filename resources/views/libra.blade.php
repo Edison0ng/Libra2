@@ -414,6 +414,16 @@
                     <span id="profile-card-fakultas" class="inline-block bg-white/10 text-[10px] font-medium px-3 py-1 rounded-full mt-3 border border-white/10">-</span>
                 </div>
 
+                <!-- Alamat Pengantaran -->
+                <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 p-4 text-sm">
+                    <div class="flex items-center gap-3 font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                        <i class="fa-solid fa-location-dot text-lg text-rose-500"></i> <span>Alamat Pengantaran</span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 mb-2.5">Dipakai sebagai alamat awal saat memilih pengantaran buku atau ATK. Perbarui kalau kamu pindah rumah atau kos.</p>
+                    <textarea id="profile-alamat-input" rows="3" maxlength="500" placeholder="Tulis alamat lengkap (jalan, nomor, RT/RW, kelurahan, kota)..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-xs text-slate-800 dark:text-white resize-none"></textarea>
+                    <button type="button" id="profile-alamat-btn" onclick="simpanAlamatProfil()" class="mt-3 w-full py-2.5 bg-blue-600 text-white text-xs font-semibold rounded-xl shadow-sm hover:bg-blue-700 transition-colors">Simpan Alamat</button>
+                </div>
+
                 <!-- Pengaturan & Fitur -->
                 <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 overflow-hidden text-sm">
                     <div class="flex justify-between items-center p-4 border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50">
@@ -672,16 +682,26 @@
                     <label class="block text-slate-500 dark:text-slate-400 mb-1.5 font-semibold">Opsi Pengambilan</label>
                     <div class="grid grid-cols-2 gap-3">
                         <label class="flex items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300">
-                            <input type="radio" name="pickup-option" value="Booking" checked class="accent-blue-500">
+                            <input type="radio" name="pickup-option" value="Booking" checked class="accent-blue-500" onchange="toggleLoanAlamatField()">
                             <span>Ambil Sendiri</span>
                         </label>
                         <label class="flex items-center gap-2 p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800/80 text-slate-700 dark:text-slate-300">
-                            <input type="radio" name="pickup-option" value="Booking Dikonfirmasi Admin" class="accent-blue-500">
+                            <input type="radio" name="pickup-option" value="Booking Dikonfirmasi Admin" class="accent-blue-500" onchange="toggleLoanAlamatField()">
                             <span>Jasa Pengantaran</span>
                         </label>
                     </div>
                 </div>
                 
+                <!-- Alamat pengantaran: hanya muncul kalau memilih Jasa Pengantaran -->
+                <div id="loan-alamat-wrap" class="hidden">
+                    <label class="block text-slate-500 dark:text-slate-400 mb-1.5 font-semibold">Alamat Pengantaran</label>
+                    <textarea id="loan-alamat-input" rows="2" maxlength="500" placeholder="Tulis alamat lengkap tujuan pengantaran..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-500 text-xs text-slate-800 dark:text-white resize-none"></textarea>
+                    <label class="flex items-center gap-2 mt-2 text-slate-600 dark:text-slate-400 cursor-pointer">
+                        <input type="checkbox" id="loan-alamat-simpan" class="accent-blue-500">
+                        <span>Simpan sebagai alamat utama</span>
+                    </label>
+                </div>
+
                 <div class="flex gap-2 pt-2">
                     <button type="button" onclick="cancelBookingForm()" class="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold py-2.5 rounded-xl border border-slate-200/60 dark:border-slate-700 hover:bg-slate-200 transition-all">Batal</button>
                     <button type="button" onclick="submitBookingForm()" class="flex-1 bg-blue-600 text-white font-semibold py-2.5 rounded-xl hover:bg-blue-700 transition-all shadow-md">Konfirmasi</button>
@@ -721,6 +741,10 @@
                 <div id="atk-alamat-wrap" class="hidden mt-3">
                     <label class="block text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5">Alamat Pengiriman</label>
                     <textarea id="atk-alamat-input" rows="2" placeholder="Tulis alamat lengkap tujuan pengiriman..." class="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-slate-500 text-sm text-slate-800 dark:text-white resize-none"></textarea>
+                    <label class="flex items-center gap-2 mt-2 text-xs text-slate-600 dark:text-slate-400 cursor-pointer">
+                        <input type="checkbox" id="atk-alamat-simpan" class="accent-slate-800">
+                        <span>Simpan sebagai alamat utama</span>
+                    </label>
                 </div>
 
                 <div class="mt-4">
@@ -912,6 +936,8 @@
             set('profile-card-name', u.nama_lengkap || u.name || u.username || '');
             set('profile-card-nim', u.nim || '-');
             set('profile-card-fakultas', u.fakultas || '-');
+            const alamatProfilEl = document.getElementById('profile-alamat-input');
+            if (alamatProfilEl) alamatProfilEl.value = u.alamat_kirim || '';
             const av = document.getElementById('profile-card-avatar');
             if (av) av.src = u.avatar_url || ('https://api.dicebear.com/7.x/avataaars/svg?seed=' + encodeURIComponent(u.username || u.name || 'libra'));
         })();
@@ -2229,7 +2255,7 @@
                 user_name: userObj.nama_lengkap || userObj.name || 'Mahasiswa',
                 user_identity: `${userObj.nim || '-'} (${userObj.fakultas || 'Mahasiswa'})`,
                 user_phone: userObj.no_telepon || '-',
-                alamat: alamat || userObj.alamat_kirim || 'Alamat Terdaftar Pengguna',
+                alamat: alamat || userObj.alamat_kirim || 'Alamat belum diisi (hubungi pengguna)',
                 items: items,
                 total_items: items.reduce((sum, it) => sum + (it.qty || 1), 0),
                 total: total || 0,
@@ -2258,6 +2284,77 @@
             return order;
         }
 
+        // ---------- Alamat pengantaran ----------
+        const MIN_ALAMAT = 10;
+
+        function getSavedAlamat() {
+            try { return (JSON.parse(localStorage.getItem('libra_user') || '{}').alamat_kirim || '').trim(); }
+            catch (_) { return ''; }
+        }
+
+        // Simpan alamat utama ke akun + perbarui salinan di browser.
+        async function simpanAlamatUtama(alamat) {
+            try {
+                const res = await fetch('/api/profil/alamat', {
+                    method: 'PATCH',
+                    headers: getAuthHeaders({ 'Content-Type': 'application/json', 'Accept': 'application/json' }),
+                    body: JSON.stringify({ alamat_kirim: alamat })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok || !data.success) {
+                    const fieldErr = data.errors ? Object.values(data.errors)[0]?.[0] : null;
+                    throw new Error(fieldErr || data.message || 'Gagal menyimpan alamat.');
+                }
+                const u = JSON.parse(localStorage.getItem('libra_user') || '{}');
+                u.alamat_kirim = (data.user && data.user.alamat_kirim) ? data.user.alamat_kirim : alamat;
+                localStorage.setItem('libra_user', JSON.stringify(u));
+                const el = document.getElementById('profile-alamat-input');
+                if (el) el.value = u.alamat_kirim;
+                return { ok: true };
+            } catch (err) {
+                return { ok: false, message: err.message };
+            }
+        }
+
+        async function simpanAlamatProfil() {
+            const isId = currentLang === 'id';
+            const input = document.getElementById('profile-alamat-input');
+            const btn = document.getElementById('profile-alamat-btn');
+            const alamat = input.value.trim();
+            if (alamat.length < MIN_ALAMAT) {
+                alert(isId ? 'Alamat terlalu pendek, tulis alamat selengkapnya.' : 'Address is too short, please write the full address.');
+                return;
+            }
+            const original = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = isId ? 'Menyimpan...' : 'Saving...';
+            const r = await simpanAlamatUtama(alamat);
+            btn.disabled = false;
+            btn.textContent = original;
+            if (r.ok) {
+                showToast(isId ? 'Alamat Diperbarui' : 'Address Updated',
+                          isId ? 'Alamat pengantaranmu berhasil disimpan.' : 'Your delivery address has been saved.');
+            } else {
+                alert(r.message);
+            }
+        }
+
+        // Tampilkan kolom alamat di form booking hanya untuk Jasa Pengantaran
+        function toggleLoanAlamatField() {
+            const sel = document.querySelector('input[name="pickup-option"]:checked');
+            const wrap = document.getElementById('loan-alamat-wrap');
+            if (!wrap) return;
+            const antar = !!sel && sel.value === 'Booking Dikonfirmasi Admin';
+            wrap.classList.toggle('hidden', !antar);
+            if (antar) {
+                const input = document.getElementById('loan-alamat-input');
+                const saved = getSavedAlamat();
+                if (!input.value.trim()) input.value = saved;
+                const chk = document.getElementById('loan-alamat-simpan');
+                if (chk && !saved) chk.checked = true; // belum punya alamat tersimpan -> sarankan menyimpan
+            }
+        }
+
         function openBookingForm() {
             // Pengguna yang masih punya denda tidak boleh meminjam (server juga menolak).
             if (userFine > 0) {
@@ -2284,6 +2381,13 @@
             // Batas maksimal peminjaman: 1 bulan dari tanggal pinjam
             updateDueDateLimit(startStr);
             
+            // Alamat pengantaran terisi otomatis dari alamat tersimpan (bisa diedit untuk pesanan ini)
+            const loanAlamat = document.getElementById('loan-alamat-input');
+            if (loanAlamat) loanAlamat.value = getSavedAlamat();
+            const loanSimpan = document.getElementById('loan-alamat-simpan');
+            if (loanSimpan) loanSimpan.checked = false;
+            toggleLoanAlamatField();
+
             // Tampilkan form peminjaman
             document.getElementById('booking-form-section').classList.remove('hidden');
         }
@@ -2358,6 +2462,18 @@
                 return;
             }
 
+            // Jasa Pengantaran: alamat wajib diisi lengkap (kurir butuh tujuan yang jelas)
+            let alamatAntar = '';
+            if (statusVal === 'Booking Dikonfirmasi Admin') {
+                alamatAntar = (document.getElementById('loan-alamat-input').value || '').trim();
+                if (alamatAntar.length < MIN_ALAMAT) {
+                    alert(currentLang === 'id'
+                        ? 'Alamat pengantaran wajib diisi lengkap (minimal 10 karakter).'
+                        : 'Please enter the full delivery address (at least 10 characters).');
+                    return;
+                }
+            }
+
             bookingInFlight = true;
             const confirmBtn = document.querySelector('#booking-form-section button[onclick="submitBookingForm()"]');
             const originalText = confirmBtn.textContent;
@@ -2393,10 +2509,17 @@
                     buatOrderKurir({
                         prefix: 'BK',
                         id: data.loan && data.loan.id ? String(data.loan.id) : undefined,
-                        alamat: user.alamat_kirim || null,
+                        alamat: alamatAntar,
                         items: [{ id: activeBookId, nama: bookTitle, tipe: 'Buku', harga: 0, qty: 1, subtotal: 0 }],
                         total: 0
                     });
+
+                    // Centang "Simpan sebagai alamat utama" -> perbarui alamat di akun
+                    const simpanChk = document.getElementById('loan-alamat-simpan');
+                    if (simpanChk && simpanChk.checked && alamatAntar !== getSavedAlamat()) {
+                        const r = await simpanAlamatUtama(alamatAntar);
+                        if (!r.ok) console.warn('Alamat utama tidak tersimpan:', r.message);
+                    }
                 }
 
                 // Sukses
@@ -3102,6 +3225,13 @@
             const wrap = document.getElementById('atk-alamat-wrap');
             if (!wrap) return;
             wrap.classList.toggle('hidden', !selected || selected.value !== 'antar');
+            if (selected && selected.value === 'antar') {
+                const input = document.getElementById('atk-alamat-input');
+                const saved = getSavedAlamat();
+                if (input && !input.value.trim()) input.value = saved;
+                const chk = document.getElementById('atk-alamat-simpan');
+                if (chk && !saved) chk.checked = true;
+            }
             updateAtkPayHint();
         }
 
@@ -3462,8 +3592,8 @@
                 ? (document.getElementById('atk-alamat-input')?.value || '').trim()
                 : null;
 
-            if (metodePengiriman === 'antar' && (!alamatKirim || alamatKirim.length === 0)) {
-                showToastToko('Silakan masukkan alamat pengiriman terlebih dahulu!', 'red');
+            if (metodePengiriman === 'antar' && (!alamatKirim || alamatKirim.length < MIN_ALAMAT)) {
+                showToastToko('Alamat pengiriman wajib diisi lengkap (minimal 10 karakter)!', 'red');
                 return;
             }
 
@@ -3527,6 +3657,13 @@
                             harga: k.harga, qty: k.qty, subtotal: k.harga * k.qty
                         }))
                     });
+
+                    // Centang "Simpan sebagai alamat utama" -> perbarui alamat di akun
+                    const simpanAtk = document.getElementById('atk-alamat-simpan');
+                    if (simpanAtk && simpanAtk.checked && alamatKirim !== getSavedAlamat()) {
+                        const r = await simpanAlamatUtama(alamatKirim);
+                        if (!r.ok) console.warn('Alamat utama tidak tersimpan:', r.message);
+                    }
                 }
 
                 keranjang = [];
@@ -3536,6 +3673,8 @@
                 document.querySelector('input[name="atk-delivery-option"][value="ambil_sendiri"]').checked = true;
                 toggleAtkAlamatField();
                 if (document.getElementById('atk-alamat-input')) document.getElementById('atk-alamat-input').value = '';
+                const atkSimpanReset = document.getElementById('atk-alamat-simpan');
+                if (atkSimpanReset) atkSimpanReset.checked = false;
                 const payDefault = document.querySelector('input[name="atk-pay-option"][value="di_tempat"]');
                 if (payDefault) payDefault.checked = true;
                 updateAtkPayHint();
@@ -4057,6 +4196,12 @@
             'Pesanan ATK — ambil sendiri': 'ATK Order — self pickup',
             'Pesanan ATK': 'ATK Order',
             'Ambil pesananmu': 'Pick up your order',
+            'Alamat Pengantaran': 'Delivery Address',
+            'Simpan sebagai alamat utama': 'Save as my main address',
+            'Simpan Alamat': 'Save Address',
+            'Dipakai sebagai alamat awal saat memilih pengantaran buku atau ATK. Perbarui kalau kamu pindah rumah atau kos.': 'Used as the default address when choosing book or stationery delivery. Update it if you move house or boarding room.',
+            'Tulis alamat lengkap (jalan, nomor, RT/RW, kelurahan, kota)...': 'Write the full address (street, number, neighborhood, city)...',
+            'Tulis alamat lengkap tujuan pengantaran...': 'Write the full delivery address...',
             'Batalkan Booking': 'Cancel Booking',
             'Batalkan Pesanan': 'Cancel Order',
             'Membatalkan...': 'Cancelling...',

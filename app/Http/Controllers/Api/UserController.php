@@ -9,6 +9,31 @@ use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
+    // PATCH /api/profil/alamat
+    // Pengguna memperbarui alamat pengantarannya sendiri (mis. pindah rumah/kos).
+    // Hanya mengubah akun yang sedang login; pesanan lama tidak berubah karena
+    // alamat sudah disalin ke pesanan saat pesanan dibuat.
+    public function updateAlamat(Request $request)
+    {
+        $data = $request->validate([
+            'alamat_kirim' => ['required', 'string', 'min:10', 'max:500'],
+        ], [
+            'alamat_kirim.required' => 'Alamat tidak boleh kosong.',
+            'alamat_kirim.min'      => 'Alamat terlalu pendek, tulis alamat selengkapnya.',
+            'alamat_kirim.max'      => 'Alamat maksimal 500 karakter.',
+        ]);
+
+        $user = $request->user();
+        $user->alamat_kirim = trim($data['alamat_kirim']);
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Alamat berhasil diperbarui.',
+            'user'    => $user,
+        ]);
+    }
+
     // GET /api/users
     public function index()
     {
