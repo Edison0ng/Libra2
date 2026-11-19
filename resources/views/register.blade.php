@@ -50,9 +50,6 @@
     align-items:center;
     justify-content:center;
     padding: 40px 20px;
-    background:
-      radial-gradient(900px 500px at 50% 0%, rgba(61,107,255,0.06), transparent 60%),
-      #F7F8FC;
   }
 
   .register-card{
@@ -235,11 +232,12 @@
   @media (max-width: 480px){
     .register-card{ padding: 32px 24px; }
   }
+  @include('partials.auth-background-css')
 </style>
 </head>
 <body>
 
-<div class="register-shell">
+<div class="register-shell auth-bg">
   <div class="register-card">
 
     <div class="card-logo"><span class="logo-text">LIBRA</span></div>
@@ -391,6 +389,9 @@
     </p>
 
   </div>
+
+  @include('partials.auth-background-shelf')
+
 </div>
 
 <script>
@@ -580,6 +581,8 @@
     });
   });
 </script>
+
+@include('partials.auth-background-js')
 
 </body>
 </html>
