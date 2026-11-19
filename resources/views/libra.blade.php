@@ -404,6 +404,7 @@
 
             <!-- TAB 4: PROFIL -->
             <div id="profil" class="tab-content max-w-xl mx-auto space-y-6">
+                <div id="profil-main" class="space-y-6 !mt-0">
                 <!-- Profil Mahasiswa -->
                 <div class="bg-gradient-to-br from-slate-800 to-slate-950 dark:from-slate-900 dark:to-black p-6 rounded-3xl text-center text-white shadow-md relative overflow-hidden">
                     <div class="w-20 h-20 bg-slate-700 rounded-full mx-auto mb-3 border-4 border-slate-600 overflow-hidden">
@@ -414,12 +415,17 @@
                     <span id="profile-card-fakultas" class="inline-block bg-white/10 text-[10px] font-medium px-3 py-1 rounded-full mt-3 border border-white/10">-</span>
                 </div>
 
-                <!-- Profil Saya (gaya form: label kiri, nilai kanan, tombol Ubah) -->
-                <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 p-5 text-sm">
-                    <h4 class="font-bold text-base text-slate-800 dark:text-white">Profil Saya</h4>
-                    <p class="text-[11px] text-slate-400 mt-0.5 pb-4 mb-5 border-b border-slate-100 dark:border-slate-800">Kelola informasi profil Anda untuk mengontrol dan mengamankan akun</p>
-                    <div id="profil-rows" class="space-y-5"></div>
-                </div>
+                <!-- Edit Profil: membuka tampilan edit di tab ini (tanpa pindah halaman) -->
+                <button type="button" onclick="openProfilEdit()" class="w-full text-left flex items-center justify-between gap-3 p-4 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors text-sm">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <i class="fa-solid fa-user-pen text-lg text-blue-500"></i>
+                        <div class="min-w-0">
+                            <span class="block font-medium text-slate-700 dark:text-slate-300">Edit Profil</span>
+                            <span class="block text-[11px] text-slate-400">Nama, email, nomor telepon, alamat &amp; password</span>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-[10px] text-slate-400 flex-shrink-0"></i>
+                </button>
 
                 <!-- Pengaturan & Fitur -->
                 <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 overflow-hidden text-sm">
@@ -498,6 +504,19 @@
                     <button onclick="logoutSesi()" class="w-full p-4 text-center font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-colors" data-i18n="logout">
                         Logout
                     </button>
+                </div>
+                </div><!-- /profil-main -->
+
+                <!-- Tampilan Edit Profil: hanya form (nama, email, telepon, alamat, password) -->
+                <div id="profil-edit-view" class="hidden space-y-4 !mt-0">
+                    <button type="button" onclick="closeProfilEdit()" class="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white transition-colors">
+                        <i class="fa-solid fa-arrow-left"></i> <span>Kembali</span>
+                    </button>
+                    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 p-5 text-sm">
+                        <h4 class="font-bold text-base text-slate-800 dark:text-white">Profil Saya</h4>
+                        <p class="text-[11px] text-slate-400 mt-0.5 pb-4 mb-5 border-b border-slate-100 dark:border-slate-800">Kelola informasi profil Anda untuk mengontrol dan mengamankan akun</p>
+                        <div id="profil-rows" class="space-y-5"></div>
+                    </div>
                 </div>
             </div>
 
@@ -1098,6 +1117,7 @@
         // ============================================================
         function switchTab(tabId) {
             activeTabId = tabId;
+            if (tabId !== 'profil' && typeof closeProfilEdit === 'function') closeProfilEdit();
             localStorage.setItem('libra-active-tab', tabId);
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             const targetContent = document.getElementById(tabId);
@@ -2303,7 +2323,6 @@
                 const u = JSON.parse(localStorage.getItem('libra_user') || '{}');
                 u.alamat_kirim = (data.user && data.user.alamat_kirim) ? data.user.alamat_kirim : alamat;
                 localStorage.setItem('libra_user', JSON.stringify(u));
-                if (typeof renderProfilForm === 'function') renderProfilForm();
                 return { ok: true };
             } catch (err) {
                 return { ok: false, message: err.message };
@@ -2315,7 +2334,7 @@
         // ============================================================
         const PROFIL_ROWS = [
             { key: 'nim',          label: 'NIM',                readonly: true },
-            { key: 'fakultas',     label: 'Fakultas',           readonly: true },
+            { key: 'fakultas',     label: 'Program Studi',      readonly: true },
             { key: 'nama_lengkap', label: 'Nama Lengkap' },
             { key: 'email',        label: 'Email' },
             { key: 'no_telepon',   label: 'Nomor Telepon' },
@@ -2566,6 +2585,30 @@
 
         renderProfilForm();
         refreshProfilFromServer();
+
+
+        // Buka/tutup tampilan edit di dalam tab Profil (tanpa pindah halaman)
+        function openProfilEdit() {
+            document.getElementById('profil-main').classList.add('hidden');
+            document.getElementById('profil-edit-view').classList.remove('hidden');
+            profilEditKey = null;
+            renderProfilForm();
+            refreshProfilFromServer();
+            const tab = document.getElementById('profil');
+            if (tab && tab.scrollIntoView) tab.scrollIntoView({ block: 'start' });
+            // Tombol "back" di HP/browser kembali ke tampilan profil, bukan keluar dari aplikasi
+            try { history.pushState({ profilEdit: true }, ''); } catch (_) {}
+        }
+
+        function closeProfilEdit(fromPop) {
+            const view = document.getElementById('profil-edit-view');
+            if (!view || view.classList.contains('hidden')) return;
+            profilEditKey = null;
+            view.classList.add('hidden');
+            document.getElementById('profil-main').classList.remove('hidden');
+            if (!fromPop && history.state && history.state.profilEdit) history.back();
+        }
+        window.addEventListener('popstate', () => closeProfilEdit(true));
 
         // Tampilkan kolom alamat di form booking hanya untuk Jasa Pengantaran
         function toggleLoanAlamatField() {
@@ -4426,8 +4469,10 @@
             'Ambil pesananmu': 'Pick up your order',
             'Alamat Pengantaran': 'Delivery Address',
             'Simpan sebagai alamat utama': 'Save as my main address',
+            'Edit Profil': 'Edit Profile',
             'Profil Saya': 'My Profile',
             'Kelola informasi profil Anda untuk mengontrol dan mengamankan akun': 'Manage your profile information to control and secure your account',
+            'Nama, email, nomor telepon, alamat & password': 'Name, email, phone number, address & password',
             'Tulis alamat lengkap tujuan pengantaran...': 'Write the full delivery address...',
             'Batalkan Booking': 'Cancel Booking',
             'Batalkan Pesanan': 'Cancel Order',

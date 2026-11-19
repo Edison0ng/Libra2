@@ -302,9 +302,9 @@
         <p class="field-hint">Dipakai untuk reset kata sandi jika Anda lupa.</p>
       </div>
 
-      <!-- Fakultas -->
+      <!-- Program Studi (disimpan di kolom DB "fakultas") -->
       <div class="field-group">
-        <label for="fakultas">Fakultas / Program Studi</label>
+        <label for="fakultas">Program Studi</label>
         <div class="input-wrap">
           <span class="input-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">

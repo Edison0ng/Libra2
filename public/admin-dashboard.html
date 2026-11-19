@@ -491,7 +491,7 @@
                         class="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 flex gap-3">
                         <div class="relative w-full">
                             <input type="text" id="search-users"
-                                placeholder="Cari nama, NIM, fakultas, atau no. telepon..."
+                                placeholder="Cari nama, NIM, program studi, atau no. telepon..."
                                 class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block pl-10 p-2.5">
                             <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400"></i>
                         </div>
@@ -504,7 +504,7 @@
                                     <th class="px-4 py-3">Avatar</th>
                                     <th class="px-4 py-3">Nama Lengkap</th>
                                     <th class="px-4 py-3">NIM</th>
-                                    <th class="px-4 py-3">Fakultas</th>
+                                    <th class="px-4 py-3">Program Studi</th>
                                     <th class="px-4 py-3">No. Telepon</th>
                                     <th class="px-4 py-3">Alamat Kirim</th>
                                     <th class="px-4 py-3 text-center">Aksi</th>
@@ -1071,7 +1071,7 @@
                         class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200">
                 </div>
                 <div><label
-                        class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Fakultas</label><input
+                        class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Program Studi</label><input
                         type="text" id="user-fakultas"
                         class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg p-2.5 text-sm text-slate-800 dark:text-slate-200">
                 </div>
@@ -2674,7 +2674,7 @@
             },
             users: {
                 title: 'Laporan Data Pengguna',
-                columns: ['Nama Lengkap', 'NIM', 'Email', 'Fakultas', 'No. Telepon', 'Alamat Kirim'],
+                columns: ['Nama Lengkap', 'NIM', 'Email', 'Program Studi', 'No. Telepon', 'Alamat Kirim'],
                 rows: data => data.map(item => [
                     item?.nama_lengkap, item?.nim, item?.email, item?.fakultas, item?.no_telepon, item?.alamat_kirim
                 ])
