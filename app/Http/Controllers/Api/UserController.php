@@ -18,11 +18,21 @@ class UserController extends Controller
     // Email & password punya endpoint terpisah karena butuh konfirmasi.
     public function updateProfil(Request $request)
     {
+        $user = $request->user();
+
         $data = $request->validate([
+            // NIM hanya angka: ini sekaligus mencegah NIM diubah menjadi 'admin' / 'kurir'
+            // (peran admin dan kurir ditentukan dari nilai NIM).
+            'nim'          => ['sometimes', 'required', 'string', 'max:50', 'regex:/^[0-9]+$/', Rule::unique('users', 'nim')->ignore($user->id)],
+            'fakultas'     => ['sometimes', 'required', 'string', 'max:255'],
             'nama_lengkap' => ['sometimes', 'required', 'string', 'max:255'],
             'no_telepon'   => ['sometimes', 'required', 'string', 'min:8', 'max:50', 'regex:/^[0-9]+$/'],
             'alamat_kirim' => ['sometimes', 'required', 'string', 'min:10', 'max:500'],
         ], [
+            'nim.required'          => 'NIM tidak boleh kosong.',
+            'nim.regex'             => 'NIM hanya boleh berisi angka.',
+            'nim.unique'            => 'NIM ini sudah dipakai akun lain.',
+            'fakultas.required'     => 'Program studi tidak boleh kosong.',
             'nama_lengkap.required' => 'Nama tidak boleh kosong.',
             'no_telepon.required'   => 'Nomor telepon tidak boleh kosong.',
             'no_telepon.regex'      => 'Nomor telepon hanya boleh berisi angka.',
@@ -36,7 +46,18 @@ class UserController extends Controller
             return response()->json(['success' => false, 'message' => 'Tidak ada data yang diubah.'], 422);
         }
 
-        $user = $request->user();
+        if (array_key_exists('nim', $data)) {
+            // Akun admin / kurir dikenali dari NIM-nya, jadi tidak boleh diganti lewat profil.
+            if ($user->isAdmin() || $user->isKurir()) {
+                return response()->json(['success' => false, 'message' => 'Akun ini tidak dapat mengubah NIM.'], 403);
+            }
+            // NIM juga dipakai untuk login (bersama username), jangan sampai bentrok dengan username akun lain.
+            $bentrok = User::where('username', $data['nim'])->where('id', '!=', $user->id)->exists();
+            if ($bentrok) {
+                return response()->json(['success' => false, 'message' => 'NIM ini sudah dipakai akun lain.'], 422);
+            }
+        }
+
         foreach ($data as $field => $value) {
             $user->{$field} = trim($value);
         }

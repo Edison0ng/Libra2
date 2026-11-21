@@ -421,7 +421,6 @@
                         <i class="fa-solid fa-user-pen text-lg text-blue-500"></i>
                         <div class="min-w-0">
                             <span class="block font-medium text-slate-700 dark:text-slate-300">Edit Profil</span>
-                            <span class="block text-[11px] text-slate-400">Nama, email, nomor telepon, alamat &amp; password</span>
                         </div>
                     </div>
                     <i class="fa-solid fa-chevron-right text-[10px] text-slate-400 flex-shrink-0"></i>
@@ -670,7 +669,7 @@
             <!-- Tombol Default untuk membuka form -->
             <div class="mt-6" id="booking-default-btn-container">
                 <button onclick="openBookingForm()" class="w-full bg-slate-900 dark:bg-blue-600 text-white text-sm font-semibold py-3 rounded-xl shadow-md hover:bg-slate-800 dark:hover:bg-blue-700 active:scale-[0.98] transition-all">
-                    <i class="fa-solid fa-book-open mr-2"></i> Booking & Antar ke Rumah
+                    <i class="fa-solid fa-book-open mr-2"></i> Booking
                 </button>
             </div>
 
@@ -1654,7 +1653,7 @@
 
                     bookingBtn.disabled = false;
                     bookingBtn.className = 'w-full bg-slate-900 dark:bg-blue-600 text-white text-sm font-semibold py-3 rounded-xl shadow-md hover:bg-slate-800 dark:hover:bg-blue-700 active:scale-[0.98] transition-all';
-                    bookingBtn.innerHTML = `<i class="fa-solid fa-book-open mr-2"></i> Booking & Antar ke Rumah`;
+                    bookingBtn.innerHTML = `<i class="fa-solid fa-book-open mr-2"></i> Booking`;
 
                     card.innerHTML = `
                         <div class="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 rounded-xl p-3 text-xs">
@@ -1671,7 +1670,7 @@
                 if (info.book_available) {
                     bookingBtn.disabled = false;
                     bookingBtn.className = 'w-full bg-slate-900 dark:bg-blue-600 text-white text-sm font-semibold py-3 rounded-xl shadow-md hover:bg-slate-800 dark:hover:bg-blue-700 active:scale-[0.98] transition-all';
-                    bookingBtn.innerHTML = `<i class="fa-solid fa-book-open mr-2"></i> Booking & Antar ke Rumah`;
+                    bookingBtn.innerHTML = `<i class="fa-solid fa-book-open mr-2"></i> Booking`;
                     card.classList.add('hidden');
                     return;
                 }
@@ -2292,8 +2291,8 @@
         // PROFIL SAYA: form gaya "label kiri, nilai kanan, tombol Ubah"
         // ============================================================
         const PROFIL_ROWS = [
-            { key: 'nim',          label: 'NIM',                readonly: true },
-            { key: 'fakultas',     label: 'Program Studi',      readonly: true },
+            { key: 'nim',          label: 'NIM' },
+            { key: 'fakultas',     label: 'Program Studi' },
             { key: 'nama_lengkap', label: 'Nama Lengkap' },
             { key: 'email',        label: 'Email' },
             { key: 'no_telepon',   label: 'Nomor Telepon' },
@@ -2425,6 +2424,14 @@
                 const field = row.key === 'alamat_kirim' ? pEl('textarea', P_INPUT + ' resize-none') : pEl('input', P_INPUT);
                 if (row.key === 'alamat_kirim') { field.rows = 3; field.maxLength = 500; field.placeholder = 'Tulis alamat lengkap (jalan, nomor, RT/RW, kelurahan, kota)...'; }
                 if (row.key === 'nama_lengkap') { field.type = 'text'; field.maxLength = 255; }
+                if (row.key === 'fakultas') { field.type = 'text'; field.maxLength = 255; field.placeholder = 'Contoh: Informatika'; }
+                if (row.key === 'nim') {
+                    field.type = 'text';
+                    field.inputMode = 'numeric';
+                    field.maxLength = 50;
+                    field.placeholder = 'Contoh: 2308561001';
+                    field.addEventListener('input', () => { field.value = field.value.replace(/\D/g, ''); });
+                }
                 if (row.key === 'no_telepon') {
                     field.type = 'text';
                     field.inputMode = 'numeric';
@@ -2466,6 +2473,10 @@
             const u = getLibraUser();
             const nameEl = document.getElementById('profile-card-name');
             if (nameEl) nameEl.textContent = u.nama_lengkap || u.name || u.username || '';
+            const nimEl = document.getElementById('profile-card-nim');
+            if (nimEl) nimEl.textContent = u.nim || '-';
+            const fakEl = document.getElementById('profile-card-fakultas');
+            if (fakEl) fakEl.textContent = u.fakultas || '-';
         }
 
         async function profilWithBusy(btn, label, fn) {
@@ -2482,6 +2493,9 @@
 
         async function saveProfilField(key, value, btn, showErr) {
             const v = (value || '').trim();
+            if (key === 'nim' && !v) return showErr('NIM tidak boleh kosong.');
+            if (key === 'nim' && !/^[0-9]+$/.test(v)) return showErr('NIM hanya boleh berisi angka.');
+            if (key === 'fakultas' && !v) return showErr('Program studi tidak boleh kosong.');
             if (key === 'nama_lengkap' && !v) return showErr('Nama tidak boleh kosong.');
             if (key === 'no_telepon' && !/^[0-9]{8,}$/.test(v)) return showErr('Nomor telepon hanya boleh angka, minimal 8 digit.');
             if (key === 'alamat_kirim' && v.length < MIN_ALAMAT) return showErr('Alamat terlalu pendek, tulis alamat selengkapnya.');
@@ -4299,7 +4313,6 @@
             'Batalkan Antrian': 'Leave Queue',
             'Ditahan untuk Antrian Lain': 'Held for Another Queue',
             'Ini giliranmu!': "It's your turn!",
-            'Booking & Antar ke Rumah': 'Book & Deliver to Home',
             'Perkiraan giliranmu:': 'Estimated turn:',
             'Perkiraan:': 'Estimate:',
             'Booking sebelum': 'Book before',
@@ -4373,7 +4386,6 @@
             'Edit Profil': 'Edit Profile',
             'Profil Saya': 'My Profile',
             'Kelola informasi profil Anda untuk mengontrol dan mengamankan akun': 'Manage your profile information to control and secure your account',
-            'Nama, email, nomor telepon, alamat & password': 'Name, email, phone number, address & password',
             'Tulis alamat lengkap tujuan pengantaran...': 'Write the full delivery address...',
             'Batalkan Booking': 'Cancel Booking',
             'Batalkan Pesanan': 'Cancel Order',
@@ -4416,6 +4428,13 @@
             'Contoh: 081234567890': 'Example: 081234567890',
             'Tulis alamat lengkap (jalan, nomor, RT/RW, kelurahan, kota)...': 'Write the full address (street, number, RT/RW, village, city)...',
             'Tautan verifikasi dikirim ke email baru. Email lama tetap dipakai sampai email baru dikonfirmasi.': 'A verification link will be sent to the new email. The old email stays in use until the new one is confirmed.',
+            'NIM tidak boleh kosong.': 'Student ID (NIM) cannot be empty.',
+            'NIM hanya boleh berisi angka.': 'Student ID (NIM) may only contain digits.',
+            'NIM ini sudah dipakai akun lain.': 'This Student ID (NIM) is already used by another account.',
+            'Akun ini tidak dapat mengubah NIM.': 'This account cannot change its Student ID (NIM).',
+            'Program studi tidak boleh kosong.': 'Study program cannot be empty.',
+            'Contoh: 2308561001': 'Example: 2308561001',
+            'Contoh: Informatika': 'Example: Informatics',
             'Nama tidak boleh kosong.': 'Name cannot be empty.',
             'Nomor telepon hanya boleh angka, minimal 8 digit.': 'Phone number may only contain digits, at least 8 digits.',
             'Alamat terlalu pendek, tulis alamat selengkapnya.': 'The address is too short, please write the full address.',
