@@ -39,7 +39,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/email/resend', [AuthController::class, 'resendVerification'])->middleware('throttle:5,1');
 
 // Lupa password: kirim link reset ke email
-Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:5,1');
 
 // Reset password: submit token + password baru
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);

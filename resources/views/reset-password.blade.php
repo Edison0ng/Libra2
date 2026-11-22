@@ -11,19 +11,19 @@
 
 <style>
   :root{
-    --bg: #0A0E17;
-    --panel-solid: #10172A;
-    --panel-2: #151D34;
-    --line: #222B42;
-    --text: #E7EAF2;
-    --muted: #8A92A6;
-    --muted-2: #737F9C;
+    --bg: #FFFFFF;
+    --panel-solid: #FFFFFF;
+    --panel-2: #F4F6FA;
+    --line: #E3E7F0;
+    --text: #1A2033;
+    --muted: #6B7280;
+    --muted-2: #8A92A6;
     --accent: #3D6BFF;
-    --accent-2: #7C9CFF;
-    --danger: #FF5470;
-    --success: #3DDC97;
-    --success-bg: rgba(61, 220, 151, 0.12);
-    --danger-bg: rgba(255, 84, 112, 0.12);
+    --accent-2: #2F56E0;
+    --danger: #E0264F;
+    --success: #18A869;
+    --success-bg: rgba(24, 168, 105, 0.10);
+    --danger-bg: rgba(224, 38, 79, 0.08);
     --radius: 14px;
   }
 
@@ -211,11 +211,17 @@
   }
 
   .back-footer a{ font-weight:600; }
+
+  /* Latar sama seperti halaman login: pola buku, cahaya, titik, rak buku */
+  .auth-card{
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05), 0 18px 48px rgba(47, 86, 224, 0.14);
+  }
+  @include('partials.auth-background-css')
 </style>
 </head>
 <body>
 
-<div class="auth-shell">
+<div class="auth-shell auth-bg">
   <div class="auth-card">
     <div class="card-logo">
       <h1 style="display:none;">Reset Password LIBRA</h1>
@@ -287,7 +293,9 @@
       <a href="{{ route('login.view') }}">Kembali ke Login</a>
     </p>
   </div>
+  @include('partials.auth-background-shelf')
 </div>
+@include('partials.auth-background-js')
 
 <script>
   const API_BASE_URL = '{{ url('/api') }}';
