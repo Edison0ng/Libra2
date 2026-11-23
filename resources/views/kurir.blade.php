@@ -57,10 +57,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome 6 Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts: Inter & Sora -->
+    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <script>
         tailwind.config = {
@@ -68,20 +68,26 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        sora: ['Sora', 'sans-serif']
+                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
                     },
                     colors: {
+                        north: {
+                            bg: '#F1EFEA',
+                            card: '#FDFCF9',
+                            dark: '#151512',
+                            darkHover: '#23231F',
+                            border: '#E5E2DA',
+                            borderDark: '#262620',
+                            lime: '#BEF264',
+                            indigo: '#6366F1',
+                            text: '#1A1916',
+                            muted: '#78756D',
+                        },
                         libra: {
-                            dark: '#0A0E17',
-                            panel: '#10172A',
-                            panel2: '#151D34',
-                            border: '#222B42',
-                            primary: '#3B82F6',
-                            accent: '#3D6BFF',
-                            accent2: '#7C9CFF',
-                            success: '#10B981',
-                            amber: '#F59E0B'
+                            dark: '#151512',
+                            bg: '#F1EFEA',
+                            primary: '#6366F1',
+                            red: '#E11D48'
                         }
                     }
                 }
@@ -90,6 +96,15 @@
     </script>
 
     <style>
+        body {
+            font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+            background-color: #F1EFEA;
+            color: #1A1916;
+        }
+        .dark body {
+            background-color: #151512;
+            color: #EAE8E2;
+        }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
@@ -110,31 +125,29 @@
         }
     </style>
 </head>
-<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-200">
+<body class="bg-[#F1EFEA] dark:bg-[#151512] text-[#1A1916] dark:text-[#EAE8E2] min-h-screen flex flex-col transition-colors duration-200">
 
     <!-- ======================================================== -->
     <!-- TOP NAVIGATION BAR                                      -->
     <!-- ======================================================== -->
-    <header class="bg-slate-900 text-white border-b border-slate-800 sticky top-0 z-30 shadow-md">
+    <header class="bg-[#151512] text-white border-b border-[#262620] sticky top-0 z-30 shadow-md">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
             <!-- Brand & Entity Identifier -->
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
-                    <i class="fa-solid fa-truck-fast text-lg"></i>
+                <div class="w-10 h-10 rounded-xl bg-[#BEF264] flex items-center justify-center text-[#151512] shadow-sm">
+                    <i class="fa-solid fa-truck-fast text-lg font-bold"></i>
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
-                        <span class="font-sora font-extrabold text-lg tracking-wider text-white">LIBRA</span>
-                        <span class="bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
-                            Kurir Logistik
-                        </span>
+                        <span class="font-extrabold text-lg tracking-tight text-white">LIBRA</span>
+                        <span class="text-[9px] font-bold tracking-widest text-[#BEF264] uppercase">KURIR</span>
                     </div>
-                    <p class="text-[11px] text-slate-400 hidden sm:block">Sistem Pemrosesan & Pemantauan Pengantaran Pesanan</p>
+                    <p class="text-[11px] text-[#9C988F] hidden sm:block">Sistem Pemrosesan & Pemantauan Pengantaran Pesanan</p>
                 </div>
             </div>
 
             <!-- Middle: Live Status & Clock -->
-            <div class="hidden md:flex items-center gap-4 bg-slate-800/60 border border-slate-700/60 rounded-xl px-4 py-1.5 text-xs">
+            <div class="hidden md:flex items-center gap-4 bg-[#21211D] border border-[#2E2E28] rounded-xl px-4 py-1.5 text-xs">
                 <div class="flex items-center gap-2">
                     <span class="relative flex h-2.5 w-2.5">
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -142,26 +155,26 @@
                     </span>
                     <span class="text-emerald-400 font-semibold">Siap Bertugas</span>
                 </div>
-                <div class="w-px h-4 bg-slate-700"></div>
-                <div id="live-clock" class="text-slate-300 font-mono">-</div>
+                <div class="w-px h-4 bg-[#2E2E28]"></div>
+                <div id="live-clock" class="text-[#9C988F] font-mono">-</div>
             </div>
 
             <!-- Right Controls: Theme & User Profile -->
             <div class="flex items-center gap-2 sm:gap-3">
                 <!-- Theme Toggle Button -->
-                <button onclick="toggleDarkMode()" class="p-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-slate-300 hover:text-white transition-colors" title="Ubah Tema Gelap/Terang">
-                    <i id="theme-toggle-icon" class="fa-solid fa-moon"></i>
+                <button onclick="toggleDarkMode()" class="p-2.5 bg-[#21211D] hover:bg-[#2A2A24] border border-[#2E2E28] rounded-xl text-[#9C988F] hover:text-white transition-colors" title="Ubah Tema Gelap/Terang">
+                    <i id="theme-toggle-icon" class="fa-regular fa-moon text-sm"></i>
                 </button>
 
                 <!-- Profile Badge & Logout -->
-                <div class="flex items-center gap-2 pl-2 border-l border-slate-800">
-                    <div id="courier-initial" class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs">
+                <div class="flex items-center gap-2 pl-2 border-l border-[#262620]">
+                    <div id="courier-initial" class="w-8 h-8 rounded-full bg-[#6366F1] flex items-center justify-center text-white font-bold text-xs">
                         K
                     </div>
                     <div class="hidden lg:block text-left">
                         <p class="text-xs font-semibold leading-tight text-white" id="courier-name">Kurir</p>
                     </div>
-                    <button onclick="logoutCourier()" class="text-slate-400 hover:text-rose-400 p-1.5 transition-colors" title="Keluar">
+                    <button onclick="logoutCourier()" class="text-[#9C988F] hover:text-rose-400 p-1.5 transition-colors" title="Keluar">
                         <i class="fa-solid fa-right-from-bracket"></i>
                     </button>
                 </div>
@@ -173,43 +186,42 @@
     <!-- MAIN CONTENT CONTAINER                                  -->
     <!-- ======================================================== -->
     <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-
         <!-- Top Overview Statistics Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <!-- Card 1: Incoming -->
-            <div onclick="switchMainTab('incoming')" class="cursor-pointer bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-amber-400 dark:hover:border-amber-500/50 transition-all group">
+            <div onclick="switchMainTab('incoming')" class="cursor-pointer bg-[#FDFCF9] dark:bg-[#1C1C18] border border-[#E5E2DA] dark:border-[#262620] rounded-2xl p-4 sm:p-5 shadow-sm hover:border-amber-400 dark:hover:border-amber-500/50 transition-all group">
                 <div class="flex items-center justify-between">
-                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Incoming</span>
+                    <span class="text-xs font-semibold text-[#78756D] dark:text-[#9C988F] uppercase tracking-wider">Incoming</span>
                     <div class="w-8 h-8 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-500 flex items-center justify-center group-hover:scale-110 transition-transform">
                         <i class="fa-solid fa-inbox"></i>
                     </div>
                 </div>
                 <div class="mt-3 flex items-baseline gap-2">
-                    <span id="stat-incoming-count" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white">0</span>
+                    <span id="stat-incoming-count" class="text-2xl sm:text-3xl font-extrabold text-[#1A1916] dark:text-white">0</span>
                     <span class="text-xs text-amber-500 font-semibold">Pesanan Baru</span>
                 </div>
-                <p class="text-[11px] text-slate-400 mt-1">Belum mulai diantar</p>
+                <p class="text-[11px] text-[#78756D] mt-1">Belum mulai diantar</p>
             </div>
 
             <!-- Card 2: Outgoing - Sedang Diantar -->
-            <div onclick="switchMainTab('outgoing'); filterOutgoing('Sedang Diantar');" class="cursor-pointer bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-blue-400 dark:hover:border-blue-500/50 transition-all group">
+            <div onclick="switchMainTab('outgoing'); filterOutgoing('Sedang Diantar');" class="cursor-pointer bg-[#FDFCF9] dark:bg-[#1C1C18] border border-[#E5E2DA] dark:border-[#262620] rounded-2xl p-4 sm:p-5 shadow-sm hover:border-[#6366F1] dark:hover:border-[#6366F1]/50 transition-all group">
                 <div class="flex items-center justify-between">
-                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Sedang Diantar</span>
-                    <div class="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <span class="text-xs font-semibold text-[#78756D] dark:text-[#9C988F] uppercase tracking-wider">Sedang Diantar</span>
+                    <div class="w-8 h-8 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-[#6366F1] flex items-center justify-center group-hover:scale-110 transition-transform">
                         <i class="fa-solid fa-truck-moving pulse-subtle"></i>
                     </div>
                 </div>
                 <div class="mt-3 flex items-baseline gap-2">
-                    <span id="stat-active-count" class="text-2xl sm:text-3xl font-extrabold text-blue-600 dark:text-blue-400">0</span>
-                    <span class="text-xs text-blue-500 font-semibold">Dalam Perjalanan</span>
+                    <span id="stat-active-count" class="text-2xl sm:text-3xl font-extrabold text-[#6366F1] dark:text-indigo-400">0</span>
+                    <span class="text-xs text-[#6366F1] font-semibold">Dalam Perjalanan</span>
                 </div>
-                <p class="text-[11px] text-slate-400 mt-1">Sedang dalam perjalanan</p>
+                <p class="text-[11px] text-[#78756D] mt-1">Sedang dalam perjalanan</p>
             </div>
 
             <!-- Card 3: Outgoing - Selesai -->
-            <div onclick="switchMainTab('outgoing'); filterOutgoing('Selesai');" class="cursor-pointer bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm hover:border-emerald-400 dark:hover:border-emerald-500/50 transition-all group">
+            <div onclick="switchMainTab('outgoing'); filterOutgoing('Selesai');" class="cursor-pointer bg-[#FDFCF9] dark:bg-[#1C1C18] border border-[#E5E2DA] dark:border-[#262620] rounded-2xl p-4 sm:p-5 shadow-sm hover:border-emerald-400 dark:hover:border-emerald-500/50 transition-all group">
                 <div class="flex items-center justify-between">
-                    <span class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Selesai</span>
+                    <span class="text-xs font-semibold text-[#78756D] dark:text-[#9C988F] uppercase tracking-wider">Selesai</span>
                     <div class="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-500 flex items-center justify-center group-hover:scale-110 transition-transform">
                         <i class="fa-solid fa-circle-check"></i>
                     </div>
@@ -218,35 +230,35 @@
                     <span id="stat-completed-count" class="text-2xl sm:text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">0</span>
                     <span class="text-xs text-emerald-500 font-semibold">Tiba di Tujuan</span>
                 </div>
-                <p class="text-[11px] text-slate-400 mt-1">Sudah sampai di tujuan</p>
+                <p class="text-[11px] text-[#78756D] mt-1">Sudah sampai di tujuan</p>
             </div>
         </div>
 
         <!-- ======================================================== -->
         <!-- TWO MAIN SWITCH TABS: INCOMING & OUTGOING                -->
         <!-- ======================================================== -->
-        <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div class="bg-[#FDFCF9] dark:bg-[#1C1C18] rounded-3xl border border-[#E5E2DA] dark:border-[#262620] shadow-sm overflow-hidden">
             
             <!-- Tab Switcher Navigation Bar -->
-            <div class="border-b border-slate-200 dark:border-slate-800 p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-900/50">
-                <div class="flex items-center gap-2 p-1 bg-slate-200/80 dark:bg-slate-800/80 rounded-2xl w-fit">
+            <div class="border-b border-[#E5E2DA] dark:border-[#262620] p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#F7F5F0] dark:bg-[#21211D]">
+                <div class="flex items-center gap-2 p-1 bg-[#EAE8E1] dark:bg-[#262620] rounded-2xl w-fit">
                     <!-- Tab Incoming Button -->
-                    <button id="tab-btn-incoming" onclick="switchMainTab('incoming')" class="flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm">
+                    <button id="tab-btn-incoming" onclick="switchMainTab('incoming')" class="flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all bg-[#FDFCF9] dark:bg-[#151512] text-[#6366F1] dark:text-indigo-400 shadow-sm">
                         <i class="fa-solid fa-inbox text-base"></i>
                         <span>Incoming</span>
                         <span id="badge-incoming" class="bg-amber-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full">0</span>
                     </button>
                     <!-- Tab Outgoing Button -->
-                    <button id="tab-btn-outgoing" onclick="switchMainTab('outgoing')" class="flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+                    <button id="tab-btn-outgoing" onclick="switchMainTab('outgoing')" class="flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all text-[#78756D] dark:text-[#9C988F] hover:text-[#1A1916] dark:hover:text-white">
                         <i class="fa-solid fa-paper-plane text-base"></i>
                         <span>Outgoing</span>
-                        <span id="badge-outgoing" class="bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-bold px-2 py-0.5 rounded-full">0</span>
+                        <span id="badge-outgoing" class="bg-[#E5E2DA] dark:bg-[#2E2E28] text-[#78756D] dark:text-[#9C988F] text-[11px] font-bold px-2 py-0.5 rounded-full">0</span>
                     </button>
                 </div>
 
                 <!-- Utilities on Tab Bar -->
                 <div class="flex items-center gap-2">
-                    <button onclick="refreshOrders()" class="flex items-center gap-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold px-3.5 py-2.5 rounded-xl transition-colors">
+                    <button onclick="refreshOrders()" class="flex items-center gap-2 bg-[#FDFCF9] hover:bg-[#EAE8E1] dark:bg-[#21211D] dark:hover:bg-[#2A2A24] border border-[#E5E2DA] dark:border-[#2E2E28] text-[#1A1916] dark:text-[#EAE8E2] text-xs font-semibold px-3.5 py-2.5 rounded-xl transition-colors">
                         <i class="fa-solid fa-rotate-right"></i>
                         <span class="hidden sm:inline">Refresh Data</span>
                     </button>
@@ -261,22 +273,22 @@
                 <!-- Tab Description & Search -->
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                        <h3 class="font-bold text-base text-slate-800 dark:text-white flex items-center gap-2">
+                        <h3 class="font-bold text-base text-[#1A1916] dark:text-white flex items-center gap-2">
                             <span>Daftar Pesanan Masuk (Incoming)</span>
-                            <span class="text-xs font-normal text-slate-500 dark:text-slate-400">— Pesanan baru belum mulai diantar</span>
+                            <span class="text-xs font-normal text-[#78756D] dark:text-[#9C988F]">— Pesanan baru belum mulai diantar</span>
                         </h3>
                     </div>
                     <div class="relative w-full sm:w-72">
-                        <input type="text" id="search-incoming" oninput="renderIncomingTable()" placeholder="Cari ID, nama pengguna, alamat..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-white focus:outline-none focus:border-blue-500 transition-colors">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                        <input type="text" id="search-incoming" oninput="renderIncomingTable()" placeholder="Cari ID, nama pengguna, alamat..." class="w-full bg-[#FDFCF9] dark:bg-[#21211D] border border-[#E5E2DA] dark:border-[#2E2E28] rounded-xl pl-9 pr-3 py-2 text-xs text-[#1A1916] dark:text-white focus:outline-none focus:border-[#6366F1] transition-colors">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-[#78756D] text-xs"></i>
                     </div>
                 </div>
 
                 <!-- Incoming Table -->
-                <div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-2xl">
+                <div class="overflow-x-auto border border-[#E5E2DA] dark:border-[#262620] rounded-2xl">
                     <table class="w-full text-left border-collapse text-xs">
                         <thead>
-                            <tr class="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase font-semibold">
+                            <tr class="bg-[#F7F5F0] dark:bg-[#21211D] border-b border-[#E5E2DA] dark:border-[#262620] text-[#78756D] dark:text-[#9C988F] uppercase font-semibold">
                                 <th class="py-3 px-4">ID Pesanan</th>
                                 <th class="py-3 px-4">Nama Pengguna</th>
                                 <th class="py-3 px-4 text-center">Jumlah Item</th>
@@ -285,16 +297,16 @@
                                 <th class="py-3 px-4 text-center">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody id="tbody-incoming" class="divide-y divide-slate-100 dark:divide-slate-800">
+                        <tbody id="tbody-incoming" class="divide-y divide-[#E5E2DA] dark:divide-[#262620]">
                             <!-- Injected by JavaScript -->
                         </tbody>
                     </table>
                 </div>
 
                 <!-- Footer hint -->
-                <p class="text-[11px] text-slate-400 flex items-center gap-1.5 italic">
-                    <i class="fa-solid fa-circle-info text-blue-500"></i>
-                    Klik tombol titik tiga (<i class="fa-solid fa-ellipsis-vertical text-slate-400"></i>) untuk membuka popup detail pesanan dan menekan tombol <strong>Kirim Sekarang</strong>.
+                <p class="text-[11px] text-[#78756D] flex items-center gap-1.5 italic">
+                    <i class="fa-solid fa-circle-info text-[#6366F1]"></i>
+                    Klik tombol titik tiga (<i class="fa-solid fa-ellipsis-vertical text-[#78756D]"></i>) untuk membuka popup detail pesanan dan menekan tombol <strong>Kirim Sekarang</strong>.
                 </p>
             </div>
 
@@ -306,38 +318,38 @@
                 <!-- Filter & Sorting Controls -->
                 <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                     <div>
-                        <h3 class="font-bold text-base text-slate-800 dark:text-white flex items-center gap-2">
+                        <h3 class="font-bold text-base text-[#1A1916] dark:text-white flex items-center gap-2">
                             <span>Daftar Pengantaran (Outgoing)</span>
-                            <span class="text-xs font-normal text-slate-500 dark:text-slate-400">— Sedang diproses & telah selesai</span>
+                            <span class="text-xs font-normal text-[#78756D] dark:text-[#9C988F]">— Sedang diproses & telah selesai</span>
                         </h3>
                     </div>
 
                     <!-- Filter by status -->
                     <div class="flex flex-wrap items-center gap-2">
-                        <span class="text-xs font-semibold text-slate-400 mr-1">Filter Status:</span>
-                        <button onclick="filterOutgoing('Semua')" id="filter-btn-semua" class="filter-outgoing-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-blue-600 text-white shadow-sm transition-all">
+                        <span class="text-xs font-semibold text-[#78756D] mr-1">Filter Status:</span>
+                        <button onclick="filterOutgoing('Semua')" id="filter-btn-semua" class="filter-outgoing-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-[#6366F1] text-white shadow-sm transition-all">
                             Semua
                         </button>
-                        <button onclick="filterOutgoing('Sedang Diantar')" id="filter-btn-sedang-diantar" class="filter-outgoing-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
-                            <span class="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1.5 animate-pulse"></span> Sedang Diantar
+                        <button onclick="filterOutgoing('Sedang Diantar')" id="filter-btn-sedang-diantar" class="filter-outgoing-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-[#FDFCF9] dark:bg-[#21211D] border border-[#E5E2DA] dark:border-[#2E2E28] text-[#78756D] dark:text-[#9C988F] hover:bg-[#EAE8E1] dark:hover:bg-[#2A2A24] transition-all">
+                            <span class="inline-block w-2 h-2 rounded-full bg-[#6366F1] mr-1.5 animate-pulse"></span> Sedang Diantar
                         </button>
-                        <button onclick="filterOutgoing('Selesai')" id="filter-btn-selesai" class="filter-outgoing-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
+                        <button onclick="filterOutgoing('Selesai')" id="filter-btn-selesai" class="filter-outgoing-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-[#FDFCF9] dark:bg-[#21211D] border border-[#E5E2DA] dark:border-[#2E2E28] text-[#78756D] dark:text-[#9C988F] hover:bg-[#EAE8E1] dark:hover:bg-[#2A2A24] transition-all">
                             <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-1.5"></span> Selesai
                         </button>
                     </div>
 
                     <!-- Search Input -->
                     <div class="relative w-full lg:w-64">
-                        <input type="text" id="search-outgoing" oninput="renderOutgoingTable()" placeholder="Cari ID pesanan, nama..." class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-800 dark:text-white focus:outline-none focus:border-blue-500 transition-colors">
-                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                        <input type="text" id="search-outgoing" oninput="renderOutgoingTable()" placeholder="Cari ID pesanan, nama..." class="w-full bg-[#FDFCF9] dark:bg-[#21211D] border border-[#E5E2DA] dark:border-[#2E2E28] rounded-xl pl-9 pr-3 py-2 text-xs text-[#1A1916] dark:text-white focus:outline-none focus:border-[#6366F1] transition-colors">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-[#78756D] text-xs"></i>
                     </div>
                 </div>
 
                 <!-- Outgoing Table -->
-                <div class="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-2xl">
+                <div class="overflow-x-auto border border-[#E5E2DA] dark:border-[#262620] rounded-2xl">
                     <table class="w-full text-left border-collapse text-xs">
                         <thead>
-                            <tr class="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 uppercase font-semibold">
+                            <tr class="bg-[#F7F5F0] dark:bg-[#21211D] border-b border-[#E5E2DA] dark:border-[#262620] text-[#78756D] dark:text-[#9C988F] uppercase font-semibold">
                                 <th class="py-3 px-4">ID Pesanan</th>
                                 <th class="py-3 px-4">Nama Pengguna</th>
                                 <th class="py-3 px-4">Status Pengantaran</th>
@@ -346,14 +358,14 @@
                                 <th class="py-3 px-4 text-center">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody id="tbody-outgoing" class="divide-y divide-slate-100 dark:divide-slate-800">
+                        <tbody id="tbody-outgoing" class="divide-y divide-[#E5E2DA] dark:divide-[#262620]">
                             <!-- Injected by JavaScript -->
                         </tbody>
                     </table>
                 </div>
 
                 <!-- Footer hint -->
-                <p class="text-[11px] text-slate-400 flex items-center gap-1.5 italic">
+                <p class="text-[11px] text-[#78756D] flex items-center gap-1.5 italic">
                     <i class="fa-solid fa-stopwatch text-emerald-500"></i>
                     Klik titik tiga untuk melihat popup detail dan tombol <strong>Sudah Selesai</strong> pada pesanan yang sedang diantar.
                 </p>
@@ -367,20 +379,20 @@
     <!-- POPUP A: DETAIL PESANAN BARU (TAB INCOMING)             -->
     <!-- ======================================================== -->
     <div id="modal-incoming" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-fadeIn">
+        <div class="bg-[#FDFCF9] dark:bg-[#1C1C18] border border-[#E5E2DA] dark:border-[#262620] rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-fadeIn">
             
             <!-- Modal Header -->
-            <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/40">
+            <div class="p-5 border-b border-[#E5E2DA] dark:border-[#262620] flex items-center justify-between bg-[#F7F5F0] dark:bg-[#21211D]">
                 <div class="flex items-center gap-3">
                     <div class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold">
                         <i class="fa-solid fa-inbox text-sm"></i>
                     </div>
                     <div>
-                        <h4 class="font-bold text-sm text-slate-900 dark:text-white">Detail Pesanan Baru (Incoming)</h4>
-                        <p class="text-[11px] text-slate-400">ID Pesanan: <span id="inc-modal-id" class="font-mono font-bold text-blue-500">-</span></p>
+                        <h4 class="font-bold text-sm text-[#1A1916] dark:text-white">Detail Pesanan Baru (Incoming)</h4>
+                        <p class="text-[11px] text-[#78756D]">ID Pesanan: <span id="inc-modal-id" class="font-mono font-bold text-[#6366F1]">-</span></p>
                     </div>
                 </div>
-                <button onclick="closeModal('modal-incoming')" class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition-colors">
+                <button onclick="closeModal('modal-incoming')" class="w-8 h-8 rounded-full bg-[#EAE8E1] dark:bg-[#262620] text-[#78756D] hover:text-[#1A1916] dark:hover:text-white flex items-center justify-center transition-colors">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
@@ -389,53 +401,53 @@
             <div class="p-5 space-y-4 overflow-y-auto hide-scrollbar text-xs">
                 
                 <!-- Informasi Pengguna -->
-                <div class="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-700/60 space-y-2">
+                <div class="bg-[#F7F5F0] dark:bg-[#21211D] p-4 rounded-2xl border border-[#E5E2DA] dark:border-[#2E2E28] space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Identitas Pengguna</span>
+                        <span class="text-[10px] font-bold text-[#78756D] uppercase tracking-wider">Identitas Pengguna</span>
                         <span class="bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-full text-[10px] font-bold">
                             Menunggu Pengantaran
                         </span>
                     </div>
                     <div class="grid grid-cols-2 gap-3 pt-1">
                         <div>
-                            <p class="text-slate-400 text-[10px]">Nama Lengkap</p>
-                            <p id="inc-modal-user" class="font-semibold text-slate-800 dark:text-white text-sm">-</p>
+                            <p class="text-[#78756D] text-[10px]">Nama Lengkap</p>
+                            <p id="inc-modal-user" class="font-semibold text-[#1A1916] dark:text-white text-sm">-</p>
                         </div>
                         <div>
-                            <p class="text-slate-400 text-[10px]">Identitas (NIM / Program Studi)</p>
-                            <p id="inc-modal-identity" class="font-medium text-slate-700 dark:text-slate-200">-</p>
+                            <p class="text-[#78756D] text-[10px]">Identitas (NIM / Program Studi)</p>
+                            <p id="inc-modal-identity" class="font-medium text-[#1A1916] dark:text-[#EAE8E2]">-</p>
                         </div>
                         <div>
-                            <p class="text-slate-400 text-[10px]">No. Telepon</p>
-                            <p id="inc-modal-phone" class="font-medium text-slate-700 dark:text-slate-200">-</p>
+                            <p class="text-[#78756D] text-[10px]">No. Telepon</p>
+                            <p id="inc-modal-phone" class="font-medium text-[#1A1916] dark:text-[#EAE8E2]">-</p>
                         </div>
                         <div>
-                            <p class="text-slate-400 text-[10px]">Waktu Pemesanan</p>
-                            <p id="inc-modal-time" class="font-medium text-slate-700 dark:text-slate-200">-</p>
+                            <p class="text-[#78756D] text-[10px]">Waktu Pemesanan</p>
+                            <p id="inc-modal-time" class="font-medium text-[#1A1916] dark:text-[#EAE8E2]">-</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Alamat Tujuan Pengantaran -->
-                <div class="bg-blue-50/60 dark:bg-blue-950/30 p-4 rounded-2xl border border-blue-100 dark:border-blue-900/40">
+                <div class="bg-indigo-50/60 dark:bg-indigo-950/30 p-4 rounded-2xl border border-indigo-100 dark:border-indigo-900/40">
                     <div class="flex items-start gap-2.5">
                         <i class="fa-solid fa-location-dot text-rose-500 text-sm mt-0.5"></i>
                         <div class="flex-1">
-                            <p class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Alamat Tujuan Pengantaran</p>
-                            <p id="inc-modal-address" class="font-medium text-slate-800 dark:text-slate-200 mt-1 leading-relaxed">-</p>
+                            <p class="text-[10px] font-bold text-[#6366F1] dark:text-indigo-400 uppercase tracking-wider">Alamat Tujuan Pengantaran</p>
+                            <p id="inc-modal-address" class="font-medium text-[#1A1916] dark:text-[#EAE8E2] mt-1 leading-relaxed">-</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Daftar Item Dipesan -->
                 <div>
-                    <h5 class="font-bold text-slate-800 dark:text-white mb-2 flex items-center justify-between">
+                    <h5 class="font-bold text-[#1A1916] dark:text-white mb-2 flex items-center justify-between">
                         <span>Daftar Item yang Dipesan</span>
-                        <span id="inc-modal-total-items-badge" class="text-slate-400 font-normal text-[11px]">0 Item</span>
+                        <span id="inc-modal-total-items-badge" class="text-[#78756D] font-normal text-[11px]">0 Item</span>
                     </h5>
-                    <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+                    <div class="border border-[#E5E2DA] dark:border-[#262620] rounded-xl overflow-hidden">
                         <table class="w-full text-left text-xs">
-                            <thead class="bg-slate-50 dark:bg-slate-800 text-slate-400 uppercase text-[10px]">
+                            <thead class="bg-[#F7F5F0] dark:bg-[#21211D] text-[#78756D] uppercase text-[10px]">
                                 <tr>
                                     <th class="py-2 px-3">Item / Produk</th>
                                     <th class="py-2 px-3">Tipe</th>
@@ -444,7 +456,7 @@
                                     <th class="py-2 px-3 text-right">Subtotal</th>
                                 </tr>
                             </thead>
-                            <tbody id="inc-modal-items-tbody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                            <tbody id="inc-modal-items-tbody" class="divide-y divide-[#E5E2DA] dark:divide-[#262620]">
                                 <!-- Injected by JavaScript -->
                             </tbody>
                         </table>
@@ -452,11 +464,11 @@
                 </div>
 
                 <!-- Total Pembayaran -->
-                <div id="inc-modal-total-box" class="bg-slate-900 text-white p-4 rounded-2xl flex items-center justify-between">
+                <div id="inc-modal-total-box" class="bg-[#151512] text-white p-4 rounded-2xl flex items-center justify-between">
                     <div>
-                        <p class="text-[10px] text-slate-400 uppercase font-semibold">Total Pembayaran Pengguna</p>
+                        <p class="text-[10px] text-[#9C988F] uppercase font-semibold">Total Pembayaran Pengguna</p>
                         <p id="inc-modal-pay-info" class="text-[11px] font-semibold mt-0.5"></p>
-                        <p id="inc-modal-total-items" class="text-[11px] text-blue-400">Total 0 item</p>
+                        <p id="inc-modal-total-items" class="text-[11px] text-[#BEF264]">Total 0 item</p>
                     </div>
                     <div class="text-right">
                         <span id="inc-modal-total-pay" class="text-lg font-bold font-mono text-emerald-400">Rp 0</span>
@@ -466,11 +478,11 @@
             </div>
 
             <!-- Modal Footer with "Kirim Sekarang" Button -->
-            <div class="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 flex items-center justify-end gap-3">
-                <button type="button" onclick="closeModal('modal-incoming')" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+            <div class="p-4 border-t border-[#E5E2DA] dark:border-[#262620] bg-[#F7F5F0] dark:bg-[#21211D] flex items-center justify-end gap-3">
+                <button type="button" onclick="closeModal('modal-incoming')" class="px-4 py-2.5 rounded-xl border border-[#E5E2DA] dark:border-[#2E2E28] text-[#78756D] dark:text-[#9C988F] font-semibold hover:bg-[#EAE8E1] dark:hover:bg-[#2A2A24] transition-colors">
                     Batal
                 </button>
-                <button type="button" id="btn-kirim-sekarang" onclick="executeKirimSekarang()" class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold flex items-center gap-2 shadow-lg shadow-blue-600/30 transition-all hover:scale-[1.02] active:scale-95">
+                <button type="button" id="btn-kirim-sekarang" onclick="executeKirimSekarang()" class="px-5 py-2.5 rounded-xl bg-[#6366F1] hover:bg-[#4F52D9] text-white font-bold flex items-center gap-2 shadow-lg shadow-indigo-600/30 transition-all hover:scale-[1.02] active:scale-95">
                     <i class="fa-solid fa-truck-fast"></i>
                     <span>Kirim Sekarang</span>
                 </button>
@@ -484,20 +496,20 @@
     <!-- (Menangani: Sedang Diantar & Sudah Selesai)              -->
     <!-- ======================================================== -->
     <div id="modal-outgoing" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-fadeIn">
+        <div class="bg-[#FDFCF9] dark:bg-[#1C1C18] border border-[#E5E2DA] dark:border-[#262620] rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-fadeIn">
             
             <!-- Modal Header -->
-            <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/40">
+            <div class="p-5 border-b border-[#E5E2DA] dark:border-[#262620] flex items-center justify-between bg-[#F7F5F0] dark:bg-[#21211D]">
                 <div class="flex items-center gap-3">
-                    <div id="out-modal-icon-wrap" class="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center font-bold">
+                    <div id="out-modal-icon-wrap" class="w-9 h-9 rounded-xl bg-[#6366F1] text-white flex items-center justify-center font-bold">
                         <i id="out-modal-header-icon" class="fa-solid fa-truck-moving text-sm"></i>
                     </div>
                     <div>
-                        <h4 id="out-modal-title" class="font-bold text-sm text-slate-900 dark:text-white">Detail Pengantaran</h4>
-                        <p class="text-[11px] text-slate-400">ID Pesanan: <span id="out-modal-id" class="font-mono font-bold text-blue-500">-</span></p>
+                        <h4 id="out-modal-title" class="font-bold text-sm text-[#1A1916] dark:text-white">Detail Pengantaran</h4>
+                        <p class="text-[11px] text-[#78756D]">ID Pesanan: <span id="out-modal-id" class="font-mono font-bold text-[#6366F1]">-</span></p>
                     </div>
                 </div>
-                <button onclick="closeModal('modal-outgoing')" class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-white flex items-center justify-center transition-colors">
+                <button onclick="closeModal('modal-outgoing')" class="w-8 h-8 rounded-full bg-[#EAE8E1] dark:bg-[#262620] text-[#78756D] hover:text-[#1A1916] dark:hover:text-white flex items-center justify-center transition-colors">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
@@ -506,52 +518,52 @@
             <div class="p-5 space-y-4 overflow-y-auto hide-scrollbar text-xs">
                 
                 <!-- Informasi Pengguna & Waktu -->
-                <div class="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-700/60 space-y-2">
+                <div class="bg-[#F7F5F0] dark:bg-[#21211D] p-4 rounded-2xl border border-[#E5E2DA] dark:border-[#2E2E28] space-y-2">
                     <div class="flex items-center justify-between">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Identitas Pengguna</span>
+                        <span class="text-[10px] font-bold text-[#78756D] uppercase tracking-wider">Identitas Pengguna</span>
                         <span id="out-modal-status-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold">-</span>
                     </div>
                     <div class="grid grid-cols-2 gap-3 pt-1">
                         <div>
-                            <p class="text-slate-400 text-[10px]">Nama Pengguna</p>
-                            <p id="out-modal-user" class="font-semibold text-slate-800 dark:text-white text-sm">-</p>
+                            <p class="text-[#78756D] text-[10px]">Nama Pengguna</p>
+                            <p id="out-modal-user" class="font-semibold text-[#1A1916] dark:text-white text-sm">-</p>
                         </div>
                         <div>
-                            <p class="text-slate-400 text-[10px]">Identitas (NIM / Program Studi)</p>
-                            <p id="out-modal-identity" class="font-medium text-slate-700 dark:text-slate-200">-</p>
+                            <p class="text-[#78756D] text-[10px]">Identitas (NIM / Program Studi)</p>
+                            <p id="out-modal-identity" class="font-medium text-[#1A1916] dark:text-[#EAE8E2]">-</p>
                         </div>
                         <div>
-                            <p class="text-slate-400 text-[10px]">No. Telepon</p>
-                            <p id="out-modal-phone" class="font-medium text-slate-700 dark:text-slate-200">-</p>
+                            <p class="text-[#78756D] text-[10px]">No. Telepon</p>
+                            <p id="out-modal-phone" class="font-medium text-[#1A1916] dark:text-[#EAE8E2]">-</p>
                         </div>
                         <div>
-                            <p class="text-slate-400 text-[10px]">Waktu Mulai Pengantaran</p>
-                            <p id="out-modal-start-time" class="font-medium text-slate-700 dark:text-slate-200">-</p>
+                            <p class="text-[#78756D] text-[10px]">Waktu Mulai Pengantaran</p>
+                            <p id="out-modal-start-time" class="font-medium text-[#1A1916] dark:text-[#EAE8E2]">-</p>
                         </div>
                         <div id="out-modal-end-time-row" class="hidden col-span-2">
-                            <p class="text-slate-400 text-[10px]">Waktu Selesai Pengantaran</p>
+                            <p class="text-[#78756D] text-[10px]">Waktu Selesai Pengantaran</p>
                             <p id="out-modal-end-time" class="font-semibold text-emerald-600 dark:text-emerald-400">-</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Alamat Tujuan Pengantaran -->
-                <div class="bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200 dark:border-slate-700/60">
+                <div class="bg-[#F7F5F0] dark:bg-[#21211D] p-4 rounded-2xl border border-[#E5E2DA] dark:border-[#2E2E28]">
                     <div class="flex items-start gap-2.5">
                         <i class="fa-solid fa-map-location-dot text-rose-500 text-sm mt-0.5"></i>
                         <div class="flex-1">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Alamat Tujuan Pengantaran</p>
-                            <p id="out-modal-address" class="font-medium text-slate-800 dark:text-slate-200 mt-1 leading-relaxed">-</p>
+                            <p class="text-[10px] font-bold text-[#78756D] uppercase tracking-wider">Alamat Tujuan Pengantaran</p>
+                            <p id="out-modal-address" class="font-medium text-[#1A1916] dark:text-[#EAE8E2] mt-1 leading-relaxed">-</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Daftar Item Dipesan -->
                 <div>
-                    <h5 class="font-bold text-slate-800 dark:text-white mb-2">Daftar Item yang Dipesan</h5>
-                    <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+                    <h5 class="font-bold text-[#1A1916] dark:text-white mb-2">Daftar Item yang Dipesan</h5>
+                    <div class="border border-[#E5E2DA] dark:border-[#262620] rounded-xl overflow-hidden">
                         <table class="w-full text-left text-xs">
-                            <thead class="bg-slate-50 dark:bg-slate-800 text-slate-400 uppercase text-[10px]">
+                            <thead class="bg-[#F7F5F0] dark:bg-[#21211D] text-[#78756D] uppercase text-[10px]">
                                 <tr>
                                     <th class="py-2 px-3">Item / Produk</th>
                                     <th class="py-2 px-3">Tipe</th>
@@ -560,7 +572,7 @@
                                     <th class="py-2 px-3 text-right">Subtotal</th>
                                 </tr>
                             </thead>
-                            <tbody id="out-modal-items-tbody" class="divide-y divide-slate-100 dark:divide-slate-800">
+                            <tbody id="out-modal-items-tbody" class="divide-y divide-[#E5E2DA] dark:divide-[#262620]">
                                 <!-- Injected by JavaScript -->
                             </tbody>
                         </table>
@@ -568,11 +580,11 @@
                 </div>
 
                 <!-- Total Pembayaran -->
-                <div id="out-modal-total-box" class="bg-slate-900 text-white p-4 rounded-2xl flex items-center justify-between">
+                <div id="out-modal-total-box" class="bg-[#151512] text-white p-4 rounded-2xl flex items-center justify-between">
                     <div>
-                        <p class="text-[10px] text-slate-400 uppercase font-semibold">Total Pembayaran</p>
+                        <p class="text-[10px] text-[#9C988F] uppercase font-semibold">Total Pembayaran</p>
                         <p id="out-modal-pay-info" class="text-[11px] font-semibold mt-0.5"></p>
-                        <p class="text-[11px] text-slate-400">Sudah termasuk biaya pesanan</p>
+                        <p class="text-[11px] text-[#9C988F]">Sudah termasuk biaya pesanan</p>
                     </div>
                     <div class="text-right">
                         <span id="out-modal-total-pay" class="text-lg font-bold font-mono text-emerald-400">Rp 0</span>
@@ -582,8 +594,8 @@
             </div>
 
             <!-- Modal Footer with "Sudah Selesai" Button or Completed Indicator -->
-            <div class="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 flex items-center justify-between gap-3">
-                <button type="button" onclick="closeModal('modal-outgoing')" class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+            <div class="p-4 border-t border-[#E5E2DA] dark:border-[#262620] bg-[#F7F5F0] dark:bg-[#21211D] flex items-center justify-between gap-3">
+                <button type="button" onclick="closeModal('modal-outgoing')" class="px-4 py-2.5 rounded-xl border border-[#E5E2DA] dark:border-[#2E2E28] text-[#78756D] dark:text-[#9C988F] font-semibold hover:bg-[#EAE8E1] dark:hover:bg-[#2A2A24] transition-colors">
                     Tutup
                 </button>
                 <div id="out-modal-actions-container">
@@ -1211,7 +1223,7 @@ function startGlobalTicker() {
         function updateThemeIcon(isDark) {
             const icon = document.getElementById('theme-toggle-icon');
             if (icon) {
-                icon.className = isDark ? 'fa-solid fa-sun text-amber-400' : 'fa-solid fa-moon text-slate-300';
+                icon.className = isDark ? 'fa-regular fa-sun text-sm text-[#BEF264]' : 'fa-regular fa-moon text-sm';
             }
         }
 
