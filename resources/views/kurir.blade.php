@@ -1,4 +1,4 @@
-@php
+﻿@php
     // Blade wrapper untuk Kurir view
 @endphp
 <!DOCTYPE html>
@@ -34,6 +34,17 @@
         return orig(input, init);
       };
     })();
+    </script>
+        <script>
+        // Init theme immediately to prevent flashing and ensure correct initial state
+        (function() {
+            var saved = localStorage.getItem('libra-theme');
+            if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        })();
     </script>
     <script src="/js/auth-fetch.js"></script>
 <script>
@@ -162,7 +173,7 @@
             <!-- Right Controls: Theme & User Profile -->
             <div class="flex items-center gap-2 sm:gap-3">
                 <!-- Theme Toggle Button -->
-                <button onclick="toggleDarkMode()" class="p-2.5 bg-[#21211D] hover:bg-[#2A2A24] border border-[#2E2E28] rounded-xl text-[#9C988F] hover:text-white transition-colors" title="Ubah Tema Gelap/Terang">
+                <button onclick="toggleDarkMode()" class="p-2 w-9 h-9 flex items-center justify-center bg-[#21211D] hover:bg-[#2A2A24] border border-[#2E2E28] rounded-xl text-[#9C988F] hover:text-white transition-colors" title="Ubah Tema Gelap/Terang">
                     <i id="theme-toggle-icon" class="fa-regular fa-moon text-sm"></i>
                 </button>
 
@@ -737,20 +748,20 @@ async function loadOrders() {
             const incBtn = document.getElementById('tab-btn-incoming');
             const outBtn = document.getElementById('tab-btn-outgoing');
 
-            const activeClass = 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm';
-            const inactiveClass = 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white';
+            const activeClass = 'bg-[#FDFCF9] dark:bg-[#151512] text-[#6366F1] dark:text-[#BEF264] shadow-sm border border-[#E5E2DA] dark:border-[#2E2E28] font-bold';
+            const inactiveClass = 'text-[#78756D] dark:text-[#9C988F] hover:text-[#1A1916] dark:hover:text-white font-medium border border-transparent';
 
             if (tab === 'incoming') {
                 incPanel.classList.add('active');
                 outPanel.classList.remove('active');
-                incBtn.className = `flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all ${activeClass}`;
-                outBtn.className = `flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all ${inactiveClass}`;
+                incBtn.className = `flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-sm transition-all ${activeClass}`;
+                outBtn.className = `flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-sm transition-all ${inactiveClass}`;
                 renderIncomingTable();
             } else {
                 outPanel.classList.add('active');
                 incPanel.classList.remove('active');
-                outBtn.className = `flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all ${activeClass}`;
-                incBtn.className = `flex items-center gap-2.5 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all ${inactiveClass}`;
+                outBtn.className = `flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-sm transition-all ${activeClass}`;
+                incBtn.className = `flex items-center gap-2.5 px-5 py-2.5 rounded-xl text-sm transition-all ${inactiveClass}`;
                 renderOutgoingTable();
             }
         }
@@ -766,7 +777,7 @@ async function loadOrders() {
                 if (match) {
                     btn.className = 'filter-outgoing-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-blue-600 text-white shadow-sm transition-all';
                 } else {
-                    btn.className = 'filter-outgoing-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all';
+                    btn.className = 'filter-outgoing-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-[#FDFCF9] dark:bg-[#21211D] border border-[#E5E2DA] dark:border-[#2E2E28] text-[#78756D] dark:text-[#9C988F] hover:bg-[#EAE8E1] dark:hover:bg-[#2A2A24] transition-all';
                 }
             });
             renderOutgoingTable();
@@ -811,10 +822,10 @@ function updateStats() {
             if (list.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="6" class="py-12 text-center text-slate-400">
+                        <td colspan="6" class="py-12 text-center text-[#78756D] dark:text-[#9C988F]">
                             <i class="fa-solid fa-inbox text-3xl mb-2 opacity-40"></i>
                             <p class="font-medium text-xs">Tidak ada pesanan baru di Incoming saat ini.</p>
-                            <p class="text-[11px] mt-1 text-slate-500">Pesanan dari pengguna yang memilih diantar akan muncul di sini.</p>
+                            <p class="text-[11px] mt-1 text-[#78756D] dark:text-[#9C988F]">Pesanan dari pengguna yang memilih diantar akan muncul di sini.</p>
                         </td>
                     </tr>
                 `;
@@ -833,28 +844,28 @@ function updateStats() {
                         : '<span class="bg-amber-100 dark:bg-amber-950 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded text-[10px] font-bold">ATK</span>');
 
                 return `
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                        <td class="py-3.5 px-4 font-mono font-semibold text-slate-900 dark:text-white">
+                    <tr class="hover:bg-[#F7F5F0] dark:hover:bg-[#21211D]/80 transition-colors">
+                        <td class="py-3.5 px-4 font-mono font-semibold text-[#1A1916] dark:text-white dark:text-white">
                             <div class="flex items-center gap-1.5">
                                 <span>${escapeHtml(orderId)}</span>
                                 ${typeBadge}
                             </div>
                         </td>
                         <td class="py-3.5 px-4">
-                            <p class="font-semibold text-slate-800 dark:text-white">${escapeHtml(o.user_name)}</p>
-                            <p class="text-[11px] text-slate-400">${escapeHtml(o.user_identity || '-')}</p>
+                            <p class="font-semibold text-[#1A1916] dark:text-white dark:text-white">${escapeHtml(o.user_name)}</p>
+                            <p class="text-[11px] text-[#78756D] dark:text-[#9C988F]">${escapeHtml(o.user_identity || '-')}</p>
                         </td>
-                        <td class="py-3.5 px-4 text-center font-semibold text-slate-700 dark:text-slate-300">
+                        <td class="py-3.5 px-4 text-center font-semibold text-[#1A1916] dark:text-[#EAE8E2] dark:text-slate-300">
                             ${totalItem} item
                         </td>
                         <td class="py-3.5 px-4 font-bold font-mono text-emerald-600 dark:text-emerald-400">
-                            ${isBukuOnly(o) ? '<span class="font-normal text-slate-400">-</span>' : formatRupiah(o.total_pembayaran) + payBadgeHtml(o)}
+                            ${isBukuOnly(o) ? '<span class="font-normal text-[#78756D] dark:text-[#9C988F]">-</span>' : formatRupiah(o.total_pembayaran) + payBadgeHtml(o)}
                         </td>
-                        <td class="py-3.5 px-4 text-slate-500 dark:text-slate-400 text-[11px]">
+                        <td class="py-3.5 px-4 text-[#78756D] dark:text-[#9C988F] dark:text-[#78756D] dark:text-[#9C988F] text-[11px]">
                             ${formatDateTimeIndo(o.waktu_pemesanan)}
                         </td>
                         <td class="py-3.5 px-4 text-center">
-                            <button onclick="openIncomingModal('${escapeHtml(orderId)}')" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-slate-700 text-slate-500 flex items-center justify-center transition-all mx-auto shadow-sm" title="Lihat Detail Pesanan">
+                            <button onclick="openIncomingModal('${escapeHtml(orderId)}')" class="w-8 h-8 rounded-xl bg-[#FDFCF9] dark:bg-[#21211D] border border-[#E5E2DA] dark:border-[#2E2E28] hover:bg-[#EAE8E1] hover:text-[#6366F1] dark:hover:bg-[#2A2A24] text-[#78756D] dark:text-[#9C988F] flex items-center justify-center transition-all mx-auto shadow-sm" title="Lihat Detail Pesanan">
                                 <i class="fa-solid fa-ellipsis-vertical"></i>
                             </button>
                         </td>
@@ -899,10 +910,10 @@ function updateStats() {
             if (list.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" class="py-12 text-center text-slate-400">
+                        <td colspan="7" class="py-12 text-center text-[#78756D] dark:text-[#9C988F]">
                             <i class="fa-solid fa-paper-plane text-3xl mb-2 opacity-40"></i>
                             <p class="font-medium text-xs">Belum ada pesanan pada kategori Outgoing ini.</p>
-                            <p class="text-[11px] mt-1 text-slate-500">Klik "Kirim Sekarang" pada pesanan di Incoming untuk memulai pengantaran.</p>
+                            <p class="text-[11px] mt-1 text-[#78756D] dark:text-[#9C988F]">Klik "Kirim Sekarang" pada pesanan di Incoming untuk memulai pengantaran.</p>
                         </td>
                     </tr>
                 `;
@@ -924,25 +935,25 @@ function updateStats() {
                        </span>`;
 
                 return `
-                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                        <td class="py-3.5 px-4 font-mono font-semibold text-slate-900 dark:text-white">
+                    <tr class="hover:bg-[#F7F5F0] dark:hover:bg-[#21211D]/80 transition-colors">
+                        <td class="py-3.5 px-4 font-mono font-semibold text-[#1A1916] dark:text-white dark:text-white">
                             ${escapeHtml(orderId)}
                         </td>
                         <td class="py-3.5 px-4">
-                            <p class="font-semibold text-slate-800 dark:text-white">${escapeHtml(o.user_name)}</p>
-                            <p class="text-[11px] text-slate-400 truncate max-w-xs">${escapeHtml(o.alamat)}</p>
+                            <p class="font-semibold text-[#1A1916] dark:text-white dark:text-white">${escapeHtml(o.user_name)}</p>
+                            <p class="text-[11px] text-[#78756D] dark:text-[#9C988F] truncate max-w-xs">${escapeHtml(o.alamat)}</p>
                         </td>
                         <td class="py-3.5 px-4">
                             ${statusBadge}
                         </td>
-                        <td class="py-3.5 px-4 text-slate-500 dark:text-slate-400 text-[11px]">
+                        <td class="py-3.5 px-4 text-[#78756D] dark:text-[#9C988F] dark:text-[#78756D] dark:text-[#9C988F] text-[11px]">
                             ${formatDateTimeIndo(o.waktu_mulai_pengantaran)}
                         </td>
-                        <td class="py-3.5 px-4 text-slate-500 dark:text-slate-400 text-[11px]">
+                        <td class="py-3.5 px-4 text-[#78756D] dark:text-[#9C988F] dark:text-[#78756D] dark:text-[#9C988F] text-[11px]">
                             ${formatDateTimeIndo(o.waktu_selesai_pengantaran)}
                         </td>
                         <td class="py-3.5 px-4 text-center">
-                            <button onclick="openOutgoingModal('${escapeHtml(orderId)}')" class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-slate-700 text-slate-500 flex items-center justify-center transition-all mx-auto shadow-sm" title="Buka Detail Pengantaran">
+                            <button onclick="openOutgoingModal('${escapeHtml(orderId)}')" class="w-8 h-8 rounded-xl bg-[#FDFCF9] dark:bg-[#21211D] border border-[#E5E2DA] dark:border-[#2E2E28] hover:bg-[#EAE8E1] hover:text-[#6366F1] dark:hover:bg-[#2A2A24] text-[#78756D] dark:text-[#9C988F] flex items-center justify-center transition-all mx-auto shadow-sm" title="Buka Detail Pengantaran">
                                 <i class="fa-solid fa-ellipsis-vertical"></i>
                             </button>
                         </td>
@@ -979,8 +990,8 @@ function updateStats() {
 
             const tbody = document.getElementById('inc-modal-items-tbody');
             tbody.innerHTML = items.map(item => `
-                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                    <td class="py-2.5 px-3 font-semibold text-slate-800 dark:text-white">
+                <tr class="hover:bg-[#F7F5F0] dark:hover:bg-[#21211D]/80">
+                    <td class="py-2.5 px-3 font-semibold text-[#1A1916] dark:text-white dark:text-white">
                         ${escapeHtml(item.nama)}
                     </td>
                     <td class="py-2.5 px-3">
@@ -988,13 +999,13 @@ function updateStats() {
                             ${escapeHtml(item.tipe || 'ATK')}
                         </span>
                     </td>
-                    <td class="py-2.5 px-3 text-right font-mono text-slate-600 dark:text-slate-300"${bukuOnly ? ' style="display:none"' : ''}>
+                    <td class="py-2.5 px-3 text-right font-mono text-[#5C5954] dark:text-[#A8A49C] dark:text-slate-300"${bukuOnly ? ' style="display:none"' : ''}>
                         ${item.tipe === 'Buku' ? '-' : formatRupiah(item.harga)}
                     </td>
-                    <td class="py-2.5 px-3 text-center font-bold text-slate-800 dark:text-white">
+                    <td class="py-2.5 px-3 text-center font-bold text-[#1A1916] dark:text-white dark:text-white">
                         ${item.qty || 1}
                     </td>
-                    <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-900 dark:text-white"${bukuOnly ? ' style="display:none"' : ''}>
+                    <td class="py-2.5 px-3 text-right font-mono font-bold text-[#1A1916] dark:text-white dark:text-white"${bukuOnly ? ' style="display:none"' : ''}>
                         ${item.tipe === 'Buku' ? '-' : formatRupiah(item.subtotal || (item.harga * (item.qty || 1)))}
                     </td>
                 </tr>
@@ -1111,7 +1122,7 @@ async function executeKirimSekarang() {
 
 
                 actionsContainer.innerHTML = `
-                    <button type="button" disabled class="px-5 py-2.5 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 font-semibold cursor-not-allowed flex items-center gap-2">
+                    <button type="button" disabled class="px-5 py-2.5 rounded-xl bg-slate-200 dark:bg-slate-800 text-[#78756D] dark:text-[#9C988F] dark:text-[#78756D] dark:text-[#9C988F] font-semibold cursor-not-allowed flex items-center gap-2">
                         <i class="fa-solid fa-lock"></i>
                         <span>Pengantaran Telah Selesai</span>
                     </button>
@@ -1124,8 +1135,8 @@ async function executeKirimSekarang() {
 
             const tbody = document.getElementById('out-modal-items-tbody');
             tbody.innerHTML = items.map(item => `
-                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                    <td class="py-2.5 px-3 font-semibold text-slate-800 dark:text-white">
+                <tr class="hover:bg-[#F7F5F0] dark:hover:bg-[#21211D]/80">
+                    <td class="py-2.5 px-3 font-semibold text-[#1A1916] dark:text-white dark:text-white">
                         ${escapeHtml(item.nama)}
                     </td>
                     <td class="py-2.5 px-3">
@@ -1133,13 +1144,13 @@ async function executeKirimSekarang() {
                             ${escapeHtml(item.tipe || 'ATK')}
                         </span>
                     </td>
-                    <td class="py-2.5 px-3 text-right font-mono text-slate-600 dark:text-slate-300"${bukuOnly ? ' style="display:none"' : ''}>
+                    <td class="py-2.5 px-3 text-right font-mono text-[#5C5954] dark:text-[#A8A49C] dark:text-slate-300"${bukuOnly ? ' style="display:none"' : ''}>
                         ${item.tipe === 'Buku' ? '-' : formatRupiah(item.harga)}
                     </td>
-                    <td class="py-2.5 px-3 text-center font-bold text-slate-800 dark:text-white">
+                    <td class="py-2.5 px-3 text-center font-bold text-[#1A1916] dark:text-white dark:text-white">
                         ${item.qty || 1}
                     </td>
-                    <td class="py-2.5 px-3 text-right font-mono font-bold text-slate-900 dark:text-white"${bukuOnly ? ' style="display:none"' : ''}>
+                    <td class="py-2.5 px-3 text-right font-mono font-bold text-[#1A1916] dark:text-white dark:text-white"${bukuOnly ? ' style="display:none"' : ''}>
                         ${item.tipe === 'Buku' ? '-' : formatRupiah(item.subtotal || (item.harga * (item.qty || 1)))}
                     </td>
                 </tr>
@@ -1232,7 +1243,7 @@ function startGlobalTicker() {
             if (!container) return;
 
             const toast = document.createElement('div');
-            const bgClass = type === 'emerald' ? 'border-emerald-500 bg-slate-900 text-white' : (type === 'blue' ? 'border-blue-500 bg-slate-900 text-white' : 'border-amber-500 bg-slate-900 text-white');
+            const bgClass = type === 'emerald' ? 'border-emerald-500 bg-[#151512] text-white border border-[#262620]' : (type === 'blue' ? 'border-blue-500 bg-[#151512] text-white border border-[#262620]' : 'border-amber-500 bg-[#151512] text-white border border-[#262620]');
             const iconClass = type === 'emerald' ? 'fa-circle-check text-emerald-400' : (type === 'blue' ? 'fa-truck-fast text-blue-400' : 'fa-circle-info text-amber-400');
 
             toast.className = `p-4 rounded-2xl border shadow-2xl flex items-start gap-3 pointer-events-auto transform transition-all duration-300 translate-y-2 opacity-0 max-w-sm ${bgClass}`;
