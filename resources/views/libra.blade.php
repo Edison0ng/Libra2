@@ -1562,7 +1562,7 @@
                 bookingBtn.innerHTML = `<i class="fa-solid fa-ban mr-2"></i> ${currentLang === 'id' ? 'Buku Sedang Dipinjam' : 'Book Currently Borrowed'}`;
             }
             // Baik status Tersedia maupun Dipinjam, selalu cek ke server utk hold/antrian.
-            loadQueueInfoForModal(id);
+            const queueInfoPromise = loadQueueInfoForModal(id);
 
             // Rekomendasi buku
             renderRecommendations(id);
@@ -1573,6 +1573,17 @@
             // Tampilkan modal
             document.getElementById('detail-modal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
+
+            return queueInfoPromise;
+        }
+
+        // Booking langsung dari kartu rekomendasi di beranda:
+        // buka detail buku, tunggu status hold/antrian dari server, lalu buka form booking
+        // hanya jika tombol Booking memang aktif (buku tersedia dan tidak ditahan).
+        async function bookFromRecommendation(id) {
+            try { await openBookDetail(id); } catch (e) { return; }
+            const btn = document.querySelector('#booking-default-btn-container button');
+            if (btn && !btn.disabled) openBookingForm();
         }
 
         // ===================== ANTRIAN BUKU (QUEUE) =====================
@@ -2071,15 +2082,24 @@
             if (!container) return;
             
             const recommended = pilihBukuRekomendasi(4);
-            container.innerHTML = recommended.map(book => `
-                <div onclick="openBookDetail(${book.id})" class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 overflow-hidden pb-3 cursor-pointer hover:shadow-md transition-shadow">
+            container.innerHTML = recommended.map(book => {
+                // Status terkini diambil dari kartu di Pustaka (diperbarui dari server).
+                const liveCard = document.querySelector(`.book-card[data-id="${book.id}"]`);
+                const dipinjam = (liveCard ? liveCard.dataset.status : book.status) === 'Dipinjam';
+                const tombol = dipinjam
+                    ? `<button type="button" disabled class="mt-2 w-full text-[11px] font-semibold py-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed"><i class="fa-solid fa-ban mr-1"></i> Sedang Dipinjam</button>`
+                    : `<button type="button" onclick="event.stopPropagation(); bookFromRecommendation('${book.id}')" class="mt-2 w-full text-[11px] font-semibold py-2 rounded-lg bg-slate-900 dark:bg-blue-600 text-white hover:bg-slate-800 dark:hover:bg-blue-700 active:scale-[0.98] transition"><i class="fa-solid fa-book-open mr-1"></i> Booking</button>`;
+                return `
+                <div onclick="openBookDetail('${book.id}')" class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 overflow-hidden pb-3 cursor-pointer hover:shadow-md transition-shadow">
                     <img src="${book.cover}" class="w-full aspect-[4/5] object-cover">
                     <div class="p-3">
                         <h4 class="font-bold text-xs md:text-sm text-slate-800 dark:text-white line-clamp-1">${book.title}</h4>
                         <p class="text-[11px] text-slate-400 mt-0.5">${book.author}</p>
+                        ${tombol}
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
 
         // ============================================================
@@ -4478,6 +4498,7 @@
             'Program studi tidak boleh kosong.': 'Study program cannot be empty.',
             'Contoh: 2308561001': 'Example: 2308561001',
             'Contoh: Informatika': 'Example: Informatics',
+            'Sedang Dipinjam': 'Currently Borrowed',
             'Nama tidak boleh kosong.': 'Name cannot be empty.',
             'Nomor telepon hanya boleh angka, minimal 8 digit.': 'Phone number may only contain digits, at least 8 digits.',
             'Alamat terlalu pendek, tulis alamat selengkapnya.': 'The address is too short, please write the full address.',
