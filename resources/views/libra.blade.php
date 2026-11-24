@@ -304,6 +304,7 @@
                         data-status="Tersedia" 
                         data-genre="{{ $book->genre ?? 'Umum' }}"
                         data-rating="4.5"
+                        data-popularitas="{{ $popularitas[(string) $book->ISBN] ?? 0 }}"
                         data-desc="Deskripsi buku tidak tersedia.">
 
                         <button type="button"
@@ -970,6 +971,7 @@
 
             renderWishlist();
             syncWishlistUI();
+            renderRecommendedBooks();
         }
 
         // ============================================================
@@ -986,7 +988,8 @@
                 const genre = card.dataset.genre || 'Science';
                 const rating = parseFloat(card.dataset.rating) || 4.5;
                 const desc = card.dataset.desc || 'Deskripsi buku tidak tersedia.';
-                books.push({ id, title, author, cover, status, genre, rating, desc });
+                const popularitas = parseInt(card.dataset.popularitas, 10) || 0;
+                books.push({ id, title, author, cover, status, genre, rating, desc, popularitas });
             });
             return books;
         }
@@ -2024,11 +2027,50 @@
         // ============================================================
         // FUNGSI REKOMENDASI BUKU
         // ============================================================
+        // Rekomendasi beranda: gabungan minat pengguna dan popularitas.
+        // 1) Minat: genre dari buku yang pernah dipinjam (bobot 2) dan masuk wishlist (bobot 1).
+        // 2) Buku yang sudah pernah dipinjam atau ada di wishlist tidak direkomendasikan lagi.
+        // 3) Urutan: skor genre terbesar lebih dulu, lalu popularitas (jumlah pinjam + wishlist).
+        // Pengguna baru tanpa riwayat otomatis mendapat buku terpopuler.
+        function pilihBukuRekomendasi(jumlah) {
+            const norm = v => String(v == null ? '' : v).trim().toLowerCase();
+            const byId = {};
+            booksData.forEach(b => { byId[String(b.id)] = b; });
+
+            let loans = [];
+            try { loans = Array.isArray(activeLoans) ? activeLoans : []; } catch (e) { loans = []; }
+
+            const sudahAda = new Set();
+            const bobotGenre = {};
+            const tambah = (bookId, bobot) => {
+                const b = byId[String(bookId)];
+                if (!b) return;
+                sudahAda.add(String(b.id));
+                const g = norm(b.genre);
+                if (g) bobotGenre[g] = (bobotGenre[g] || 0) + bobot;
+            };
+            loans.forEach(l => tambah(l.book_id, 2));
+            (Array.isArray(wishlistBooks) ? wishlistBooks : []).forEach(id => tambah(id, 1));
+
+            const skor = b => (bobotGenre[norm(b.genre)] || 0);
+            const urut = (a, b) =>
+                (skor(b) - skor(a)) ||
+                ((b.popularitas || 0) - (a.popularitas || 0)) ||
+                String(a.title).localeCompare(String(b.title));
+
+            const baru = booksData.filter(b => !sudahAda.has(String(b.id))).sort(urut);
+            if (baru.length >= jumlah) return baru.slice(0, jumlah);
+
+            // Katalog kecil: lengkapi dengan buku lain supaya kartu tetap terisi.
+            const sisa = booksData.filter(b => sudahAda.has(String(b.id))).sort(urut);
+            return baru.concat(sisa).slice(0, jumlah);
+        }
+
         function renderRecommendedBooks() {
             const container = document.getElementById('recommended-books');
             if (!container) return;
             
-            const recommended = booksData.slice(0, 4);
+            const recommended = pilihBukuRekomendasi(4);
             container.innerHTML = recommended.map(book => `
                 <div onclick="openBookDetail(${book.id})" class="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200/60 dark:border-slate-800 overflow-hidden pb-3 cursor-pointer hover:shadow-md transition-shadow">
                     <img src="${book.cover}" class="w-full aspect-[4/5] object-cover">
@@ -2790,6 +2832,7 @@
                 updateCourierStatusVisibility();
                 await updateBookStatuses();
                 syncWishlistUI();
+                renderRecommendedBooks();
             } catch (err) {
                 console.error('Error loading loans:', err);
             }
